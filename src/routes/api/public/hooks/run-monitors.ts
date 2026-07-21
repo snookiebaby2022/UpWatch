@@ -6,6 +6,7 @@ async function sendAlert(opts: {
   errorMessage: string | null;
 }) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { isPublicHttpUrl } = await import("@/lib/url-safety");
   const { data: channels } = await supabaseAdmin
     .from("notification_channels")
     .select("type, target")
@@ -23,17 +24,28 @@ async function sendAlert(opts: {
   await Promise.allSettled(
     channels.map(async (c) => {
       try {
+        // SSRF guard on user-supplied webhook targets.
+        const safety = isPublicHttpUrl(c.target);
+        if (!safety.ok) {
+          console.warn("alert target blocked", c.type, safety.reason);
+          return;
+        }
         if (c.type === "slack" || c.type === "discord") {
           await fetch(c.target, {
             method: "POST",
             headers: { "content-type": "application/json" },
+            // Do not forward user_id to third-party webhooks (PII).
             body: JSON.stringify(c.type === "discord" ? { content: text } : { text }),
           });
         } else if (c.type === "webhook") {
           await fetch(c.target, {
             method: "POST",
             headers: { "content-type": "application/json" },
-            body: JSON.stringify({ monitor: opts.monitor, transition: opts.transition, error: opts.errorMessage }),
+            body: JSON.stringify({
+              monitor: { id: opts.monitor.id, name: opts.monitor.name, url: opts.monitor.url },
+              transition: opts.transition,
+              error: opts.errorMessage,
+            }),
           });
         }
         // email channel: no managed email domain wired yet — logged as an alert row for now.
@@ -46,25 +58,28 @@ async function sendAlert(opts: {
 
 
 
+
 export const Route = createFileRoute("/api/public/hooks/run-monitors")({
   server: {
     handlers: {
       POST: async ({ request }) => {
         try {
-        // Prefer a dedicated CRON_SECRET. Fall back to the publishable key for
-        // backwards compatibility, but that key is public (shipped to the browser),
-        // so any caller could trigger runs — set CRON_SECRET and update pg_cron.
+        // Require a dedicated CRON_SECRET. The publishable-key fallback was
+        // removed — that key is shipped to browsers, so any visitor could
+        // trigger the run loop.
         const authHeader = request.headers.get("authorization");
         const provided = request.headers.get("x-cron-secret")
           ?? request.headers.get("apikey")
           ?? authHeader?.replace("Bearer ", "");
         const cronSecret = process.env.CRON_SECRET;
-        const publishable = process.env.SUPABASE_PUBLISHABLE_KEY;
-        const expected = cronSecret ?? publishable;
         if (!cronSecret) {
-          console.warn("[run-monitors] CRON_SECRET not set; falling back to publishable key (public).");
+          console.error("[run-monitors] CRON_SECRET is not configured — refusing to run.");
+          return new Response(JSON.stringify({ error: "server not configured" }), {
+            status: 503,
+            headers: { "content-type": "application/json" },
+          });
         }
-        if (!provided || !expected || provided !== expected) {
+        if (!provided || provided !== cronSecret) {
           return new Response(JSON.stringify({ error: "unauthorized" }), {
             status: 401,
             headers: { "content-type": "application/json" },
@@ -72,6 +87,7 @@ export const Route = createFileRoute("/api/public/hooks/run-monitors")({
         }
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        const { isPublicHttpUrl } = await import("@/lib/url-safety");
 
         const nowIso = new Date().toISOString();
         const { data: monitors, error } = await supabaseAdmin
@@ -100,6 +116,24 @@ export const Route = createFileRoute("/api/public/hooks/run-monitors")({
             let errorMessage: string | null = null;
             let responseTime: number | null = null;
 
+            // SSRF guard — reject private/loopback/metadata targets before any fetch.
+            const safety = isPublicHttpUrl(m.url);
+            if (!safety.ok) {
+              errorMessage = `URL blocked: ${safety.reason}`;
+              await supabaseAdmin.from("check_results").insert({
+                monitor_id: m.id,
+                status: "down",
+                response_time_ms: null,
+                status_code: null,
+                error_message: errorMessage,
+              });
+              await supabaseAdmin
+                .from("monitors")
+                .update({ last_status: "down", last_checked_at: nowIso })
+                .eq("id", m.id);
+              return { id: m.id, status: "down", previous: m.last_status };
+            }
+
             try {
               const controller = new AbortController();
               const timer = setTimeout(() => controller.abort(), 15_000);
@@ -115,7 +149,19 @@ export const Route = createFileRoute("/api/public/hooks/run-monitors")({
 
               if (res.ok) {
                 if (m.type === "keyword" && m.keyword) {
-                  const body = await res.text();
+                  // Cap keyword-mode body read at 512 KB to avoid unbounded memory use.
+                  const reader = res.body?.getReader();
+                  const decoder = new TextDecoder();
+                  let body = "";
+                  const CAP = 512 * 1024;
+                  if (reader) {
+                    while (body.length < CAP) {
+                      const { value, done } = await reader.read();
+                      if (done) break;
+                      body += decoder.decode(value, { stream: true });
+                    }
+                    await reader.cancel().catch(() => {});
+                  }
                   status = body.includes(m.keyword) ? "up" : "down";
                   if (status === "down") errorMessage = `keyword "${m.keyword}" missing`;
                 } else {
@@ -130,6 +176,7 @@ export const Route = createFileRoute("/api/public/hooks/run-monitors")({
               status = "down";
               errorMessage = err instanceof Error ? err.message : "check failed";
             }
+
 
             await supabaseAdmin.from("check_results").insert({
               monitor_id: m.id,

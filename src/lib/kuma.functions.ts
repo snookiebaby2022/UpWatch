@@ -58,7 +58,8 @@ export const getKumaStatus = createServerFn({ method: "GET" }).handler(async ():
       monitors,
       incident: config.incident ? config.incident.title : null,
     };
-  } catch {
+  } catch (err) {
+    console.error("[kuma] fetch failed", err);
     return { ok: false, monitors: [], incident: null };
   }
 });

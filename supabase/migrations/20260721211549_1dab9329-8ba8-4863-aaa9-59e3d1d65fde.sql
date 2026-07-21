@@ -1,0 +1,1 @@
+DROP POLICY IF EXISTS "Admins can view waitlist" ON public.waitlist;

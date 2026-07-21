@@ -168,10 +168,15 @@ function AdminPage() {
   }
 
   async function handleSignOut() {
-    await queryClient.cancelQueries();
-    queryClient.clear();
-    await supabase.auth.signOut();
-    navigate({ to: "/auth", replace: true });
+    try {
+      await queryClient.cancelQueries();
+      queryClient.clear();
+      await supabase.auth.signOut();
+    } catch (err) {
+      console.error("admin sign out failed", err);
+    } finally {
+      navigate({ to: "/auth", replace: true });
+    }
   }
 
   const totals = {
