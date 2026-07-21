@@ -121,7 +121,11 @@ function Dashboard() {
           <Link to="/status" className="text-sm text-zinc-400 hover:text-white transition-colors">
             Status page
           </Link>
-          <button
+          {isAdmin && (
+            <Link to="/admin" className="text-sm text-brand hover:text-white transition-colors">
+              Admin
+            </Link>
+          )}
             onClick={handleSignOut}
             className="bg-surface border border-brand-border px-4 py-2 rounded-full text-sm font-semibold text-white hover:bg-brand-border transition-colors"
           >
