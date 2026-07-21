@@ -3,6 +3,7 @@ import { useQuery, queryOptions } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { getKumaStatus, type KumaMonitor } from "@/lib/kuma.functions";
 import { supabase } from "@/integrations/supabase/client";
+import { SITE_URL, OG_IMAGE } from "@/lib/site";
 
 const kumaQueryOptions = (fn: typeof getKumaStatus) =>
   queryOptions({
@@ -12,9 +13,88 @@ const kumaQueryOptions = (fn: typeof getKumaStatus) =>
     staleTime: 15_000,
   });
 
+const HOME_TITLE = "UpWatch — Website Uptime Monitoring That Doesn't Sleep";
+const HOME_DESC =
+  "Monitor your websites and APIs from every region. Instant Slack, Discord, email and SMS alerts the moment something breaks. From £0/mo.";
+
+const FAQS = [
+  {
+    q: "What happens if my site goes down?",
+    a: "The instant a check fails, we retry from a secondary path to confirm it's real — not a network blip. Then we fire alerts through every channel you've enabled: email, Slack, Discord, SMS, or webhook. You get a full trace log, timestamp, and the exact error.",
+  },
+  {
+    q: "How often do you check my endpoints?",
+    a: "Every 60 seconds on all plans. Business tier adds 30-second checks for critical infrastructure.",
+  },
+  {
+    q: "Can I host a public status page?",
+    a: "Yes — every plan includes a hosted status page at status.yourdomain.com with full SSL. Share it with customers, embed it in your app, or link it from your support docs.",
+  },
+  {
+    q: "Is my data secure?",
+    a: "Your monitoring data never leaves our infrastructure. We don't use third-party analytics, don't sell your data, and encrypt all traffic end-to-end.",
+  },
+  {
+    q: "What if I outgrow the starter plan?",
+    a: "Upgrade anytime — no migration needed, no downtime. Same monitors, same history, just more features.",
+  },
+  {
+    q: "Can I monitor APIs, not just websites?",
+    a: "Absolutely. We check HTTP/HTTPS endpoints, TCP ports, ping, DNS resolution, and keyword presence on any page.",
+  },
+];
+
 export const Route = createFileRoute("/")({
   loader: ({ context }) =>
     context.queryClient.ensureQueryData(kumaQueryOptions(getKumaStatus)),
+  head: () => ({
+    meta: [
+      { title: HOME_TITLE },
+      { name: "description", content: HOME_DESC },
+      { property: "og:title", content: HOME_TITLE },
+      { property: "og:description", content: HOME_DESC },
+      { property: "og:url", content: `${SITE_URL}/` },
+      { property: "og:image", content: OG_IMAGE },
+      { property: "og:image:width", content: "1200" },
+      { property: "og:image:height", content: "630" },
+      { name: "twitter:title", content: HOME_TITLE },
+      { name: "twitter:description", content: HOME_DESC },
+      { name: "twitter:image", content: OG_IMAGE },
+    ],
+    links: [{ rel: "canonical", href: `${SITE_URL}/` }],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "SoftwareApplication",
+          name: "UpWatch",
+          applicationCategory: "DeveloperApplication",
+          operatingSystem: "Web",
+          description: HOME_DESC,
+          url: `${SITE_URL}/`,
+          image: OG_IMAGE,
+          offers: [
+            { "@type": "Offer", name: "Starter", price: "0", priceCurrency: "GBP" },
+            { "@type": "Offer", name: "Pro", price: "10", priceCurrency: "GBP" },
+            { "@type": "Offer", name: "Business", price: "30", priceCurrency: "GBP" },
+          ],
+        }),
+      },
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: FAQS.map((f) => ({
+            "@type": "Question",
+            name: f.q,
+            acceptedAnswer: { "@type": "Answer", text: f.a },
+          })),
+        }),
+      },
+    ],
+  }),
   component: Index,
   errorComponent: HomeError,
   notFoundComponent: () => (
@@ -387,32 +467,6 @@ function Testimonials() {
   );
 }
 
-const FAQS = [
-  {
-    q: "What happens if my site goes down?",
-    a: "The instant a check fails, we retry from a secondary path to confirm it's real — not a network blip. Then we fire alerts through every channel you've enabled: email, Slack, Discord, SMS, or webhook. You get a full trace log, timestamp, and the exact error.",
-  },
-  {
-    q: "How often do you check my endpoints?",
-    a: "Every 60 seconds on all plans. Business tier adds 30-second checks for critical infrastructure.",
-  },
-  {
-    q: "Can I host a public status page?",
-    a: "Yes — every plan includes a hosted status page at status.yourdomain.com with full SSL. Share it with customers, embed it in your app, or link it from your support docs.",
-  },
-  {
-    q: "Is my data secure?",
-    a: "Your monitoring data never leaves our infrastructure. We don't use third-party analytics, don't sell your data, and encrypt all traffic end-to-end.",
-  },
-  {
-    q: "What if I outgrow the starter plan?",
-    a: "Upgrade anytime — no migration needed, no downtime. Same monitors, same history, just more features.",
-  },
-  {
-    q: "Can I monitor APIs, not just websites?",
-    a: "Absolutely. We check HTTP/HTTPS endpoints, TCP ports, ping, DNS resolution, and keyword presence on any page.",
-  },
-];
 
 function FAQ() {
   return (

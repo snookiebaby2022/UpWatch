@@ -10,6 +10,7 @@ export const Route = createFileRoute("/auth")({
     meta: [
       { title: "Sign in — UpWatch" },
       { name: "description", content: "Sign in or create your UpWatch account to monitor your websites." },
+      { name: "robots", content: "noindex, nofollow" },
     ],
   }),
   component: AuthPage,

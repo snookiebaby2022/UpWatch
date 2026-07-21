@@ -1,15 +1,23 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { SITE_URL, OG_IMAGE } from "@/lib/site";
+
+const TITLE = "Privacy Policy — UpWatch";
+const DESC = "How UpWatch collects, uses, and protects your data. No third-party analytics, no data selling.";
 
 export const Route = createFileRoute("/privacy")({
   head: () => ({
     meta: [
-      { title: "Privacy Policy — UpWatch" },
-      { name: "description", content: "How UpWatch collects, uses, and protects your data." },
-      { property: "og:title", content: "Privacy Policy — UpWatch" },
-      { property: "og:description", content: "How UpWatch collects, uses, and protects your data." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
+      { title: TITLE },
+      { name: "description", content: DESC },
+      { property: "og:title", content: TITLE },
+      { property: "og:description", content: DESC },
+      { property: "og:url", content: `${SITE_URL}/privacy` },
+      { property: "og:image", content: OG_IMAGE },
+      { name: "twitter:title", content: TITLE },
+      { name: "twitter:description", content: DESC },
+      { name: "twitter:image", content: OG_IMAGE },
     ],
+    links: [{ rel: "canonical", href: `${SITE_URL}/privacy` }],
   }),
   component: Privacy,
 });

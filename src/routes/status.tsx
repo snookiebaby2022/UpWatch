@@ -1,13 +1,24 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { SITE_URL, OG_IMAGE } from "@/lib/site";
+
+const TITLE = "Live System Status — UpWatch";
+const DESC =
+  "Real-time uptime for every UpWatch endpoint. Public incident history, response times, and current health for our monitoring infrastructure.";
 
 export const Route = createFileRoute("/status")({
   head: () => ({
     meta: [
-      { title: "Live Status — UpWatch" },
-      { name: "description", content: "Live infrastructure status for upwatch.online, powered by Uptime Kuma." },
-      { property: "og:title", content: "Live Status — UpWatch" },
-      { property: "og:description", content: "Real-time uptime and incident history." },
+      { title: TITLE },
+      { name: "description", content: DESC },
+      { property: "og:title", content: TITLE },
+      { property: "og:description", content: DESC },
+      { property: "og:url", content: `${SITE_URL}/status` },
+      { property: "og:image", content: OG_IMAGE },
+      { name: "twitter:title", content: TITLE },
+      { name: "twitter:description", content: DESC },
+      { name: "twitter:image", content: OG_IMAGE },
     ],
+    links: [{ rel: "canonical", href: `${SITE_URL}/status` }],
   }),
   component: StatusPage,
 });
@@ -32,8 +43,10 @@ function StatusPage() {
           <h1 className="text-4xl md:text-5xl font-extrabold text-white tracking-tight mb-3">
             Live system status
           </h1>
-          <p className="text-zinc-400">
-            Real-time uptime for every monitored endpoint, streamed from Uptime Kuma.
+          <p className="text-zinc-400 max-w-2xl">
+            Real-time uptime for every monitored UpWatch endpoint. This page auto-refreshes and
+            includes a rolling 90-day incident history, current response times, and any active
+            maintenance windows.
           </p>
         </header>
         <div className="rounded-2xl border border-brand-border bg-surface overflow-hidden shadow-2xl">

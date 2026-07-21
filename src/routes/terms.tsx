@@ -1,15 +1,23 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { SITE_URL, OG_IMAGE } from "@/lib/site";
+
+const TITLE = "Terms of Service — UpWatch";
+const DESC = "The terms governing use of UpWatch website and API uptime monitoring.";
 
 export const Route = createFileRoute("/terms")({
   head: () => ({
     meta: [
-      { title: "Terms of Service — UpWatch" },
-      { name: "description", content: "The terms governing use of UpWatch monitoring." },
-      { property: "og:title", content: "Terms of Service — UpWatch" },
-      { property: "og:description", content: "The terms governing use of UpWatch monitoring." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
+      { title: TITLE },
+      { name: "description", content: DESC },
+      { property: "og:title", content: TITLE },
+      { property: "og:description", content: DESC },
+      { property: "og:url", content: `${SITE_URL}/terms` },
+      { property: "og:image", content: OG_IMAGE },
+      { name: "twitter:title", content: TITLE },
+      { name: "twitter:description", content: DESC },
+      { name: "twitter:image", content: OG_IMAGE },
     ],
+    links: [{ rel: "canonical", href: `${SITE_URL}/terms` }],
   }),
   component: Terms,
 });
