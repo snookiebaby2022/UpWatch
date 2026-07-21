@@ -397,6 +397,10 @@ function AdminPage() {
             </table>
           </div>
         ) : (
+          (() => {
+            // Build id→monitor once so the incidents render is O(N) instead of O(N×M).
+            const monitorById = new Map(monitors.map((m) => [m.id, m]));
+            return (
           <div className="overflow-x-auto border border-border/60 rounded-lg">
             <table className="w-full text-sm">
               <thead className="bg-card/40 text-xs uppercase tracking-widest text-muted-foreground">
@@ -409,7 +413,7 @@ function AdminPage() {
               </thead>
               <tbody>
                 {incidents.map((i) => {
-                  const mon = monitors.find((m) => m.id === i.monitor_id);
+                  const mon = monitorById.get(i.monitor_id);
                   return (
                     <tr key={i.id} className="border-t border-border/60">
                       <td className="px-4 py-3">{mon?.name ?? i.monitor_id.slice(0, 8)}</td>
