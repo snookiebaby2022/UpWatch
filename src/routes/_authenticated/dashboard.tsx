@@ -155,6 +155,8 @@ function Dashboard() {
   );
 }
 
+type LiveStatus = { name?: string; url?: string; status?: string; ping?: number };
+
 function MonitorsPanel({
   monitors,
   isLoading,
@@ -163,6 +165,7 @@ function MonitorsPanel({
   plan,
   used,
   limit,
+  liveStatuses,
   onChange,
 }: {
   monitors: Monitor[];
@@ -172,6 +175,7 @@ function MonitorsPanel({
   plan: Plan;
   used: number;
   limit: number;
+  liveStatuses: LiveStatus[] | null;
   onChange: () => void;
 }) {
   const [name, setName] = useState("");
