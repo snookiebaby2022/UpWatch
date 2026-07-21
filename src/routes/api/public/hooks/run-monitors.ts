@@ -50,6 +50,7 @@ export const Route = createFileRoute("/api/public/hooks/run-monitors")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        try {
         // Prefer a dedicated CRON_SECRET. Fall back to the publishable key for
         // backwards compatibility, but that key is public (shipped to the browser),
         // so any caller could trigger runs — set CRON_SECRET and update pg_cron.
