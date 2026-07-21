@@ -1,5 +1,6 @@
-import { createFileRoute, Link, redirect } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, useCallback } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/admin")({
@@ -37,6 +38,9 @@ type UserRow = {
 };
 
 function AdminPage() {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [currentUserId, setCurrentUserId] = useState<string>("");
   const [users, setUsers] = useState<UserRow[]>([]);
   const [monitors, setMonitors] = useState<any[]>([]);
   const [waitlist, setWaitlist] = useState<any[]>([]);
@@ -44,6 +48,10 @@ function AdminPage() {
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<"users" | "monitors" | "waitlist" | "incidents">("users");
   const [msg, setMsg] = useState<string | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => setCurrentUserId(data.user?.id ?? ""));
+  }, []);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -96,15 +104,9 @@ function AdminPage() {
 
   async function updatePlan(userId: string, plan: Plan, status: Status) {
     setMsg(null);
-    const { data: existing } = await supabase
+    const { error } = await supabase
       .from("subscriptions")
-      .select("id")
-      .eq("user_id", userId)
-      .maybeSingle();
-
-    const { error } = existing
-      ? await supabase.from("subscriptions").update({ plan, status }).eq("user_id", userId)
-      : await supabase.from("subscriptions").insert({ user_id: userId, plan, status });
+      .upsert({ user_id: userId, plan, status }, { onConflict: "user_id" });
 
     if (error) {
       setMsg(error.message);
@@ -116,11 +118,18 @@ function AdminPage() {
 
   async function toggleAdmin(userId: string, makeAdmin: boolean) {
     setMsg(null);
+    if (!makeAdmin && userId === currentUserId) {
+      setMsg("You can't revoke your own admin role — ask another admin to do it.");
+      return;
+    }
     if (makeAdmin) {
       const { error } = await supabase
         .from("user_roles")
-        .insert({ user_id: userId, role: "admin" });
-      if (error && !error.message.includes("duplicate")) {
+        .upsert(
+          { user_id: userId, role: "admin" },
+          { onConflict: "user_id,role", ignoreDuplicates: true },
+        );
+      if (error) {
         setMsg(error.message);
         return;
       }
@@ -136,6 +145,13 @@ function AdminPage() {
       }
     }
     load();
+  }
+
+  async function handleSignOut() {
+    await queryClient.cancelQueries();
+    queryClient.clear();
+    await supabase.auth.signOut();
+    navigate({ to: "/auth", replace: true });
   }
 
   const totals = {
@@ -157,7 +173,7 @@ function AdminPage() {
           <div className="flex items-center gap-3 text-sm">
             <Link to="/dashboard" className="text-muted-foreground hover:text-foreground">Dashboard</Link>
             <button
-              onClick={async () => { await supabase.auth.signOut(); window.location.href = "/"; }}
+              onClick={handleSignOut}
               className="text-muted-foreground hover:text-foreground"
             >
               Sign out
@@ -247,7 +263,9 @@ function AdminPage() {
                     <td className="px-4 py-3 text-right">
                       <button
                         onClick={() => toggleAdmin(u.id, u.role !== "admin")}
-                        className="text-xs px-2 py-1 border border-border/60 rounded hover:border-brand"
+                        disabled={u.role === "admin" && u.id === currentUserId}
+                        title={u.role === "admin" && u.id === currentUserId ? "You can't revoke your own admin role" : ""}
+                        className="text-xs px-2 py-1 border border-border/60 rounded hover:border-brand disabled:opacity-40 disabled:cursor-not-allowed"
                       >
                         {u.role === "admin" ? "Revoke admin" : "Make admin"}
                       </button>

@@ -50,10 +50,20 @@ export const Route = createFileRoute("/api/public/hooks/run-monitors")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        // Prefer a dedicated CRON_SECRET. Fall back to the publishable key for
+        // backwards compatibility, but that key is public (shipped to the browser),
+        // so any caller could trigger runs — set CRON_SECRET and update pg_cron.
         const authHeader = request.headers.get("authorization");
-        const apikey = request.headers.get("apikey") ?? authHeader?.replace("Bearer ", "");
-        const expected = process.env.SUPABASE_PUBLISHABLE_KEY;
-        if (!apikey || !expected || apikey !== expected) {
+        const provided = request.headers.get("x-cron-secret")
+          ?? request.headers.get("apikey")
+          ?? authHeader?.replace("Bearer ", "");
+        const cronSecret = process.env.CRON_SECRET;
+        const publishable = process.env.SUPABASE_PUBLISHABLE_KEY;
+        const expected = cronSecret ?? publishable;
+        if (!cronSecret) {
+          console.warn("[run-monitors] CRON_SECRET not set; falling back to publishable key (public).");
+        }
+        if (!provided || !expected || provided !== expected) {
           return new Response(JSON.stringify({ error: "unauthorized" }), {
             status: 401,
             headers: { "content-type": "application/json" },
