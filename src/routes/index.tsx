@@ -333,7 +333,7 @@ const FAQS = [
   },
   {
     q: "How often do you check my endpoints?",
-    a: "From every 5 minutes on the Starter plan down to every 30 seconds on Business, across multiple global regions simultaneously to eliminate false positives.",
+    a: "From every 5 minutes on the Starter plan down to every 60 seconds on Business, across multiple global regions simultaneously to eliminate false positives.",
   },
   {
     q: "Can I host a public status page?",
