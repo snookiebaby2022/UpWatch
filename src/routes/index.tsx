@@ -153,7 +153,7 @@ function LiveDemo() {
         <div className="space-y-6">
           {isLoading && (
             <div className="text-sm text-zinc-500 py-8 text-center font-mono">
-              Waiting for heartbeats from Uptime Kuma…
+              Waiting for heartbeats…
             </div>
           )}
           {failed && (
