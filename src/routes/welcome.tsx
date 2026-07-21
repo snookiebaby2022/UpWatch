@@ -168,7 +168,7 @@ function WelcomePage() {
         >
           <span className="inline-flex items-center gap-2">
             <span className="size-1 rounded-full bg-brand animate-pulse" />
-            System nominal · v1.0
+            All systems operational · v1.0
           </span>
         </div>
       </div>
