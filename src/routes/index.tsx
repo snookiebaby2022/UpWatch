@@ -58,8 +58,10 @@ function Nav() {
         <Link to="/status" className="hover:text-brand transition-colors">Status</Link>
         <a href="#pricing" className="hover:text-brand transition-colors">Pricing</a>
       </div>
-      <div className="flex items-center gap-3">
-        {signedIn ? (
+      <div className="flex items-center gap-3 min-h-[40px]">
+        {signedIn === null ? (
+          <div className="h-9 w-24 rounded-full bg-surface animate-pulse" />
+        ) : signedIn ? (
           <Link
             to="/dashboard"
             className="bg-white text-black px-4 py-2 rounded-full text-sm font-semibold hover:bg-zinc-200 transition-colors"
