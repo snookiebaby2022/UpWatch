@@ -14,13 +14,55 @@ export type Database = {
   }
   public: {
     Tables: {
+      check_results: {
+        Row: {
+          checked_at: string
+          error_message: string | null
+          id: string
+          monitor_id: string
+          response_time_ms: number | null
+          status: string
+          status_code: number | null
+        }
+        Insert: {
+          checked_at?: string
+          error_message?: string | null
+          id?: string
+          monitor_id: string
+          response_time_ms?: number | null
+          status: string
+          status_code?: number | null
+        }
+        Update: {
+          checked_at?: string
+          error_message?: string | null
+          id?: string
+          monitor_id?: string
+          response_time_ms?: number | null
+          status?: string
+          status_code?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "check_results_monitor_id_fkey"
+            columns: ["monitor_id"]
+            isOneToOne: false
+            referencedRelation: "monitors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       monitors: {
         Row: {
           created_at: string
           id: string
           interval_seconds: number
           is_active: boolean
+          keyword: string | null
+          last_checked_at: string | null
+          last_status: string
           name: string
+          type: string
           updated_at: string
           url: string
           user_id: string
@@ -30,7 +72,11 @@ export type Database = {
           id?: string
           interval_seconds?: number
           is_active?: boolean
+          keyword?: string | null
+          last_checked_at?: string | null
+          last_status?: string
           name: string
+          type?: string
           updated_at?: string
           url: string
           user_id: string
@@ -40,7 +86,11 @@ export type Database = {
           id?: string
           interval_seconds?: number
           is_active?: boolean
+          keyword?: string | null
+          last_checked_at?: string | null
+          last_status?: string
           name?: string
+          type?: string
           updated_at?: string
           url?: string
           user_id?: string
@@ -68,6 +118,42 @@ export type Database = {
           display_name?: string | null
           id?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      subscriptions: {
+        Row: {
+          created_at: string
+          current_period_end: string | null
+          id: string
+          plan: string
+          status: string
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_period_end?: string | null
+          id?: string
+          plan?: string
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_period_end?: string | null
+          id?: string
+          plan?: string
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
