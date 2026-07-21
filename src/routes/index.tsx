@@ -16,7 +16,8 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
-const STRIPE_URL = "https://buy.stripe.com/demo";
+const STRIPE_PRO_URL = "https://buy.stripe.com/14A5kDeEQb1o61s1a2ebu00";
+const STRIPE_BUSINESS_URL = "https://buy.stripe.com/5kQ00j7coedA3Tk5qiebu01";
 
 function Index() {
   return (
@@ -69,10 +70,10 @@ function Hero() {
       </p>
       <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
         <a
-          href={STRIPE_URL}
+          href={STRIPE_PRO_URL}
           className="w-full sm:w-auto bg-brand text-bg px-8 py-4 rounded-xl font-bold text-lg hover:scale-105 transition-transform"
         >
-          Get Started — $29/mo
+          Get Started — £10/mo
         </a>
         <a
           href="#demo"
@@ -168,13 +169,13 @@ type Tier = {
 const TIERS: Tier[] = [
   {
     name: "Starter",
-    price: "$0",
+    price: "£0",
     features: ["5 Monitors", "5-minute intervals", "Email alerts"],
     cta: "Join Free",
   },
   {
     name: "Pro",
-    price: "$29",
+    price: "£10",
     features: [
       "50 Monitors",
       "1-minute intervals",
@@ -182,19 +183,20 @@ const TIERS: Tier[] = [
       "Custom Status Pages",
     ],
     cta: "Subscribe Now",
-    href: STRIPE_URL,
+    href: STRIPE_PRO_URL,
     popular: true,
   },
   {
     name: "Business",
-    price: "$99",
+    price: "£30",
     features: [
       "Unlimited Monitors",
       "30-second intervals",
       "Multi-region checking",
       "White-label reports",
     ],
-    cta: "Contact Sales",
+    cta: "Subscribe Now",
+    href: STRIPE_BUSINESS_URL,
   },
 ];
 
@@ -263,7 +265,7 @@ const TESTIMONIALS = [
   },
   {
     quote:
-      "Setting up Uptime Kuma was a pain until I found this hosted version. Best $29 I spend every month.",
+      "Setting up Uptime Kuma was a pain until I found this hosted version. Best £10 I spend every month.",
     name: "Marcus Thorne",
     role: "Independent Developer",
   },
