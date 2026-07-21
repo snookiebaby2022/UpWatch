@@ -467,32 +467,6 @@ function Testimonials() {
   );
 }
 
-const FAQS = [
-  {
-    q: "What happens if my site goes down?",
-    a: "The instant a check fails, we retry from a secondary path to confirm it's real — not a network blip. Then we fire alerts through every channel you've enabled: email, Slack, Discord, SMS, or webhook. You get a full trace log, timestamp, and the exact error.",
-  },
-  {
-    q: "How often do you check my endpoints?",
-    a: "Every 60 seconds on all plans. Business tier adds 30-second checks for critical infrastructure.",
-  },
-  {
-    q: "Can I host a public status page?",
-    a: "Yes — every plan includes a hosted status page at status.yourdomain.com with full SSL. Share it with customers, embed it in your app, or link it from your support docs.",
-  },
-  {
-    q: "Is my data secure?",
-    a: "Your monitoring data never leaves our infrastructure. We don't use third-party analytics, don't sell your data, and encrypt all traffic end-to-end.",
-  },
-  {
-    q: "What if I outgrow the starter plan?",
-    a: "Upgrade anytime — no migration needed, no downtime. Same monitors, same history, just more features.",
-  },
-  {
-    q: "Can I monitor APIs, not just websites?",
-    a: "Absolutely. We check HTTP/HTTPS endpoints, TCP ports, ping, DNS resolution, and keyword presence on any page.",
-  },
-];
 
 function FAQ() {
   return (
