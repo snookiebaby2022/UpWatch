@@ -269,6 +269,8 @@ function Pricing() {
             {tier.href ? (
               <a
                 href={tier.href}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="w-full py-3 rounded-lg bg-brand text-bg text-center font-bold hover:opacity-90 transition-opacity"
               >
                 {tier.cta}
