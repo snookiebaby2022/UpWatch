@@ -36,13 +36,13 @@ function Index() {
 function Nav() {
   return (
     <nav className="flex items-center justify-between px-6 py-6 max-w-7xl mx-auto">
-      <a href="#" className="flex items-center gap-2">
+      <Link to="/" className="flex items-center gap-2">
         <div className="size-3 rounded-full bg-brand animate-pulse" />
         <span className="text-white font-bold tracking-tight text-xl">UpWatch</span>
-      </a>
+      </Link>
       <div className="hidden md:flex gap-8 text-sm font-medium">
         <a href="#demo" className="hover:text-brand transition-colors">Product</a>
-        <a href="#demo" className="hover:text-brand transition-colors">Status</a>
+        <Link to="/status" className="hover:text-brand transition-colors">Status</Link>
         <a href="#pricing" className="hover:text-brand transition-colors">Pricing</a>
       </div>
       <a
