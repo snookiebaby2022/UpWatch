@@ -340,10 +340,6 @@ const FAQS = [
     a: "Yes. Pro and Business plans include hosted status pages that you can map to your own custom domain with full SSL.",
   },
   {
-    q: "Do you integrate with Uptime Kuma?",
-    a: "UpWatch works alongside self-hosted tools and can pull status via the Uptime Kuma API if you want a hybrid setup.",
-  },
-  {
     q: "Can I cancel anytime?",
     a: "Yes. Subscriptions are month-to-month, no contracts. Cancel from your dashboard and you keep access until the end of the billing period.",
   },
