@@ -22,13 +22,14 @@ const credentialsSchema = z.object({
 
 function AuthPage() {
   const navigate = useNavigate();
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [mode, setMode] = useState<"signin" | "signup" | "forgot">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
+  const [lastSignupEmail, setLastSignupEmail] = useState<string | null>(null);
 
   // If already signed in, bounce to dashboard.
   useEffect(() => {
@@ -41,6 +42,22 @@ function AuthPage() {
     e.preventDefault();
     setError(null);
     setInfo(null);
+
+    if (mode === "forgot") {
+      const trimmed = email.trim().toLowerCase();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+        setError("Enter a valid email");
+        return;
+      }
+      setLoading(true);
+      const { error: err } = await supabase.auth.resetPasswordForEmail(trimmed, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      setLoading(false);
+      if (err) return setError(err.message);
+      setInfo("Check your inbox for a password reset link.");
+      return;
+    }
 
     const parsed = credentialsSchema.safeParse({ email, password });
     if (!parsed.success) {
@@ -60,6 +77,7 @@ function AuthPage() {
           },
         });
         if (err) throw err;
+        setLastSignupEmail(parsed.data.email);
         setInfo("Account created. Check your inbox to confirm your email.");
       } else {
         const { error: err } = await supabase.auth.signInWithPassword({
@@ -74,6 +92,25 @@ function AuthPage() {
     } finally {
       setLoading(false);
     }
+  }
+
+  async function handleResendVerification() {
+    const target = lastSignupEmail ?? email.trim().toLowerCase();
+    if (!target) {
+      setError("Enter your email above first.");
+      return;
+    }
+    setError(null);
+    setInfo(null);
+    setLoading(true);
+    const { error: err } = await supabase.auth.resend({
+      type: "signup",
+      email: target,
+      options: { emailRedirectTo: `${window.location.origin}/dashboard` },
+    });
+    setLoading(false);
+    if (err) return setError(err.message);
+    setInfo("Verification email sent.");
   }
 
   async function handleGoogle() {
