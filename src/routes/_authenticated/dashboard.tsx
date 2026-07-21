@@ -66,6 +66,26 @@ function Dashboard() {
     },
   });
 
+  const subscriptionQuery = useQuery({
+    queryKey: ["subscription", userId],
+    enabled: !!userId,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("subscriptions")
+        .select("plan, status, current_period_end")
+        .eq("user_id", userId)
+        .maybeSingle();
+      return data;
+    },
+  });
+
+  const plan: Plan =
+    subscriptionQuery.data?.status === "active" && subscriptionQuery.data?.plan
+      ? ((subscriptionQuery.data.plan as Plan) ?? "starter")
+      : "starter";
+  const limit = PLAN_LIMITS[plan];
+  const used = monitorsQuery.data?.length ?? 0;
+
   async function handleSignOut() {
     await queryClient.cancelQueries();
     queryClient.clear();
@@ -80,12 +100,17 @@ function Dashboard() {
           <div className="size-3 rounded-full bg-brand animate-pulse" />
           <span className="text-white font-bold tracking-tight text-xl">UpWatch</span>
         </Link>
-        <button
-          onClick={handleSignOut}
-          className="bg-surface border border-brand-border px-4 py-2 rounded-full text-sm font-semibold text-white hover:bg-brand-border transition-colors"
-        >
-          Sign out
-        </button>
+        <div className="flex items-center gap-3">
+          <Link to="/status" className="text-sm text-zinc-400 hover:text-white transition-colors">
+            Status page
+          </Link>
+          <button
+            onClick={handleSignOut}
+            className="bg-surface border border-brand-border px-4 py-2 rounded-full text-sm font-semibold text-white hover:bg-brand-border transition-colors"
+          >
+            Sign out
+          </button>
+        </div>
       </nav>
 
       <main className="max-w-4xl mx-auto px-6 py-12 space-y-10">
@@ -101,10 +126,13 @@ function Dashboard() {
           isLoading={monitorsQuery.isLoading}
           error={monitorsQuery.error as Error | null}
           userId={userId}
+          plan={plan}
+          used={used}
+          limit={limit}
           onChange={() => queryClient.invalidateQueries({ queryKey: ["monitors", userId] })}
         />
 
-        <BillingPanel />
+        <BillingPanel plan={plan} />
       </main>
     </div>
   );
