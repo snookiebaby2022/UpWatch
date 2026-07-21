@@ -97,7 +97,7 @@ function Hero() {
       </h1>
       <p className="max-w-2xl mx-auto text-lg text-zinc-400 mb-10">
         Professional uptime monitoring for modern stacks. Instant alerts via Slack, Email, or SMS
-        the second your site hiccups. Already watching 1.2M endpoints.
+        the second your site hiccups.
       </p>
       <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
         <Link
