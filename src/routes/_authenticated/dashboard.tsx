@@ -270,13 +270,6 @@ function MonitorsPanel({
                   Delete
                 </button>
               </div>
-                <button
-                  onClick={() => removeMonitor(m.id)}
-                  className="text-xs text-zinc-500 hover:text-red-400 transition-colors"
-                >
-                  Delete
-                </button>
-              </div>
             </li>
           ))}
         </ul>
