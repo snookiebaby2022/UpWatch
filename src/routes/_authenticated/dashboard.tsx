@@ -66,6 +66,22 @@ function Dashboard() {
     },
   });
 
+  const piStatusQuery = useQuery({
+    queryKey: ["pi-status"],
+    refetchInterval: 30_000,
+    retry: false,
+    queryFn: async () => {
+      try {
+        const res = await fetch("https://api.upwatch.online/api/status", { signal: AbortSignal.timeout(5000) });
+        if (!res.ok) return null;
+        const json = (await res.json()) as { monitors?: Array<{ name?: string; url?: string; status?: string; ping?: number }> };
+        return json.monitors ?? [];
+      } catch {
+        return null;
+      }
+    },
+  });
+
   const subscriptionQuery = useQuery({
     queryKey: ["subscription", userId],
     enabled: !!userId,
