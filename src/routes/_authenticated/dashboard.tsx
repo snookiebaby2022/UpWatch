@@ -23,7 +23,13 @@ type Monitor = {
   interval_seconds: number;
   is_active: boolean;
   created_at: string;
+  last_status?: string | null;
+  last_checked_at?: string | null;
 };
+
+type Plan = "starter" | "pro" | "business";
+const PLAN_LIMITS: Record<Plan, number> = { starter: 5, pro: 50, business: Infinity };
+const PLAN_LABEL: Record<Plan, string> = { starter: "Starter", pro: "Pro", business: "Business" };
 
 function Dashboard() {
   const navigate = useNavigate();
@@ -60,6 +66,26 @@ function Dashboard() {
     },
   });
 
+  const subscriptionQuery = useQuery({
+    queryKey: ["subscription", userId],
+    enabled: !!userId,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("subscriptions")
+        .select("plan, status, current_period_end")
+        .eq("user_id", userId)
+        .maybeSingle();
+      return data;
+    },
+  });
+
+  const plan: Plan =
+    subscriptionQuery.data?.status === "active" && subscriptionQuery.data?.plan
+      ? ((subscriptionQuery.data.plan as Plan) ?? "starter")
+      : "starter";
+  const limit = PLAN_LIMITS[plan];
+  const used = monitorsQuery.data?.length ?? 0;
+
   async function handleSignOut() {
     await queryClient.cancelQueries();
     queryClient.clear();
@@ -74,12 +100,17 @@ function Dashboard() {
           <div className="size-3 rounded-full bg-brand animate-pulse" />
           <span className="text-white font-bold tracking-tight text-xl">UpWatch</span>
         </Link>
-        <button
-          onClick={handleSignOut}
-          className="bg-surface border border-brand-border px-4 py-2 rounded-full text-sm font-semibold text-white hover:bg-brand-border transition-colors"
-        >
-          Sign out
-        </button>
+        <div className="flex items-center gap-3">
+          <Link to="/status" className="text-sm text-zinc-400 hover:text-white transition-colors">
+            Status page
+          </Link>
+          <button
+            onClick={handleSignOut}
+            className="bg-surface border border-brand-border px-4 py-2 rounded-full text-sm font-semibold text-white hover:bg-brand-border transition-colors"
+          >
+            Sign out
+          </button>
+        </div>
       </nav>
 
       <main className="max-w-4xl mx-auto px-6 py-12 space-y-10">
@@ -95,10 +126,13 @@ function Dashboard() {
           isLoading={monitorsQuery.isLoading}
           error={monitorsQuery.error as Error | null}
           userId={userId}
+          plan={plan}
+          used={used}
+          limit={limit}
           onChange={() => queryClient.invalidateQueries({ queryKey: ["monitors", userId] })}
         />
 
-        <BillingPanel />
+        <BillingPanel plan={plan} />
       </main>
     </div>
   );
@@ -109,22 +143,34 @@ function MonitorsPanel({
   isLoading,
   error,
   userId,
+  plan,
+  used,
+  limit,
   onChange,
 }: {
   monitors: Monitor[];
   isLoading: boolean;
   error: Error | null;
   userId: string;
+  plan: Plan;
+  used: number;
+  limit: number;
   onChange: () => void;
 }) {
   const [name, setName] = useState("");
   const [url, setUrl] = useState("");
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
+  const atLimit = used >= limit;
+  const limitLabel = limit === Infinity ? "∞" : String(limit);
 
   async function addMonitor(e: React.FormEvent) {
     e.preventDefault();
     if (!userId) return;
+    if (atLimit) {
+      setMsg(`You've reached your ${PLAN_LABEL[plan]} plan limit (${limitLabel} monitors). Upgrade below.`);
+      return;
+    }
     setMsg(null);
     setBusy(true);
     const { error: insertError } = await supabase
@@ -151,12 +197,16 @@ function MonitorsPanel({
 
   return (
     <section className="bg-surface rounded-2xl border border-brand-border p-8">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <div>
           <h2 className="text-white font-semibold text-xl">Your monitors</h2>
           <p className="text-zinc-500 text-sm mt-1">
-            You're on the Starter plan. Add up to 5 monitors with 5-minute checks.
+            You're on the <span className="text-brand font-semibold">{PLAN_LABEL[plan]}</span> plan.
           </p>
+        </div>
+        <div className="text-xs font-mono text-zinc-500">
+          <span className={atLimit ? "text-red-400" : "text-brand"}>{used}</span>
+          <span className="text-zinc-600"> / {limitLabel}</span> monitors used
         </div>
       </div>
 
@@ -181,10 +231,10 @@ function MonitorsPanel({
         />
         <button
           type="submit"
-          disabled={busy}
-          className="bg-brand text-bg font-bold px-5 py-3 rounded-lg text-sm hover:opacity-90 disabled:opacity-60"
+          disabled={busy || atLimit}
+          className="bg-brand text-bg font-bold px-5 py-3 rounded-lg text-sm hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed"
         >
-          {busy ? "Adding…" : "Add monitor"}
+          {atLimit ? "Limit reached" : busy ? "Adding…" : "Add monitor"}
         </button>
       </form>
 
@@ -212,13 +262,7 @@ function MonitorsPanel({
                 <span className="text-xs font-mono text-zinc-500">
                   every {Math.round(m.interval_seconds / 60)}m
                 </span>
-                <span
-                  className={`text-xs font-mono ${
-                    m.is_active ? "text-brand" : "text-zinc-600"
-                  }`}
-                >
-                  {m.is_active ? "● active" : "○ paused"}
-                </span>
+                <StatusBadge status={m.last_status ?? "pending"} />
                 <button
                   onClick={() => removeMonitor(m.id)}
                   className="text-xs text-zinc-500 hover:text-red-400 transition-colors"
@@ -234,42 +278,55 @@ function MonitorsPanel({
   );
 }
 
-function BillingPanel() {
+function StatusBadge({ status }: { status: string }) {
+  const cls =
+    status === "up"
+      ? "text-brand"
+      : status === "down"
+        ? "text-red-400"
+        : "text-zinc-500";
+  const label = status === "up" ? "● up" : status === "down" ? "● down" : "○ pending";
+  return <span className={`text-xs font-mono ${cls}`}>{label}</span>;
+}
+
+function BillingPanel({ plan }: { plan: Plan }) {
   return (
     <section className="bg-surface rounded-2xl border border-brand-border p-8">
       <h2 className="text-white font-semibold text-xl mb-1">Billing</h2>
       <p className="text-zinc-500 text-sm mb-6">
-        You're currently on the <span className="text-brand font-semibold">Starter</span> plan
-        (free). Upgrade any time — no migration, no downtime.
+        You're currently on the <span className="text-brand font-semibold">{PLAN_LABEL[plan]}</span> plan.
+        {plan === "starter" ? " Upgrade any time — no migration, no downtime." : " Manage your subscription in Stripe."}
       </p>
-      <div className="grid md:grid-cols-2 gap-4">
-        <a
-          href={STRIPE_PRO_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="block rounded-xl border border-brand-border bg-bg/40 p-5 hover:border-brand transition-colors"
-        >
-          <div className="flex items-baseline justify-between mb-1">
-            <span className="text-white font-semibold">Pro</span>
-            <span className="text-brand font-mono">£10/mo</span>
-          </div>
-          <p className="text-xs text-zinc-500">50 monitors · 1-minute checks · Slack & Discord</p>
-        </a>
-        <a
-          href={STRIPE_BUSINESS_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="block rounded-xl border border-brand-border bg-bg/40 p-5 hover:border-brand transition-colors"
-        >
-          <div className="flex items-baseline justify-between mb-1">
-            <span className="text-white font-semibold">Business</span>
-            <span className="text-brand font-mono">£30/mo</span>
-          </div>
-          <p className="text-xs text-zinc-500">
-            Unlimited monitors · 30s checks · Multi-region
-          </p>
-        </a>
-      </div>
+      {plan !== "business" && (
+        <div className="grid md:grid-cols-2 gap-4">
+          {plan === "starter" && (
+            <a
+              href={STRIPE_PRO_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block rounded-xl border border-brand-border bg-bg/40 p-5 hover:border-brand transition-colors"
+            >
+              <div className="flex items-baseline justify-between mb-1">
+                <span className="text-white font-semibold">Pro</span>
+                <span className="text-brand font-mono">£10/mo</span>
+              </div>
+              <p className="text-xs text-zinc-500">50 monitors · 1-minute checks · Slack & Discord</p>
+            </a>
+          )}
+          <a
+            href={STRIPE_BUSINESS_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block rounded-xl border border-brand-border bg-bg/40 p-5 hover:border-brand transition-colors"
+          >
+            <div className="flex items-baseline justify-between mb-1">
+              <span className="text-white font-semibold">Business</span>
+              <span className="text-brand font-mono">£30/mo</span>
+            </div>
+            <p className="text-xs text-zinc-500">Unlimited monitors · 30s checks · Multi-region</p>
+          </a>
+        </div>
+      )}
     </section>
   );
 }

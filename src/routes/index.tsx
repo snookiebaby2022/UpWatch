@@ -471,9 +471,9 @@ function Footer() {
           <span className="text-white font-bold">UpWatch</span>
         </div>
         <div className="flex gap-8 text-sm">
-          <a href="#" className="hover:text-white">Privacy</a>
-          <a href="#" className="hover:text-white">Terms</a>
-          <a href="#" className="hover:text-white">API Docs</a>
+          <Link to="/privacy" className="hover:text-white">Privacy</Link>
+          <Link to="/terms" className="hover:text-white">Terms</Link>
+          <Link to="/status" className="hover:text-white">Status</Link>
         </div>
         <div className="text-xs text-zinc-600 font-mono">
           © 2024 UPWATCH.ONLINE // STATUS: NOMINAL
