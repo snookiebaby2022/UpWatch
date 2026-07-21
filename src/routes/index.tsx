@@ -1,6 +1,18 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link, useServerFn } from "@tanstack/react-router";
+import { useQuery, queryOptions } from "@tanstack/react-query";
+import { getKumaStatus, type KumaMonitor } from "@/lib/kuma.functions";
+
+const kumaQueryOptions = (fn: typeof getKumaStatus) =>
+  queryOptions({
+    queryKey: ["kuma-status"],
+    queryFn: () => fn(),
+    refetchInterval: 30_000,
+    staleTime: 15_000,
+  });
 
 export const Route = createFileRoute("/")({
+  loader: ({ context }) =>
+    context.queryClient.ensureQueryData(kumaQueryOptions(getKumaStatus)),
   component: Index,
 });
 
