@@ -1,5 +1,51 @@
 import { createFileRoute } from "@tanstack/react-router";
 
+async function sendAlert(opts: {
+  monitor: { id: string; url: string; user_id: string; name?: string };
+  transition: "down" | "up";
+  errorMessage: string | null;
+}) {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data: channels } = await supabaseAdmin
+    .from("notification_channels")
+    .select("type, target")
+    .eq("user_id", opts.monitor.user_id)
+    .eq("is_active", true);
+  if (!channels?.length) return;
+
+  const title =
+    opts.transition === "down"
+      ? `🔴 ${opts.monitor.name ?? opts.monitor.url} is DOWN`
+      : `🟢 ${opts.monitor.name ?? opts.monitor.url} is back UP`;
+  const detail = opts.errorMessage ? `\nReason: ${opts.errorMessage}` : "";
+  const text = `${title}\n${opts.monitor.url}${detail}`;
+
+  await Promise.allSettled(
+    channels.map(async (c) => {
+      try {
+        if (c.type === "slack" || c.type === "discord") {
+          await fetch(c.target, {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify(c.type === "discord" ? { content: text } : { text }),
+          });
+        } else if (c.type === "webhook") {
+          await fetch(c.target, {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ monitor: opts.monitor, transition: opts.transition, error: opts.errorMessage }),
+          });
+        }
+        // email channel: no managed email domain wired yet — logged as an alert row for now.
+      } catch (err) {
+        console.error("alert dispatch failed", c.type, err);
+      }
+    }),
+  );
+}
+
+
+
 export const Route = createFileRoute("/api/public/hooks/run-monitors")({
   server: {
     handlers: {
@@ -19,7 +65,7 @@ export const Route = createFileRoute("/api/public/hooks/run-monitors")({
         const nowIso = new Date().toISOString();
         const { data: monitors, error } = await supabaseAdmin
           .from("monitors")
-          .select("id, url, type, keyword, interval_seconds, last_status, last_checked_at, is_active")
+          .select("id, user_id, name, url, type, keyword, interval_seconds, last_status, last_checked_at, is_active")
           .eq("is_active", true);
 
         if (error) {
@@ -87,7 +133,25 @@ export const Route = createFileRoute("/api/public/hooks/run-monitors")({
               .update({ last_status: status, last_checked_at: nowIso })
               .eq("id", m.id);
 
-            return { id: m.id, status, previous: m.last_status };
+            const prev = m.last_status;
+            if (prev && prev !== "pending" && prev !== status) {
+              if (status === "down") {
+                await supabaseAdmin.from("incidents").insert({
+                  monitor_id: m.id,
+                  error_message: errorMessage,
+                });
+                await sendAlert({ monitor: m, transition: "down", errorMessage });
+              } else if (status === "up") {
+                await supabaseAdmin
+                  .from("incidents")
+                  .update({ resolved_at: nowIso })
+                  .eq("monitor_id", m.id)
+                  .is("resolved_at", null);
+                await sendAlert({ monitor: m, transition: "up", errorMessage: null });
+              }
+            }
+
+            return { id: m.id, status, previous: prev };
           }),
         );
 

@@ -52,6 +52,38 @@ export type Database = {
           },
         ]
       }
+      incidents: {
+        Row: {
+          error_message: string | null
+          id: string
+          monitor_id: string
+          resolved_at: string | null
+          started_at: string
+        }
+        Insert: {
+          error_message?: string | null
+          id?: string
+          monitor_id: string
+          resolved_at?: string | null
+          started_at?: string
+        }
+        Update: {
+          error_message?: string | null
+          id?: string
+          monitor_id?: string
+          resolved_at?: string | null
+          started_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "incidents_monitor_id_fkey"
+            columns: ["monitor_id"]
+            isOneToOne: false
+            referencedRelation: "monitors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       monitors: {
         Row: {
           created_at: string
@@ -93,6 +125,33 @@ export type Database = {
           type?: string
           updated_at?: string
           url?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      notification_channels: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          target: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          target: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          target?: string
+          type?: string
           user_id?: string
         }
         Relationships: []
