@@ -165,11 +165,23 @@ export const Route = createFileRoute("/api/public/hooks/run-monitors")({
           }),
         );
 
-        return Response.json({
-          ok: true,
-          checked: results.length,
-          at: nowIso,
-        });
+          const failed = results.filter((r) => r.status === "rejected").length;
+          if (failed > 0) {
+            console.warn(`[run-monitors] ${failed}/${results.length} checks rejected`);
+          }
+          return Response.json({
+            ok: true,
+            checked: results.length,
+            failed,
+            at: nowIso,
+          });
+        } catch (err) {
+          console.error("[run-monitors] handler crashed", err);
+          return new Response(
+            JSON.stringify({ error: err instanceof Error ? err.message : "internal error" }),
+            { status: 500, headers: { "content-type": "application/json" } },
+          );
+        }
       },
     },
   },
