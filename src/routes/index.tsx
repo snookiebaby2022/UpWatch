@@ -290,14 +290,23 @@ function Pricing() {
               ))}
             </ul>
             {tier.href ? (
-              <a
-                href={tier.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full py-3 rounded-lg bg-brand text-bg text-center font-bold hover:opacity-90 transition-opacity"
-              >
-                {tier.cta}
-              </a>
+              tier.href.startsWith("/") ? (
+                <Link
+                  to={tier.href}
+                  className="w-full py-3 rounded-lg bg-brand text-bg text-center font-bold hover:opacity-90 transition-opacity"
+                >
+                  {tier.cta}
+                </Link>
+              ) : (
+                <a
+                  href={tier.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full py-3 rounded-lg bg-brand text-bg text-center font-bold hover:opacity-90 transition-opacity"
+                >
+                  {tier.cta}
+                </a>
+              )
             ) : (
               <button
                 type="button"
