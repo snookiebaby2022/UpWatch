@@ -27,9 +27,12 @@ function ResetPassword() {
       if (event === "PASSWORD_RECOVERY") setReady(true);
     });
     // Fallback: if there's already a session (link clicked, hash parsed), allow update.
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) setReady(true);
-    });
+    supabase.auth
+      .getSession()
+      .then(({ data }) => {
+        if (data.session) setReady(true);
+      })
+      .catch((err) => console.error("reset-password getSession failed", err));
     return () => sub.subscription.unsubscribe();
   }, []);
 
@@ -42,14 +45,20 @@ function ResetPassword() {
       return;
     }
     setLoading(true);
-    const { error: err } = await supabase.auth.updateUser({ password });
-    setLoading(false);
-    if (err) {
-      setError(err.message);
-      return;
+    try {
+      const { error: err } = await supabase.auth.updateUser({ password });
+      if (err) {
+        setError(err.message);
+        return;
+      }
+      setInfo("Password updated. Redirecting…");
+      setTimeout(() => navigate({ to: "/dashboard", replace: true }), 1200);
+    } catch (err) {
+      console.error("password update failed", err);
+      setError(err instanceof Error ? err.message : "Failed to update password.");
+    } finally {
+      setLoading(false);
     }
-    setInfo("Password updated. Redirecting…");
-    setTimeout(() => navigate({ to: "/dashboard", replace: true }), 1200);
   }
 
   return (

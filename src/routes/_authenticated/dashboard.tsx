@@ -41,16 +41,23 @@ function Dashboard() {
 
   useEffect(() => {
     (async () => {
-      const { data } = await supabase.auth.getUser();
-      if (!data.user) return;
-      setEmail(data.user.email ?? "");
-      setUserId(data.user.id);
-      const [{ data: profile }, { data: adminFlag }] = await Promise.all([
-        supabase.from("profiles").select("display_name").eq("id", data.user.id).maybeSingle(),
-        supabase.rpc("has_role", { _user_id: data.user.id, _role: "admin" }),
-      ]);
-      setDisplayName(profile?.display_name ?? "");
-      setIsAdmin(!!adminFlag);
+      try {
+        const { data, error: userErr } = await supabase.auth.getUser();
+        if (userErr) throw userErr;
+        if (!data.user) return;
+        setEmail(data.user.email ?? "");
+        setUserId(data.user.id);
+        const [profileRes, adminRes] = await Promise.all([
+          supabase.from("profiles").select("display_name").eq("id", data.user.id).maybeSingle(),
+          supabase.rpc("has_role", { _user_id: data.user.id, _role: "admin" }),
+        ]);
+        if (profileRes.error) console.error("profile load failed", profileRes.error);
+        if (adminRes.error) console.error("role check failed", adminRes.error);
+        setDisplayName(profileRes.data?.display_name ?? "");
+        setIsAdmin(!!adminRes.data);
+      } catch (err) {
+        console.error("dashboard init failed", err);
+      }
     })();
   }, []);
 
@@ -104,10 +111,15 @@ function Dashboard() {
   const used = monitorsQuery.data?.length ?? 0;
 
   async function handleSignOut() {
-    await queryClient.cancelQueries();
-    queryClient.clear();
-    await supabase.auth.signOut();
-    navigate({ to: "/auth", replace: true });
+    try {
+      await queryClient.cancelQueries();
+      queryClient.clear();
+      await supabase.auth.signOut();
+    } catch (err) {
+      console.error("sign out failed", err);
+    } finally {
+      navigate({ to: "/auth", replace: true });
+    }
   }
 
   return (
@@ -198,28 +210,50 @@ function MonitorsPanel({
       setMsg(`You've reached your ${PLAN_LABEL[plan]} plan limit (${limitLabel} monitors). Upgrade below.`);
       return;
     }
-    setMsg(null);
-    setBusy(true);
-    const { error: insertError } = await supabase
-      .from("monitors")
-      .insert({ user_id: userId, name: name.trim(), url: url.trim() });
-    setBusy(false);
-    if (insertError) {
-      setMsg(insertError.message);
+    const trimmedName = name.trim();
+    const trimmedUrl = url.trim();
+    if (!trimmedName || !trimmedUrl) {
+      setMsg("Name and URL are required.");
       return;
     }
-    setName("");
-    setUrl("");
-    onChange();
+    try {
+      // Basic URL validation before the DB call.
+      new URL(trimmedUrl);
+    } catch {
+      setMsg("Please enter a valid URL (including https://).");
+      return;
+    }
+    setMsg(null);
+    setBusy(true);
+    try {
+      const { error: insertError } = await supabase
+        .from("monitors")
+        .insert({ user_id: userId, name: trimmedName, url: trimmedUrl });
+      if (insertError) {
+        setMsg(insertError.message);
+        return;
+      }
+      setName("");
+      setUrl("");
+      onChange();
+    } catch (err) {
+      setMsg(err instanceof Error ? err.message : "Failed to add monitor.");
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function removeMonitor(id: string) {
-    const { error: delError } = await supabase.from("monitors").delete().eq("id", id);
-    if (delError) {
-      setMsg(delError.message);
-      return;
+    try {
+      const { error: delError } = await supabase.from("monitors").delete().eq("id", id);
+      if (delError) {
+        setMsg(delError.message);
+        return;
+      }
+      onChange();
+    } catch (err) {
+      setMsg(err instanceof Error ? err.message : "Failed to delete monitor.");
     }
-    onChange();
   }
 
   return (
