@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useServerFn } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, queryOptions } from "@tanstack/react-query";
 import { getKumaStatus, type KumaMonitor } from "@/lib/kuma.functions";
 
