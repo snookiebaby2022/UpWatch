@@ -23,7 +23,13 @@ type Monitor = {
   interval_seconds: number;
   is_active: boolean;
   created_at: string;
+  last_status?: string | null;
+  last_checked_at?: string | null;
 };
+
+type Plan = "starter" | "pro" | "business";
+const PLAN_LIMITS: Record<Plan, number> = { starter: 5, pro: 50, business: Infinity };
+const PLAN_LABEL: Record<Plan, string> = { starter: "Starter", pro: "Pro", business: "Business" };
 
 function Dashboard() {
   const navigate = useNavigate();
