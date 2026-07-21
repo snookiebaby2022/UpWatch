@@ -435,6 +435,8 @@ function AdminPage() {
               </tbody>
             </table>
           </div>
+            );
+          })()
         )}
       </main>
     </div>
