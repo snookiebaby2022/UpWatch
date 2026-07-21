@@ -85,40 +85,6 @@ function Hero() {
   );
 }
 
-type MonitorBar = { h: string; color: "brand" | "yellow" };
-type Monitor = {
-  name: string;
-  url: string;
-  uptime: string;
-  bars: MonitorBar[];
-  dimmed?: boolean;
-};
-
-const MONITORS: Monitor[] = [
-  {
-    name: "Main API Gateway",
-    url: "api.upwatch.online",
-    uptime: "99.98%",
-    bars: [
-      { h: "h-6", color: "brand" },
-      { h: "h-6", color: "brand" },
-      { h: "h-6", color: "brand" },
-      { h: "h-8", color: "brand" },
-      { h: "h-6", color: "brand" },
-      { h: "h-4", color: "yellow" },
-      { h: "h-6", color: "brand" },
-      { h: "h-6", color: "brand" },
-    ],
-  },
-  {
-    name: "Global CDN",
-    url: "cdn.upwatch.online",
-    uptime: "100%",
-    dimmed: true,
-    bars: Array.from({ length: 8 }, () => ({ h: "h-6", color: "brand" as const })),
-  },
-];
-
 function LiveDemo() {
   const { data } = useQuery(kumaQueryOptions(getKumaStatus));
   const monitors = data?.monitors ?? [];
