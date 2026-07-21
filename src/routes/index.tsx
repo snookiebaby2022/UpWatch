@@ -507,11 +507,13 @@ function LeadCapture() {
     }
     setStatus("loading");
     const { error } = await supabase.from("waitlist").insert({ email: trimmed });
-    if (error) {
+    // Return a generic success message regardless of duplicate-key errors —
+    // returning "already on the list" would expose which emails are enrolled
+    // (email enumeration). Log the real error server-side only.
+    if (error && error.code !== "23505") {
+      console.error("waitlist insert failed", error);
       setStatus("error");
-      setMessage(
-        error.code === "23505" ? "You're already on the list." : "Something went wrong. Try again.",
-      );
+      setMessage("Something went wrong. Try again.");
       return;
     }
     setStatus("success");

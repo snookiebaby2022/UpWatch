@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { isPublicHttpUrl } from "@/lib/url-safety";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
@@ -216,11 +217,9 @@ function MonitorsPanel({
       setMsg("Name and URL are required.");
       return;
     }
-    try {
-      // Basic URL validation before the DB call.
-      new URL(trimmedUrl);
-    } catch {
-      setMsg("Please enter a valid URL (including https://).");
+    const safety = isPublicHttpUrl(trimmedUrl);
+    if (!safety.ok) {
+      setMsg(safety.reason);
       return;
     }
     setMsg(null);
