@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      monitors: {
+        Row: {
+          created_at: string
+          id: string
+          interval_seconds: number
+          is_active: boolean
+          name: string
+          updated_at: string
+          url: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          interval_seconds?: number
+          is_active?: boolean
+          name: string
+          updated_at?: string
+          url: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          interval_seconds?: number
+          is_active?: boolean
+          name?: string
+          updated_at?: string
+          url?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null

@@ -37,7 +37,7 @@ function Index() {
 }
 
 function Nav() {
-  const [signedIn, setSignedIn] = useState(false);
+  const [signedIn, setSignedIn] = useState<boolean | null>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSignedIn(!!data.session));
@@ -58,8 +58,10 @@ function Nav() {
         <Link to="/status" className="hover:text-brand transition-colors">Status</Link>
         <a href="#pricing" className="hover:text-brand transition-colors">Pricing</a>
       </div>
-      <div className="flex items-center gap-3">
-        {signedIn ? (
+      <div className="flex items-center gap-3 min-h-[40px]">
+        {signedIn === null ? (
+          <div className="h-9 w-24 rounded-full bg-surface animate-pulse" />
+        ) : signedIn ? (
           <Link
             to="/dashboard"
             className="bg-white text-black px-4 py-2 rounded-full text-sm font-semibold hover:bg-zinc-200 transition-colors"
@@ -118,17 +120,28 @@ function Hero() {
 }
 
 function LiveDemo() {
-  const { data } = useQuery(kumaQueryOptions(getKumaStatus));
+  const { data, isLoading, isError } = useQuery(kumaQueryOptions(getKumaStatus));
   const monitors = data?.monitors ?? [];
   const ok = data?.ok ?? false;
+  const failed = isError || (data && !data.ok);
 
   return (
     <section id="demo" className="max-w-5xl mx-auto px-6 mb-32">
       <div className="bg-surface rounded-2xl border border-brand-border p-6 shadow-2xl">
         <div className="flex items-center justify-between mb-8">
           <h3 className="text-white font-semibold flex items-center gap-2">
-            <span className={`text-xs ${ok ? "text-brand" : "text-yellow-500"}`}>●</span>
-            {ok ? "Operational Services" : "Fetching live status…"}
+            <span
+              className={`text-xs ${
+                ok ? "text-brand" : failed ? "text-red-500" : "text-yellow-500"
+              }`}
+            >
+              ●
+            </span>
+            {ok
+              ? "Operational Services"
+              : failed
+                ? "Live status temporarily unavailable"
+                : "Fetching live status…"}
           </h3>
           <Link
             to="/status"
@@ -138,9 +151,19 @@ function LiveDemo() {
           </Link>
         </div>
         <div className="space-y-6">
-          {monitors.length === 0 && (
+          {isLoading && (
             <div className="text-sm text-zinc-500 py-8 text-center font-mono">
               Waiting for heartbeats from Uptime Kuma…
+            </div>
+          )}
+          {failed && (
+            <div className="text-sm text-zinc-500 py-8 text-center font-mono border border-dashed border-brand-border rounded-xl">
+              Couldn't reach the status API. Retrying automatically…
+            </div>
+          )}
+          {!isLoading && !failed && monitors.length === 0 && (
+            <div className="text-sm text-zinc-500 py-8 text-center font-mono">
+              No monitors reporting right now.
             </div>
           )}
           {monitors.map((m) => (

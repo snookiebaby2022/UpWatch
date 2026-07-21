@@ -1,23 +1,43 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
+  head: () => ({
+    meta: [
+      { title: "Dashboard — UpWatch" },
+      { name: "description", content: "Manage your uptime monitors and billing." },
+    ],
+  }),
   component: Dashboard,
 });
+
+const STRIPE_PRO_URL = "https://buy.stripe.com/14A5kDeEQb1o61s1a2ebu00";
+const STRIPE_BUSINESS_URL = "https://buy.stripe.com/5kQ00j7coedA3Tk5qiebu01";
+
+type Monitor = {
+  id: string;
+  name: string;
+  url: string;
+  interval_seconds: number;
+  is_active: boolean;
+  created_at: string;
+};
 
 function Dashboard() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [email, setEmail] = useState<string>("");
   const [displayName, setDisplayName] = useState<string>("");
+  const [userId, setUserId] = useState<string>("");
 
   useEffect(() => {
     (async () => {
       const { data } = await supabase.auth.getUser();
       if (!data.user) return;
       setEmail(data.user.email ?? "");
+      setUserId(data.user.id);
       const { data: profile } = await supabase
         .from("profiles")
         .select("display_name")
@@ -26,6 +46,19 @@ function Dashboard() {
       setDisplayName(profile?.display_name ?? "");
     })();
   }, []);
+
+  const monitorsQuery = useQuery({
+    queryKey: ["monitors", userId],
+    enabled: !!userId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("monitors")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as Monitor[];
+    },
+  });
 
   async function handleSignOut() {
     await queryClient.cancelQueries();
@@ -49,22 +82,194 @@ function Dashboard() {
         </button>
       </nav>
 
-      <main className="max-w-4xl mx-auto px-6 py-16">
-        <h1 className="text-4xl md:text-5xl font-extrabold text-white tracking-tight mb-3">
-          Welcome{displayName ? `, ${displayName}` : ""}.
-        </h1>
-        <p className="text-zinc-400 mb-12">Signed in as {email}</p>
-
-        <div className="bg-surface rounded-2xl border border-brand-border p-8">
-          <h2 className="text-white font-semibold text-xl mb-3">Your monitors</h2>
-          <p className="text-zinc-500 text-sm mb-6">
-            You're on the Starter plan. Add up to 5 monitors with 5-minute checks.
-          </p>
-          <div className="text-sm text-zinc-500 py-12 text-center font-mono border border-dashed border-brand-border rounded-xl">
-            No monitors yet — add one to get started.
-          </div>
+      <main className="max-w-4xl mx-auto px-6 py-12 space-y-10">
+        <div>
+          <h1 className="text-4xl md:text-5xl font-extrabold text-white tracking-tight mb-3">
+            Welcome{displayName ? `, ${displayName}` : ""}.
+          </h1>
+          <p className="text-zinc-400">Signed in as {email}</p>
         </div>
+
+        <MonitorsPanel
+          monitors={monitorsQuery.data ?? []}
+          isLoading={monitorsQuery.isLoading}
+          error={monitorsQuery.error as Error | null}
+          userId={userId}
+          onChange={() => queryClient.invalidateQueries({ queryKey: ["monitors", userId] })}
+        />
+
+        <BillingPanel />
       </main>
     </div>
+  );
+}
+
+function MonitorsPanel({
+  monitors,
+  isLoading,
+  error,
+  userId,
+  onChange,
+}: {
+  monitors: Monitor[];
+  isLoading: boolean;
+  error: Error | null;
+  userId: string;
+  onChange: () => void;
+}) {
+  const [name, setName] = useState("");
+  const [url, setUrl] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
+
+  async function addMonitor(e: React.FormEvent) {
+    e.preventDefault();
+    if (!userId) return;
+    setMsg(null);
+    setBusy(true);
+    const { error: insertError } = await supabase
+      .from("monitors")
+      .insert({ user_id: userId, name: name.trim(), url: url.trim() });
+    setBusy(false);
+    if (insertError) {
+      setMsg(insertError.message);
+      return;
+    }
+    setName("");
+    setUrl("");
+    onChange();
+  }
+
+  async function removeMonitor(id: string) {
+    const { error: delError } = await supabase.from("monitors").delete().eq("id", id);
+    if (delError) {
+      setMsg(delError.message);
+      return;
+    }
+    onChange();
+  }
+
+  return (
+    <section className="bg-surface rounded-2xl border border-brand-border p-8">
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h2 className="text-white font-semibold text-xl">Your monitors</h2>
+          <p className="text-zinc-500 text-sm mt-1">
+            You're on the Starter plan. Add up to 5 monitors with 5-minute checks.
+          </p>
+        </div>
+      </div>
+
+      <form
+        onSubmit={addMonitor}
+        className="grid grid-cols-1 md:grid-cols-[1fr_2fr_auto] gap-3 mb-6"
+      >
+        <input
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          required
+          placeholder="Name (e.g. Marketing site)"
+          className="bg-bg border border-brand-border rounded-lg px-4 py-3 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-brand"
+        />
+        <input
+          value={url}
+          onChange={(e) => setUrl(e.target.value)}
+          type="url"
+          required
+          placeholder="https://example.com"
+          className="bg-bg border border-brand-border rounded-lg px-4 py-3 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-brand"
+        />
+        <button
+          type="submit"
+          disabled={busy}
+          className="bg-brand text-bg font-bold px-5 py-3 rounded-lg text-sm hover:opacity-90 disabled:opacity-60"
+        >
+          {busy ? "Adding…" : "Add monitor"}
+        </button>
+      </form>
+
+      {msg && <p className="text-sm text-red-400 mb-4">{msg}</p>}
+
+      {isLoading ? (
+        <div className="text-sm text-zinc-500 py-10 text-center font-mono">Loading monitors…</div>
+      ) : error ? (
+        <div className="text-sm text-red-400 py-10 text-center font-mono">
+          Failed to load monitors.
+        </div>
+      ) : monitors.length === 0 ? (
+        <div className="text-sm text-zinc-500 py-10 text-center font-mono border border-dashed border-brand-border rounded-xl">
+          No monitors yet — add one above to get started.
+        </div>
+      ) : (
+        <ul className="divide-y divide-brand-border/50 border border-brand-border rounded-xl overflow-hidden">
+          {monitors.map((m) => (
+            <li key={m.id} className="flex items-center justify-between px-5 py-4 bg-bg/40">
+              <div className="min-w-0">
+                <div className="text-white font-medium truncate">{m.name}</div>
+                <div className="text-xs text-zinc-500 font-mono truncate">{m.url}</div>
+              </div>
+              <div className="flex items-center gap-4">
+                <span className="text-xs font-mono text-zinc-500">
+                  every {Math.round(m.interval_seconds / 60)}m
+                </span>
+                <span
+                  className={`text-xs font-mono ${
+                    m.is_active ? "text-brand" : "text-zinc-600"
+                  }`}
+                >
+                  {m.is_active ? "● active" : "○ paused"}
+                </span>
+                <button
+                  onClick={() => removeMonitor(m.id)}
+                  className="text-xs text-zinc-500 hover:text-red-400 transition-colors"
+                >
+                  Delete
+                </button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
+function BillingPanel() {
+  return (
+    <section className="bg-surface rounded-2xl border border-brand-border p-8">
+      <h2 className="text-white font-semibold text-xl mb-1">Billing</h2>
+      <p className="text-zinc-500 text-sm mb-6">
+        You're currently on the <span className="text-brand font-semibold">Starter</span> plan
+        (free). Upgrade any time — no migration, no downtime.
+      </p>
+      <div className="grid md:grid-cols-2 gap-4">
+        <a
+          href={STRIPE_PRO_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block rounded-xl border border-brand-border bg-bg/40 p-5 hover:border-brand transition-colors"
+        >
+          <div className="flex items-baseline justify-between mb-1">
+            <span className="text-white font-semibold">Pro</span>
+            <span className="text-brand font-mono">£10/mo</span>
+          </div>
+          <p className="text-xs text-zinc-500">50 monitors · 1-minute checks · Slack & Discord</p>
+        </a>
+        <a
+          href={STRIPE_BUSINESS_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block rounded-xl border border-brand-border bg-bg/40 p-5 hover:border-brand transition-colors"
+        >
+          <div className="flex items-baseline justify-between mb-1">
+            <span className="text-white font-semibold">Business</span>
+            <span className="text-brand font-mono">£30/mo</span>
+          </div>
+          <p className="text-xs text-zinc-500">
+            Unlimited monitors · 30s checks · Multi-region
+          </p>
+        </a>
+      </div>
+    </section>
   );
 }
