@@ -93,19 +93,19 @@ function Hero() {
       <h1 className="text-5xl md:text-7xl font-extrabold text-white tracking-tight mb-6">
         Sleep better while
         <br />
-        <span className="text-brand">we watch your pings.</span>
+        <span className="text-brand">we watch your website.</span>
       </h1>
       <p className="max-w-2xl mx-auto text-lg text-zinc-400 mb-10">
         Professional uptime monitoring for modern stacks. Instant alerts via Slack, Email, or SMS
         the second your site hiccups. Already watching 1.2M endpoints.
       </p>
       <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-        <a
-          href={STRIPE_PRO_URL}
+        <Link
+          to="/auth"
           className="w-full sm:w-auto bg-brand text-bg px-8 py-4 rounded-xl font-bold text-lg hover:scale-105 transition-transform"
         >
-          Get Started — £10/mo
-        </a>
+          Get Started — Free
+        </Link>
         <a
           href="#demo"
           className="w-full sm:w-auto bg-surface border border-brand-border px-8 py-4 rounded-xl font-bold text-lg text-white hover:bg-brand-border transition-colors"
