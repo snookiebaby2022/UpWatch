@@ -216,8 +216,11 @@ export const Route = createFileRoute("/api/public/hooks/run-monitors")({
             }
 
             return { id: m.id, status, previous: prev };
-          }),
-        );
+            }),
+          );
+          results.push(...batchResults);
+        }
+
 
           const failed = results.filter((r) => r.status === "rejected").length;
           if (failed > 0) {
