@@ -262,13 +262,14 @@ function MonitorsPanel({
                 <span className="text-xs font-mono text-zinc-500">
                   every {Math.round(m.interval_seconds / 60)}m
                 </span>
-                <span
-                  className={`text-xs font-mono ${
-                    m.is_active ? "text-brand" : "text-zinc-600"
-                  }`}
+                <StatusBadge status={m.last_status ?? "pending"} />
+                <button
+                  onClick={() => removeMonitor(m.id)}
+                  className="text-xs text-zinc-500 hover:text-red-400 transition-colors"
                 >
-                  {m.is_active ? "● active" : "○ paused"}
-                </span>
+                  Delete
+                </button>
+              </div>
                 <button
                   onClick={() => removeMonitor(m.id)}
                   className="text-xs text-zinc-500 hover:text-red-400 transition-colors"
