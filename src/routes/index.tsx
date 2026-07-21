@@ -1,6 +1,18 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQuery, queryOptions } from "@tanstack/react-query";
+import { getKumaStatus, type KumaMonitor } from "@/lib/kuma.functions";
+
+const kumaQueryOptions = (fn: typeof getKumaStatus) =>
+  queryOptions({
+    queryKey: ["kuma-status"],
+    queryFn: () => fn(),
+    refetchInterval: 30_000,
+    staleTime: 15_000,
+  });
 
 export const Route = createFileRoute("/")({
+  loader: ({ context }) =>
+    context.queryClient.ensureQueryData(kumaQueryOptions(getKumaStatus)),
   component: Index,
 });
 
@@ -24,13 +36,13 @@ function Index() {
 function Nav() {
   return (
     <nav className="flex items-center justify-between px-6 py-6 max-w-7xl mx-auto">
-      <a href="#" className="flex items-center gap-2">
+      <Link to="/" className="flex items-center gap-2">
         <div className="size-3 rounded-full bg-brand animate-pulse" />
         <span className="text-white font-bold tracking-tight text-xl">UpWatch</span>
-      </a>
+      </Link>
       <div className="hidden md:flex gap-8 text-sm font-medium">
         <a href="#demo" className="hover:text-brand transition-colors">Product</a>
-        <a href="#demo" className="hover:text-brand transition-colors">Status</a>
+        <Link to="/status" className="hover:text-brand transition-colors">Status</Link>
         <a href="#pricing" className="hover:text-brand transition-colors">Pricing</a>
       </div>
       <a
@@ -73,82 +85,74 @@ function Hero() {
   );
 }
 
-type MonitorBar = { h: string; color: "brand" | "yellow" };
-type Monitor = {
-  name: string;
-  url: string;
-  uptime: string;
-  bars: MonitorBar[];
-  dimmed?: boolean;
-};
-
-const MONITORS: Monitor[] = [
-  {
-    name: "Main API Gateway",
-    url: "api.upwatch.online",
-    uptime: "99.98%",
-    bars: [
-      { h: "h-6", color: "brand" },
-      { h: "h-6", color: "brand" },
-      { h: "h-6", color: "brand" },
-      { h: "h-8", color: "brand" },
-      { h: "h-6", color: "brand" },
-      { h: "h-4", color: "yellow" },
-      { h: "h-6", color: "brand" },
-      { h: "h-6", color: "brand" },
-    ],
-  },
-  {
-    name: "Global CDN",
-    url: "cdn.upwatch.online",
-    uptime: "100%",
-    dimmed: true,
-    bars: Array.from({ length: 8 }, () => ({ h: "h-6", color: "brand" as const })),
-  },
-];
-
 function LiveDemo() {
+  const { data } = useQuery(kumaQueryOptions(getKumaStatus));
+  const monitors = data?.monitors ?? [];
+  const ok = data?.ok ?? false;
+
   return (
     <section id="demo" className="max-w-5xl mx-auto px-6 mb-32">
       <div className="bg-surface rounded-2xl border border-brand-border p-6 shadow-2xl">
         <div className="flex items-center justify-between mb-8">
           <h3 className="text-white font-semibold flex items-center gap-2">
-            <span className="text-brand text-xs">●</span> Operational Services
+            <span className={`text-xs ${ok ? "text-brand" : "text-yellow-500"}`}>●</span>
+            {ok ? "Operational Services" : "Fetching live status…"}
           </h3>
-          <span className="text-xs font-mono text-zinc-500 uppercase tracking-widest">
-            Last checked: Just now
-          </span>
+          <Link
+            to="/status"
+            className="text-xs font-mono text-zinc-500 uppercase tracking-widest hover:text-brand transition-colors"
+          >
+            Live from status.upwatch.online →
+          </Link>
         </div>
         <div className="space-y-6">
-          {MONITORS.map((m) => (
-            <div
-              key={m.name}
-              className={`flex flex-col md:flex-row md:items-center gap-4 ${m.dimmed ? "opacity-75" : ""}`}
-            >
-              <div className="w-48">
-                <div className="text-white font-medium">{m.name}</div>
-                <div className="text-xs text-zinc-500 font-mono">{m.url}</div>
-              </div>
-              <div className="flex-1 flex gap-1 h-8 items-end">
-                {m.bars.map((b, i) => (
-                  <div
-                    key={i}
-                    className={`flex-1 rounded-sm border-b-2 ${b.h} ${
-                      b.color === "yellow"
-                        ? "bg-yellow-500/20 border-yellow-500"
-                        : "bg-brand/20 border-brand"
-                    }`}
-                  />
-                ))}
-              </div>
-              <div className="text-right">
-                <div className="text-brand font-mono text-sm">{m.uptime}</div>
-              </div>
+          {monitors.length === 0 && (
+            <div className="text-sm text-zinc-500 py-8 text-center font-mono">
+              Waiting for heartbeats from Uptime Kuma…
             </div>
+          )}
+          {monitors.map((m) => (
+            <MonitorRow key={m.id} monitor={m} />
           ))}
         </div>
       </div>
     </section>
+  );
+}
+
+function MonitorRow({ monitor }: { monitor: KumaMonitor }) {
+  const beats = monitor.heartbeats.length
+    ? monitor.heartbeats
+    : Array.from({ length: 20 }, () => ({ status: 0, time: "", msg: "", ping: null }));
+  const uptime =
+    monitor.uptime != null ? `${(monitor.uptime * 100).toFixed(2)}%` : "—";
+
+  return (
+    <div className="flex flex-col md:flex-row md:items-center gap-4">
+      <div className="w-48">
+        <div className="text-white font-medium truncate">{monitor.name}</div>
+        <div className="text-xs text-zinc-500 font-mono truncate">
+          {monitor.latestPing != null ? `${monitor.latestPing}ms` : "no data"}
+        </div>
+      </div>
+      <div className="flex-1 flex gap-1 h-8 items-end">
+        {beats.map((b, i) => {
+          const color =
+            b.status === 1
+              ? "bg-brand/20 border-brand"
+              : b.status === 2
+                ? "bg-yellow-500/20 border-yellow-500"
+                : b.status === 0
+                  ? "bg-zinc-800 border-zinc-700"
+                  : "bg-red-500/20 border-red-500";
+          const h = b.status === 1 ? "h-6" : b.status === 2 ? "h-4" : b.status === 0 ? "h-3" : "h-5";
+          return <div key={i} className={`flex-1 rounded-sm border-b-2 ${h} ${color}`} />;
+        })}
+      </div>
+      <div className="text-right w-20">
+        <div className="text-brand font-mono text-sm">{uptime}</div>
+      </div>
+    </div>
   );
 }
 
