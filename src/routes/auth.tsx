@@ -140,33 +140,38 @@ function AuthPage() {
       <main className="flex-1 flex items-center justify-center px-6 py-12">
         <div className="w-full max-w-md bg-surface rounded-2xl border border-brand-border p-8 shadow-2xl">
           <h1 className="text-2xl font-bold text-white mb-1">
-            {mode === "signin" ? "Welcome back" : "Create your account"}
+            {mode === "signin" ? "Welcome back" : mode === "signup" ? "Create your account" : "Reset your password"}
           </h1>
           <p className="text-sm text-zinc-500 mb-6">
             {mode === "signin"
               ? "Sign in to manage your monitors."
-              : "Free forever plan — 5 monitors included."}
+              : mode === "signup"
+                ? "Free forever plan — 5 monitors included."
+                : "Enter your email and we'll send you a reset link."}
           </p>
 
-          <button
-            onClick={handleGoogle}
-            disabled={loading}
-            className="w-full flex items-center justify-center gap-3 bg-white text-black px-4 py-3 rounded-xl font-semibold hover:bg-zinc-200 transition-colors disabled:opacity-60"
-          >
-            <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden>
-              <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.7-6.1 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.3-.4-3.5z"/>
-              <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/>
-              <path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2c-2 1.5-4.5 2.4-7.2 2.4-5.2 0-9.6-3.3-11.2-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/>
-              <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.1-4.1 5.6l6.2 5.2C41.4 35.6 44 30.2 44 24c0-1.3-.1-2.3-.4-3.5z"/>
-            </svg>
-            Continue with Google
-          </button>
-
-          <div className="flex items-center gap-3 my-6">
-            <div className="flex-1 h-px bg-brand-border" />
-            <span className="text-xs font-mono text-zinc-600 uppercase tracking-wider">or</span>
-            <div className="flex-1 h-px bg-brand-border" />
-          </div>
+          {mode !== "forgot" && (
+            <>
+              <button
+                onClick={handleGoogle}
+                disabled={loading}
+                className="w-full flex items-center justify-center gap-3 bg-white text-black px-4 py-3 rounded-xl font-semibold hover:bg-zinc-200 transition-colors disabled:opacity-60"
+              >
+                <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden>
+                  <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.7-6.1 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.3-.4-3.5z"/>
+                  <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/>
+                  <path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2c-2 1.5-4.5 2.4-7.2 2.4-5.2 0-9.6-3.3-11.2-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/>
+                  <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.1-4.1 5.6l6.2 5.2C41.4 35.6 44 30.2 44 24c0-1.3-.1-2.3-.4-3.5z"/>
+                </svg>
+                Continue with Google
+              </button>
+              <div className="flex items-center gap-3 my-6">
+                <div className="flex-1 h-px bg-brand-border" />
+                <span className="text-xs font-mono text-zinc-600 uppercase tracking-wider">or</span>
+                <div className="flex-1 h-px bg-brand-border" />
+              </div>
+            </>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {mode === "signup" && (
@@ -198,21 +203,34 @@ function AuthPage() {
                 placeholder="you@example.com"
               />
             </div>
-            <div>
-              <label className="text-xs font-mono uppercase tracking-wider text-zinc-500 block mb-1.5">
-                Password
-              </label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={8}
-                maxLength={72}
-                className="w-full bg-bg border border-brand-border rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-brand transition-colors"
-                placeholder="••••••••"
-              />
-            </div>
+            {mode !== "forgot" && (
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-xs font-mono uppercase tracking-wider text-zinc-500">
+                    Password
+                  </label>
+                  {mode === "signin" && (
+                    <button
+                      type="button"
+                      onClick={() => { setMode("forgot"); setError(null); setInfo(null); }}
+                      className="text-xs text-brand hover:underline"
+                    >
+                      Forgot password?
+                    </button>
+                  )}
+                </div>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  minLength={8}
+                  maxLength={72}
+                  className="w-full bg-bg border border-brand-border rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-brand transition-colors"
+                  placeholder="••••••••"
+                />
+              </div>
+            )}
 
             {error && (
               <div className="text-sm text-red-400 bg-red-950/40 border border-red-900/50 rounded-lg px-3 py-2">
@@ -230,23 +248,46 @@ function AuthPage() {
               disabled={loading}
               className="w-full bg-brand text-bg px-4 py-3 rounded-xl font-bold hover:scale-[1.01] transition-transform disabled:opacity-60"
             >
-              {loading ? "…" : mode === "signin" ? "Sign in" : "Create account"}
+              {loading ? "…" : mode === "signin" ? "Sign in" : mode === "signup" ? "Create account" : "Send reset link"}
             </button>
           </form>
 
-          <p className="text-sm text-zinc-500 text-center mt-6">
-            {mode === "signin" ? "New to UpWatch? " : "Already have an account? "}
+          {mode === "signup" && lastSignupEmail && (
             <button
               type="button"
-              onClick={() => {
-                setMode(mode === "signin" ? "signup" : "signin");
-                setError(null);
-                setInfo(null);
-              }}
-              className="text-brand hover:underline font-semibold"
+              onClick={handleResendVerification}
+              disabled={loading}
+              className="w-full text-xs text-zinc-400 hover:text-brand mt-4"
             >
-              {mode === "signin" ? "Create an account" : "Sign in"}
+              Didn't get the email? Resend verification
             </button>
+          )}
+
+          <p className="text-sm text-zinc-500 text-center mt-6">
+            {mode === "forgot" ? (
+              <button
+                type="button"
+                onClick={() => { setMode("signin"); setError(null); setInfo(null); }}
+                className="text-brand hover:underline font-semibold"
+              >
+                Back to sign in
+              </button>
+            ) : (
+              <>
+                {mode === "signin" ? "New to UpWatch? " : "Already have an account? "}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMode(mode === "signin" ? "signup" : "signin");
+                    setError(null);
+                    setInfo(null);
+                  }}
+                  className="text-brand hover:underline font-semibold"
+                >
+                  {mode === "signin" ? "Create an account" : "Sign in"}
+                </button>
+              </>
+            )}
           </p>
         </div>
       </main>
