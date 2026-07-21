@@ -54,12 +54,21 @@ function AuthPage() {
         return;
       }
       setLoading(true);
-      const { error: err } = await supabase.auth.resetPasswordForEmail(trimmed, {
-        redirectTo: `${window.location.origin}/reset-password`,
-      });
-      setLoading(false);
-      if (err) return setError(err.message);
-      setInfo("Check your inbox for a password reset link.");
+      try {
+        const { error: err } = await supabase.auth.resetPasswordForEmail(trimmed, {
+          redirectTo: `${window.location.origin}/reset-password`,
+        });
+        if (err) {
+          setError(err.message);
+          return;
+        }
+        setInfo("Check your inbox for a password reset link.");
+      } catch (err) {
+        console.error("password reset failed", err);
+        setError(err instanceof Error ? err.message : "Couldn't send reset link.");
+      } finally {
+        setLoading(false);
+      }
       return;
     }
 
