@@ -278,42 +278,55 @@ function MonitorsPanel({
   );
 }
 
-function BillingPanel() {
+function StatusBadge({ status }: { status: string }) {
+  const cls =
+    status === "up"
+      ? "text-brand"
+      : status === "down"
+        ? "text-red-400"
+        : "text-zinc-500";
+  const label = status === "up" ? "● up" : status === "down" ? "● down" : "○ pending";
+  return <span className={`text-xs font-mono ${cls}`}>{label}</span>;
+}
+
+function BillingPanel({ plan }: { plan: Plan }) {
   return (
     <section className="bg-surface rounded-2xl border border-brand-border p-8">
       <h2 className="text-white font-semibold text-xl mb-1">Billing</h2>
       <p className="text-zinc-500 text-sm mb-6">
-        You're currently on the <span className="text-brand font-semibold">Starter</span> plan
-        (free). Upgrade any time — no migration, no downtime.
+        You're currently on the <span className="text-brand font-semibold">{PLAN_LABEL[plan]}</span> plan.
+        {plan === "starter" ? " Upgrade any time — no migration, no downtime." : " Manage your subscription in Stripe."}
       </p>
-      <div className="grid md:grid-cols-2 gap-4">
-        <a
-          href={STRIPE_PRO_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="block rounded-xl border border-brand-border bg-bg/40 p-5 hover:border-brand transition-colors"
-        >
-          <div className="flex items-baseline justify-between mb-1">
-            <span className="text-white font-semibold">Pro</span>
-            <span className="text-brand font-mono">£10/mo</span>
-          </div>
-          <p className="text-xs text-zinc-500">50 monitors · 1-minute checks · Slack & Discord</p>
-        </a>
-        <a
-          href={STRIPE_BUSINESS_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="block rounded-xl border border-brand-border bg-bg/40 p-5 hover:border-brand transition-colors"
-        >
-          <div className="flex items-baseline justify-between mb-1">
-            <span className="text-white font-semibold">Business</span>
-            <span className="text-brand font-mono">£30/mo</span>
-          </div>
-          <p className="text-xs text-zinc-500">
-            Unlimited monitors · 30s checks · Multi-region
-          </p>
-        </a>
-      </div>
+      {plan !== "business" && (
+        <div className="grid md:grid-cols-2 gap-4">
+          {plan === "starter" && (
+            <a
+              href={STRIPE_PRO_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block rounded-xl border border-brand-border bg-bg/40 p-5 hover:border-brand transition-colors"
+            >
+              <div className="flex items-baseline justify-between mb-1">
+                <span className="text-white font-semibold">Pro</span>
+                <span className="text-brand font-mono">£10/mo</span>
+              </div>
+              <p className="text-xs text-zinc-500">50 monitors · 1-minute checks · Slack & Discord</p>
+            </a>
+          )}
+          <a
+            href={STRIPE_BUSINESS_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block rounded-xl border border-brand-border bg-bg/40 p-5 hover:border-brand transition-colors"
+          >
+            <div className="flex items-baseline justify-between mb-1">
+              <span className="text-white font-semibold">Business</span>
+              <span className="text-brand font-mono">£30/mo</span>
+            </div>
+            <p className="text-xs text-zinc-500">Unlimited monitors · 30s checks · Multi-region</p>
+          </a>
+        </div>
+      )}
     </section>
   );
 }
