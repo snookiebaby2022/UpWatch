@@ -265,7 +265,7 @@ const TESTIMONIALS = [
   },
   {
     quote:
-      "Setting up Uptime Kuma was a pain until I found this hosted version. Best $29 I spend every month.",
+      "Setting up Uptime Kuma was a pain until I found this hosted version. Best £10 I spend every month.",
     name: "Marcus Thorne",
     role: "Independent Developer",
   },
