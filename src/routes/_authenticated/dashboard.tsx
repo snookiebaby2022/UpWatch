@@ -273,26 +273,35 @@ function MonitorsPanel({
         </div>
       ) : (
         <ul className="divide-y divide-brand-border/50 border border-brand-border rounded-xl overflow-hidden">
-          {monitors.map((m) => (
-            <li key={m.id} className="flex items-center justify-between px-5 py-4 bg-bg/40">
-              <div className="min-w-0">
-                <div className="text-white font-medium truncate">{m.name}</div>
-                <div className="text-xs text-zinc-500 font-mono truncate">{m.url}</div>
-              </div>
-              <div className="flex items-center gap-4">
-                <span className="text-xs font-mono text-zinc-500">
-                  every {Math.round(m.interval_seconds / 60)}m
-                </span>
-                <StatusBadge status={m.last_status ?? "pending"} />
-                <button
-                  onClick={() => removeMonitor(m.id)}
-                  className="text-xs text-zinc-500 hover:text-red-400 transition-colors"
-                >
-                  Delete
-                </button>
-              </div>
-            </li>
-          ))}
+          {monitors.map((m) => {
+            const live = liveStatuses?.find(
+              (s) => s.url === m.url || s.name?.toLowerCase() === m.name.toLowerCase(),
+            );
+            const status = live?.status ?? m.last_status ?? "pending";
+            return (
+              <li key={m.id} className="flex items-center justify-between px-5 py-4 bg-bg/40">
+                <div className="min-w-0">
+                  <div className="text-white font-medium truncate">{m.name}</div>
+                  <div className="text-xs text-zinc-500 font-mono truncate">{m.url}</div>
+                </div>
+                <div className="flex items-center gap-4">
+                  {typeof live?.ping === "number" && (
+                    <span className="text-xs font-mono text-zinc-500">{Math.round(live.ping)}ms</span>
+                  )}
+                  <span className="text-xs font-mono text-zinc-500">
+                    every {Math.round(m.interval_seconds / 60)}m
+                  </span>
+                  <StatusBadge status={status} />
+                  <button
+                    onClick={() => removeMonitor(m.id)}
+                    className="text-xs text-zinc-500 hover:text-red-400 transition-colors"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </li>
+            );
+          })}
         </ul>
       )}
     </section>
