@@ -1,6 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, queryOptions } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import { getKumaStatus, type KumaMonitor } from "@/lib/kuma.functions";
+import { supabase } from "@/integrations/supabase/client";
 
 const kumaQueryOptions = (fn: typeof getKumaStatus) =>
   queryOptions({
@@ -35,6 +37,16 @@ function Index() {
 }
 
 function Nav() {
+  const [signedIn, setSignedIn] = useState(false);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setSignedIn(!!data.session));
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
+      setSignedIn(!!session);
+    });
+    return () => sub.subscription.unsubscribe();
+  }, []);
+
   return (
     <nav className="flex items-center justify-between px-6 py-6 max-w-7xl mx-auto">
       <Link to="/" className="flex items-center gap-2">
@@ -46,12 +58,31 @@ function Nav() {
         <Link to="/status" className="hover:text-brand transition-colors">Status</Link>
         <a href="#pricing" className="hover:text-brand transition-colors">Pricing</a>
       </div>
-      <a
-        href="#pricing"
-        className="bg-white text-black px-4 py-2 rounded-full text-sm font-semibold hover:bg-zinc-200 transition-colors"
-      >
-        Start Monitoring
-      </a>
+      <div className="flex items-center gap-3">
+        {signedIn ? (
+          <Link
+            to="/dashboard"
+            className="bg-white text-black px-4 py-2 rounded-full text-sm font-semibold hover:bg-zinc-200 transition-colors"
+          >
+            Dashboard
+          </Link>
+        ) : (
+          <>
+            <Link
+              to="/auth"
+              className="text-sm font-medium text-zinc-300 hover:text-white transition-colors px-3 py-2"
+            >
+              Log in
+            </Link>
+            <Link
+              to="/auth"
+              className="bg-white text-black px-4 py-2 rounded-full text-sm font-semibold hover:bg-zinc-200 transition-colors"
+            >
+              Sign up
+            </Link>
+          </>
+        )}
+      </div>
     </nav>
   );
 }
@@ -172,6 +203,7 @@ const TIERS: Tier[] = [
     price: "£0",
     features: ["5 Monitors", "5-minute intervals", "Email alerts"],
     cta: "Join Free",
+    href: "/auth",
   },
   {
     name: "Pro",
