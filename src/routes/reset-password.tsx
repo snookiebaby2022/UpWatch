@@ -8,6 +8,7 @@ export const Route = createFileRoute("/reset-password")({
     meta: [
       { title: "Reset password — UpWatch" },
       { name: "description", content: "Set a new password for your UpWatch account." },
+      { name: "robots", content: "noindex, nofollow" },
     ],
   }),
   component: ResetPassword,
