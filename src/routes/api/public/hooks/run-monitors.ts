@@ -133,7 +133,25 @@ export const Route = createFileRoute("/api/public/hooks/run-monitors")({
               .update({ last_status: status, last_checked_at: nowIso })
               .eq("id", m.id);
 
-            return { id: m.id, status, previous: m.last_status };
+            const prev = m.last_status;
+            if (prev && prev !== "pending" && prev !== status) {
+              if (status === "down") {
+                await supabaseAdmin.from("incidents").insert({
+                  monitor_id: m.id,
+                  error_message: errorMessage,
+                });
+                await sendAlert({ monitor: m, transition: "down", errorMessage });
+              } else if (status === "up") {
+                await supabaseAdmin
+                  .from("incidents")
+                  .update({ resolved_at: nowIso })
+                  .eq("monitor_id", m.id)
+                  .is("resolved_at", null);
+                await sendAlert({ monitor: m, transition: "up", errorMessage: null });
+              }
+            }
+
+            return { id: m.id, status, previous: prev };
           }),
         );
 
