@@ -78,6 +78,9 @@ function Dashboard() {
   const piStatusQuery = useQuery({
     queryKey: ["pi-status"],
     refetchInterval: 30_000,
+    // Don't poll while the tab is hidden — saves requests when users leave it open.
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: true,
     retry: false,
     queryFn: async () => {
       try {

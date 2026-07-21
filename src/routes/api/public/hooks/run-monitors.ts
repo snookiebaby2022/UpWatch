@@ -108,8 +108,14 @@ export const Route = createFileRoute("/api/public/hooks/run-monitors")({
           return Date.now() - last >= (m.interval_seconds ?? 300) * 1000;
         });
 
-        const results = await Promise.allSettled(
-          due.map(async (m) => {
+        // Batch check execution to cap concurrent outbound fetches (protects the
+        // Worker and downstream targets when the monitor set grows).
+        const CONCURRENCY = 20;
+        const results: PromiseSettledResult<{ id: string; status: string; previous: string | null }>[] = [];
+        for (let i = 0; i < due.length; i += CONCURRENCY) {
+          const batch = due.slice(i, i + CONCURRENCY);
+          const batchResults = await Promise.allSettled(
+            batch.map(async (m) => {
             const started = Date.now();
             let status: "up" | "down" = "down";
             let statusCode: number | null = null;
