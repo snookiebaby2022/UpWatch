@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /auth
+Disallow: /reset-password
+Disallow: /dashboard
+Disallow: /admin
+Disallow: /_authenticated
+Disallow: /api/
+
+Sitemap: https://upwatch.online/sitemap.xml
