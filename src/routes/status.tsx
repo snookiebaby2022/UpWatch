@@ -55,6 +55,8 @@ function StatusPage() {
             title="UpWatch live status"
             className="w-full h-[85vh] bg-white"
             loading="lazy"
+            referrerPolicy="no-referrer"
+            sandbox="allow-scripts allow-same-origin allow-popups"
           />
         </div>
       </main>

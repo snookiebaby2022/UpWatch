@@ -1,9 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, queryOptions } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { getKumaStatus, type KumaMonitor } from "@/lib/kuma.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { SITE_URL, OG_IMAGE } from "@/lib/site";
+import { useSession } from "@/hooks/use-session";
+
 
 const kumaQueryOptions = (fn: typeof getKumaStatus) =>
   queryOptions({
@@ -146,15 +148,9 @@ function Index() {
 }
 
 function Nav() {
-  const [signedIn, setSignedIn] = useState<boolean | null>(null);
+  const signedIn = useSession();
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => setSignedIn(!!data.session));
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
-      setSignedIn(!!session);
-    });
-    return () => sub.subscription.unsubscribe();
-  }, []);
+
 
   return (
     <nav className="flex items-center justify-between px-6 py-6 max-w-7xl mx-auto">
@@ -570,8 +566,9 @@ function Footer() {
           <Link to="/status" className="hover:text-white">Status</Link>
         </div>
         <div className="text-xs text-zinc-600 font-mono">
-          © 2024 UPWATCH.ONLINE // STATUS: NOMINAL
+          © {new Date().getFullYear()} UPWATCH.ONLINE // STATUS: NOMINAL
         </div>
+
       </div>
     </footer>
   );

@@ -37,14 +37,39 @@ type UserRow = {
   monitors_count: number;
 };
 
+type MonitorRow = {
+  id: string;
+  name: string;
+  url: string;
+  last_status: string | null;
+  last_checked_at: string | null;
+  user_id: string;
+  is_active: boolean;
+  created_at: string;
+};
+
+type WaitlistRow = {
+  id: string;
+  email: string;
+  created_at: string;
+};
+
+type IncidentRow = {
+  id: string;
+  monitor_id: string;
+  started_at: string;
+  resolved_at: string | null;
+  error_message: string | null;
+};
+
 function AdminPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [currentUserId, setCurrentUserId] = useState<string>("");
   const [users, setUsers] = useState<UserRow[]>([]);
-  const [monitors, setMonitors] = useState<any[]>([]);
-  const [waitlist, setWaitlist] = useState<any[]>([]);
-  const [incidents, setIncidents] = useState<any[]>([]);
+  const [monitors, setMonitors] = useState<MonitorRow[]>([]);
+  const [waitlist, setWaitlist] = useState<WaitlistRow[]>([]);
+  const [incidents, setIncidents] = useState<IncidentRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<"users" | "monitors" | "waitlist" | "incidents">("users");
   const [msg, setMsg] = useState<string | null>(null);
@@ -87,12 +112,17 @@ function AdminPage() {
       const wait = waitRes.data ?? [];
       const inc = incRes.data ?? [];
 
-      const subMap = new Map((subs as any[]).map((s: any) => [s.user_id, s]));
-      const roleMap = new Map((roles as any[]).map((r: any) => [r.user_id, r.role]));
+      type SubRow = { user_id: string; plan: Plan; status: Status };
+      type RoleRow = { user_id: string; role: string };
+      const subMap = new Map((subs as SubRow[]).map((s) => [s.user_id, s]));
+      const roleMap = new Map((roles as RoleRow[]).map((r) => [r.user_id, r.role]));
       const countMap = new Map<string, number>();
-      (mons as any[]).forEach((m: any) => countMap.set(m.user_id, (countMap.get(m.user_id) ?? 0) + 1));
+      (mons as MonitorRow[]).forEach((m) =>
+        countMap.set(m.user_id, (countMap.get(m.user_id) ?? 0) + 1),
+      );
 
-      const rows: UserRow[] = (profiles as any[]).map((p: any) => {
+      type ProfileRow = { id: string; display_name: string | null; created_at: string };
+      const rows: UserRow[] = (profiles as ProfileRow[]).map((p) => {
         const s = subMap.get(p.id);
         return {
           id: p.id,
@@ -107,9 +137,9 @@ function AdminPage() {
       });
 
       setUsers(rows);
-      setMonitors(mons);
-      setWaitlist(wait);
-      setIncidents(inc);
+      setMonitors(mons as MonitorRow[]);
+      setWaitlist(wait as WaitlistRow[]);
+      setIncidents(inc as IncidentRow[]);
     } catch (err) {
       console.error("admin load failed", err);
       setLoadError(err instanceof Error ? err.message : "Failed to load admin data.");
