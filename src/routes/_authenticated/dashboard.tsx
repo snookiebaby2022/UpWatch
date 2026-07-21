@@ -143,22 +143,34 @@ function MonitorsPanel({
   isLoading,
   error,
   userId,
+  plan,
+  used,
+  limit,
   onChange,
 }: {
   monitors: Monitor[];
   isLoading: boolean;
   error: Error | null;
   userId: string;
+  plan: Plan;
+  used: number;
+  limit: number;
   onChange: () => void;
 }) {
   const [name, setName] = useState("");
   const [url, setUrl] = useState("");
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
+  const atLimit = used >= limit;
+  const limitLabel = limit === Infinity ? "∞" : String(limit);
 
   async function addMonitor(e: React.FormEvent) {
     e.preventDefault();
     if (!userId) return;
+    if (atLimit) {
+      setMsg(`You've reached your ${PLAN_LABEL[plan]} plan limit (${limitLabel} monitors). Upgrade below.`);
+      return;
+    }
     setMsg(null);
     setBusy(true);
     const { error: insertError } = await supabase
@@ -185,12 +197,16 @@ function MonitorsPanel({
 
   return (
     <section className="bg-surface rounded-2xl border border-brand-border p-8">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <div>
           <h2 className="text-white font-semibold text-xl">Your monitors</h2>
           <p className="text-zinc-500 text-sm mt-1">
-            You're on the Starter plan. Add up to 5 monitors with 5-minute checks.
+            You're on the <span className="text-brand font-semibold">{PLAN_LABEL[plan]}</span> plan.
           </p>
+        </div>
+        <div className="text-xs font-mono text-zinc-500">
+          <span className={atLimit ? "text-red-400" : "text-brand"}>{used}</span>
+          <span className="text-zinc-600"> / {limitLabel}</span> monitors used
         </div>
       </div>
 
