@@ -68,7 +68,7 @@ function AuthPage() {
     setLoading(true);
     try {
       if (mode === "signup") {
-        const { error: err } = await supabase.auth.signUp({
+        const { data, error: err } = await supabase.auth.signUp({
           email: parsed.data.email,
           password: parsed.data.password,
           options: {
@@ -77,6 +77,11 @@ function AuthPage() {
           },
         });
         if (err) throw err;
+        // If email confirmation is disabled, Supabase returns a session immediately — go straight in.
+        if (data.session) {
+          navigate({ to: "/dashboard", replace: true });
+          return;
+        }
         setLastSignupEmail(parsed.data.email);
         setInfo("Account created. Check your inbox to confirm your email.");
       } else {
