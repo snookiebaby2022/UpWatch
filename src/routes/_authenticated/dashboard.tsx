@@ -37,6 +37,7 @@ function Dashboard() {
   const [email, setEmail] = useState<string>("");
   const [displayName, setDisplayName] = useState<string>("");
   const [userId, setUserId] = useState<string>("");
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -44,12 +45,12 @@ function Dashboard() {
       if (!data.user) return;
       setEmail(data.user.email ?? "");
       setUserId(data.user.id);
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("display_name")
-        .eq("id", data.user.id)
-        .maybeSingle();
+      const [{ data: profile }, { data: adminFlag }] = await Promise.all([
+        supabase.from("profiles").select("display_name").eq("id", data.user.id).maybeSingle(),
+        supabase.rpc("has_role", { _user_id: data.user.id, _role: "admin" }),
+      ]);
       setDisplayName(profile?.display_name ?? "");
+      setIsAdmin(!!adminFlag);
     })();
   }, []);
 
