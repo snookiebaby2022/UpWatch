@@ -53,10 +53,13 @@ function AdminPage() {
     supabase.auth.getUser().then(({ data }) => setCurrentUserId(data.user?.id ?? ""));
   }, []);
 
+  const [loadError, setLoadError] = useState<string | null>(null);
+
   const load = useCallback(async () => {
     setLoading(true);
-    const [{ data: profiles }, { data: subs }, { data: roles }, { data: mons }, { data: wait }, { data: inc }] =
-      await Promise.all([
+    setLoadError(null);
+    try {
+      const [profilesRes, subsRes, rolesRes, monsRes, waitRes, incRes] = await Promise.all([
         supabase.from("profiles").select("id, display_name, created_at"),
         supabase.from("subscriptions").select("user_id, plan, status"),
         supabase.from("user_roles").select("user_id, role"),
@@ -72,30 +75,47 @@ function AdminPage() {
           .limit(100),
       ]);
 
-    const subMap = new Map((subs ?? []).map((s: any) => [s.user_id, s]));
-    const roleMap = new Map((roles ?? []).map((r: any) => [r.user_id, r.role]));
-    const countMap = new Map<string, number>();
-    (mons ?? []).forEach((m: any) => countMap.set(m.user_id, (countMap.get(m.user_id) ?? 0) + 1));
+      // Surface the first table that failed rather than silently rendering empty tabs.
+      const firstErr =
+        profilesRes.error ?? subsRes.error ?? rolesRes.error ?? monsRes.error ?? waitRes.error ?? incRes.error;
+      if (firstErr) throw firstErr;
 
-    const rows: UserRow[] = (profiles ?? []).map((p: any) => {
-      const s = subMap.get(p.id);
-      return {
-        id: p.id,
-        email: null,
-        display_name: p.display_name,
-        created_at: p.created_at,
-        role: roleMap.get(p.id) ?? "user",
-        plan: (s?.plan ?? "starter") as Plan,
-        status: (s?.status ?? "active") as Status,
-        monitors_count: countMap.get(p.id) ?? 0,
-      };
-    });
+      const profiles = profilesRes.data ?? [];
+      const subs = subsRes.data ?? [];
+      const roles = rolesRes.data ?? [];
+      const mons = monsRes.data ?? [];
+      const wait = waitRes.data ?? [];
+      const inc = incRes.data ?? [];
 
-    setUsers(rows);
-    setMonitors(mons ?? []);
-    setWaitlist(wait ?? []);
-    setIncidents(inc ?? []);
-    setLoading(false);
+      const subMap = new Map((subs as any[]).map((s: any) => [s.user_id, s]));
+      const roleMap = new Map((roles as any[]).map((r: any) => [r.user_id, r.role]));
+      const countMap = new Map<string, number>();
+      (mons as any[]).forEach((m: any) => countMap.set(m.user_id, (countMap.get(m.user_id) ?? 0) + 1));
+
+      const rows: UserRow[] = (profiles as any[]).map((p: any) => {
+        const s = subMap.get(p.id);
+        return {
+          id: p.id,
+          email: null,
+          display_name: p.display_name,
+          created_at: p.created_at,
+          role: roleMap.get(p.id) ?? "user",
+          plan: (s?.plan ?? "starter") as Plan,
+          status: (s?.status ?? "active") as Status,
+          monitors_count: countMap.get(p.id) ?? 0,
+        };
+      });
+
+      setUsers(rows);
+      setMonitors(mons);
+      setWaitlist(wait);
+      setIncidents(inc);
+    } catch (err) {
+      console.error("admin load failed", err);
+      setLoadError(err instanceof Error ? err.message : "Failed to load admin data.");
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => {
@@ -211,6 +231,17 @@ function AdminPage() {
 
         {loading ? (
           <div className="text-sm text-muted-foreground">Loading…</div>
+        ) : loadError ? (
+          <div className="border border-red-900/50 bg-red-950/30 rounded-md p-4 text-sm text-red-300">
+            <div className="font-semibold text-red-200 mb-1">Couldn't load admin data</div>
+            <div className="mb-3">{loadError}</div>
+            <button
+              onClick={() => load()}
+              className="text-xs px-3 py-1.5 border border-red-800 rounded hover:bg-red-900/40"
+            >
+              Retry
+            </button>
+          </div>
         ) : tab === "users" ? (
           <div className="overflow-x-auto border border-border/60 rounded-lg">
             <table className="w-full text-sm">
