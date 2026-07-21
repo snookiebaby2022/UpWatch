@@ -231,10 +231,10 @@ function MonitorsPanel({
         />
         <button
           type="submit"
-          disabled={busy}
-          className="bg-brand text-bg font-bold px-5 py-3 rounded-lg text-sm hover:opacity-90 disabled:opacity-60"
+          disabled={busy || atLimit}
+          className="bg-brand text-bg font-bold px-5 py-3 rounded-lg text-sm hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed"
         >
-          {busy ? "Adding…" : "Add monitor"}
+          {atLimit ? "Limit reached" : busy ? "Adding…" : "Add monitor"}
         </button>
       </form>
 
