@@ -299,7 +299,7 @@ const TESTIMONIALS = [
   },
   {
     quote:
-      "Setting up Uptime Kuma was a pain until I found this hosted version. Best £10 I spend every month.",
+      "Alerts land in Slack within seconds of an incident. The retry-from-a-second-region logic has killed every false positive we used to chase.",
     name: "Marcus Thorne",
     role: "Independent Developer",
   },
