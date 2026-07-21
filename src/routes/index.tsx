@@ -378,28 +378,62 @@ function FAQ() {
 }
 
 function LeadCapture() {
+  const [email, setEmail] = useState("");
+  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [message, setMessage] = useState("");
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const trimmed = email.trim().toLowerCase();
+    if (!trimmed || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+      setStatus("error");
+      setMessage("Please enter a valid email.");
+      return;
+    }
+    setStatus("loading");
+    const { error } = await supabase.from("waitlist").insert({ email: trimmed });
+    if (error) {
+      setStatus("error");
+      setMessage(
+        error.code === "23505" ? "You're already on the list." : "Something went wrong. Try again.",
+      );
+      return;
+    }
+    setStatus("success");
+    setMessage("You're on the list. We'll be in touch.");
+    setEmail("");
+  }
+
   return (
     <section className="max-w-3xl mx-auto px-6 pb-32">
       <div className="bg-brand rounded-3xl p-12 text-center text-bg">
         <h2 className="text-3xl font-bold mb-4">Ready to stop worrying?</h2>
-        <p className="mb-8 font-medium">Join 5,000+ developers monitoring their sites with UpWatch.</p>
-        <form
-          className="flex flex-col sm:flex-row gap-2"
-          onSubmit={(e) => e.preventDefault()}
-        >
+        <p className="mb-8 font-medium">
+          Drop your email and we'll ping you with product updates and early-access invites.
+        </p>
+        <form className="flex flex-col sm:flex-row gap-2" onSubmit={handleSubmit}>
           <input
             type="email"
             required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            disabled={status === "loading"}
             placeholder="your@email.com"
-            className="flex-1 px-6 py-4 rounded-xl bg-white/20 border-none placeholder:text-bg/60 text-bg focus:ring-2 focus:ring-bg/20 outline-none"
+            className="flex-1 px-6 py-4 rounded-xl bg-white/20 border-none placeholder:text-bg/60 text-bg focus:ring-2 focus:ring-bg/20 outline-none disabled:opacity-60"
           />
           <button
             type="submit"
-            className="bg-bg text-brand px-8 py-4 rounded-xl font-bold hover:scale-105 transition-transform shadow-xl"
+            disabled={status === "loading"}
+            className="bg-bg text-brand px-8 py-4 rounded-xl font-bold hover:scale-105 transition-transform shadow-xl disabled:opacity-60 disabled:hover:scale-100"
           >
-            Notify Me
+            {status === "loading" ? "Sending…" : "Notify Me"}
           </button>
         </form>
+        {message && (
+          <p className={`mt-4 text-sm font-medium ${status === "error" ? "text-red-900" : "text-bg/80"}`}>
+            {message}
+          </p>
+        )}
       </div>
     </section>
   );
