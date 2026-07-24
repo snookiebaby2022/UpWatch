@@ -264,6 +264,63 @@ function AdminPage() {
     }
   }
 
+  async function openTicketThread(t: TicketRow) {
+    setOpenTicket(t);
+    setTicketMessages([]);
+    setTicketReply("");
+    try {
+      const { data, error } = await supabase
+        .from("support_ticket_messages")
+        .select("*")
+        .eq("ticket_id", t.id)
+        .order("created_at", { ascending: true });
+      if (error) throw error;
+      setTicketMessages((data ?? []) as TicketMessageRow[]);
+    } catch (err) {
+      setMsg(err instanceof Error ? err.message : "Failed to load ticket messages.");
+    }
+  }
+
+  async function updateTicketStatus(id: string, status: TicketStatus) {
+    setMsg(null);
+    const { error } = await supabase.from("support_tickets").update({ status }).eq("id", id);
+    if (error) {
+      setMsg(error.message);
+      return;
+    }
+    if (openTicket?.id === id) setOpenTicket({ ...openTicket, status });
+    load();
+  }
+
+  async function sendAdminReply() {
+    if (!openTicket || !currentUserId) return;
+    const body = ticketReply.trim();
+    if (!body) return;
+    setTicketBusy(true);
+    try {
+      const { error } = await supabase.from("support_ticket_messages").insert({
+        ticket_id: openTicket.id,
+        author_id: currentUserId,
+        is_admin: true,
+        body,
+      });
+      if (error) throw error;
+      // Auto-move open → pending on first admin reply
+      if (openTicket.status === "open") {
+        await supabase.from("support_tickets").update({ status: "pending" }).eq("id", openTicket.id);
+      }
+      setTicketReply("");
+      await openTicketThread(openTicket);
+      load();
+    } catch (err) {
+      setMsg(err instanceof Error ? err.message : "Failed to send reply.");
+    } finally {
+      setTicketBusy(false);
+    }
+  }
+
+  const openTicketCount = tickets.filter((t) => t.status === "open" || t.status === "pending").length;
+
   const totals = {
     users: users.length,
     monitors: monitors.length,
