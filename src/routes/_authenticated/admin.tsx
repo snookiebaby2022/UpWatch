@@ -727,6 +727,25 @@ function AdminPage() {
   );
 }
 
+function TicketBubble({ mine, label, body, at }: { mine: boolean; label: string; body: string; at: string }) {
+  return (
+    <div className={`flex ${mine ? "justify-end" : "justify-start"}`}>
+      <div
+        className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm whitespace-pre-wrap ${
+          mine
+            ? "bg-brand/10 border border-brand/40 text-foreground"
+            : "bg-card/60 border border-border/60 text-foreground"
+        }`}
+      >
+        <div className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1">
+          {label} · {new Date(at).toLocaleString()}
+        </div>
+        {body}
+      </div>
+    </div>
+  );
+}
+
 function Stat({ label, value, accent }: { label: string; value: number; accent?: string }) {
   return (
     <div className="border border-border/60 rounded-lg px-4 py-3 bg-card/40">
