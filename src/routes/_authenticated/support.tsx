@@ -37,10 +37,19 @@ type TicketMessage = {
   created_at: string;
 };
 
+type Plan = "starter" | "pro" | "business";
+
+const PLAN_PRIORITY: Record<Plan, Priority> = {
+  starter: "low",
+  pro: "normal",
+  business: "high",
+};
+
 function SupportPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [userId, setUserId] = useState("");
+  const [plan, setPlan] = useState<Plan>("starter");
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -49,7 +58,7 @@ function SupportPage() {
   // New-ticket form
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
-  const [priority, setPriority] = useState<Priority>("normal");
+  const priority: Priority = PLAN_PRIORITY[plan];
   const [submitting, setSubmitting] = useState(false);
 
   // Thread view
@@ -59,8 +68,20 @@ function SupportPage() {
   const [replying, setReplying] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setUserId(data.user?.id ?? ""));
+    supabase.auth.getUser().then(async ({ data }) => {
+      const uid = data.user?.id ?? "";
+      setUserId(uid);
+      if (!uid) return;
+      const { data: sub } = await supabase
+        .from("subscriptions")
+        .select("plan,status")
+        .eq("user_id", uid)
+        .maybeSingle();
+      const p = (sub?.plan as Plan | undefined) ?? "starter";
+      if (p === "starter" || p === "pro" || p === "business") setPlan(p);
+    });
   }, []);
+
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -140,9 +161,9 @@ function SupportPage() {
       if (err) throw err;
       setSubject("");
       setBody("");
-      setPriority("normal");
       setMsg("Ticket submitted. We'll be in touch shortly.");
       load();
+
     } catch (e) {
       setMsg(e instanceof Error ? e.message : "Failed to submit ticket.");
     } finally {
@@ -311,16 +332,14 @@ function SupportPage() {
                   <label className="block text-xs uppercase tracking-widest text-zinc-500 mb-1">
                     Priority
                   </label>
-                  <select
-                    value={priority}
-                    onChange={(e) => setPriority(e.target.value as Priority)}
-                    className="bg-bg border border-brand-border rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-brand"
-                  >
-                    <option value="low">Low</option>
-                    <option value="normal">Normal</option>
-                    <option value="high">High</option>
-                  </select>
+                  <div className="flex items-center gap-3 bg-bg border border-brand-border rounded-lg px-4 py-2.5">
+                    <span className="text-white capitalize font-medium">{priority}</span>
+                    <span className="text-xs text-zinc-500">
+                      · set automatically from your <span className="capitalize">{plan}</span> plan
+                    </span>
+                  </div>
                 </div>
+
                 <div>
                   <label className="block text-xs uppercase tracking-widest text-zinc-500 mb-1">
                     Message
