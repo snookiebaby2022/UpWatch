@@ -42,6 +42,9 @@ export function AdminOverview({
   const recentUsers = users.slice(0, 5);
   const recentTickets = tickets.slice(0, 5);
   const monitorById = new Map(monitors.map((m) => [m.id, m]));
+  const pending = monitors.filter((m) => m.is_active && (!m.last_status || m.last_status === "pending")).length;
+  const inactive = monitors.filter((m) => !m.is_active).length;
+  const publicMonitors = monitors.filter((m) => m.is_public).length;
 
   return (
     <div className="space-y-8">
@@ -55,6 +58,9 @@ export function AdminOverview({
         <Stat label="Open incidents" value={totals.openIncidents} accent="text-amber-400" />
         <Stat label="Open tickets" value={totals.openTickets} />
         <Stat label="Alert channels" value={totals.activeChannels} />
+        <Stat label="Pending checks" value={pending} />
+        <Stat label="Inactive" value={inactive} />
+        <Stat label="Public monitors" value={publicMonitors} />
         <Stat
           label="Uptime"
           value={

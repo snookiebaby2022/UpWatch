@@ -1,6 +1,15 @@
 export type Plan = "starter" | "pro" | "business";
 export type Status = "active" | "canceled" | "past_due" | "trialing";
-export type AdminTab = "overview" | "users" | "monitors" | "waitlist" | "incidents" | "channels" | "support";
+export type AdminTab =
+  | "overview"
+  | "users"
+  | "monitors"
+  | "waitlist"
+  | "incidents"
+  | "channels"
+  | "support"
+  | "plans"
+  | "system";
 export type TicketPriority = "low" | "normal" | "high";
 export type TicketStatus = "open" | "pending" | "resolved" | "closed";
 

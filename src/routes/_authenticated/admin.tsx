@@ -7,11 +7,14 @@ import { AdminChannelsTab } from "@/components/admin/AdminChannelsTab";
 import { AdminIncidentsTab } from "@/components/admin/AdminIncidentsTab";
 import { AdminMonitorsTab } from "@/components/admin/AdminMonitorsTab";
 import { AdminOverview } from "@/components/admin/AdminOverview";
+import { AdminPlansTab } from "@/components/admin/AdminPlansTab";
 import { AdminSupportTab } from "@/components/admin/AdminSupportTab";
+import { AdminSystemTab } from "@/components/admin/AdminSystemTab";
 import { AdminUsersTab } from "@/components/admin/AdminUsersTab";
 import { AdminWaitlistTab } from "@/components/admin/AdminWaitlistTab";
 import type { AdminTab, TicketStatus } from "@/components/admin/types";
 import { useAdminData } from "@/components/admin/useAdminData";
+import { BUILD_LABEL } from "@/lib/build";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({
@@ -41,10 +44,12 @@ const TABS: { id: AdminTab; label: string }[] = [
   { id: "overview", label: "Overview" },
   { id: "users", label: "Users" },
   { id: "monitors", label: "Monitors" },
+  { id: "plans", label: "Plans" },
   { id: "waitlist", label: "Waitlist" },
   { id: "incidents", label: "Incidents" },
   { id: "channels", label: "Channels" },
   { id: "support", label: "Support" },
+  { id: "system", label: "System" },
 ];
 
 function AdminPage() {
@@ -80,6 +85,7 @@ function AdminPage() {
             <span className="text-xs uppercase tracking-widest text-muted-foreground">
               Admin Console v2
             </span>
+            <span className="text-xs font-mono text-muted-foreground/80">build {BUILD_LABEL}</span>
           </div>
           <div className="flex items-center gap-3 text-sm">
             <Link to="/" className="text-muted-foreground hover:text-foreground">
@@ -201,6 +207,10 @@ function AdminPage() {
             search={search}
             onSearchChange={setSearch}
           />
+        ) : tab === "plans" ? (
+          <AdminPlansTab users={admin.users} />
+        ) : tab === "system" ? (
+          <AdminSystemTab users={admin.users} channels={admin.channels} />
         ) : (
           <AdminSupportTab
             tickets={admin.tickets}

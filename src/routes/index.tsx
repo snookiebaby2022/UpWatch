@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { getPublicStatus } from "@/lib/status.functions";
 import { STATUS_PAGE_URL, SITE_URL, OG_IMAGE } from "@/lib/site";
+import { PLAN_FEATURES, PLAN_LABEL, PLAN_ORDER, PLAN_PRICE } from "@/lib/plans";
 import { StatusMonitorList, StatusSourceBadge } from "@/components/StatusMonitorList";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/hooks/use-session";
@@ -280,46 +281,20 @@ function LiveDemo() {
 type Tier = {
   name: string;
   price: string;
-  features: string[];
+  features: readonly string[];
   cta: string;
   href?: string;
   popular?: boolean;
 };
 
-const TIERS: Tier[] = [
-  {
-    name: "Starter",
-    price: "£0",
-    features: ["5 Monitors", "15-minute intervals", "Email alerts"],
-    cta: "Join Free",
-    href: "/auth",
-  },
-  {
-    name: "Pro",
-    price: "£10",
-    features: [
-      "50 Monitors",
-      "5-minute intervals",
-      "Slack & Discord integrations",
-      "Custom Status Pages",
-    ],
-    cta: "Subscribe Now",
-    href: STRIPE_PRO_URL,
-    popular: true,
-  },
-  {
-    name: "Business",
-    price: "£30",
-    features: [
-      "Unlimited Monitors",
-      "1-minute intervals",
-      "Multi-region checking",
-      "White-label reports",
-    ],
-    cta: "Subscribe Now",
-    href: STRIPE_BUSINESS_URL,
-  },
-];
+const TIERS: Tier[] = PLAN_ORDER.map((plan) => ({
+  name: PLAN_LABEL[plan],
+  price: PLAN_PRICE[plan],
+  features: PLAN_FEATURES[plan],
+  cta: plan === "starter" ? "Join Free" : "Subscribe Now",
+  href: plan === "starter" ? "/auth" : plan === "pro" ? STRIPE_PRO_URL : STRIPE_BUSINESS_URL,
+  popular: plan === "pro",
+}));
 
 function Pricing() {
   return (

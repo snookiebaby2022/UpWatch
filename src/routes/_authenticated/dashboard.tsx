@@ -6,7 +6,7 @@ import { isPublicHttpUrl } from "@/lib/url-safety";
 import { NotificationBell } from "@/components/NotificationBell";
 import { ChannelsPanel } from "@/components/ChannelsPanel";
 import type { Plan } from "@/lib/plans";
-import { PLAN_INTERVAL_SECONDS, PLAN_LABEL, PLAN_LIMITS } from "@/lib/plans";
+import { PLAN_FEATURES, PLAN_INTERVAL_SECONDS, PLAN_LABEL, PLAN_LIMITS } from "@/lib/plans";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
@@ -164,8 +164,9 @@ function Dashboard() {
           used={used}
           limit={limit}
           onChange={() => queryClient.invalidateQueries({ queryKey: ["monitors", userId] })}
-
         />
+
+        <PlanFeaturesPanel plan={plan} used={used} limit={limit} />
 
         <ChannelsPanel userId={userId} plan={plan} />
 
@@ -373,6 +374,27 @@ function StatusBadge({ status }: { status: string }) {
         : "text-zinc-500";
   const label = status === "up" ? "● up" : status === "down" ? "● down" : "○ pending";
   return <span className={`text-xs font-mono ${cls}`}>{label}</span>;
+}
+
+function PlanFeaturesPanel({ plan, used, limit }: { plan: Plan; used: number; limit: number }) {
+  const intervalMin = PLAN_INTERVAL_SECONDS[plan] / 60;
+  return (
+    <section className="bg-surface rounded-2xl border border-brand-border p-6">
+      <h2 className="text-white font-semibold text-lg mb-1">Your {PLAN_LABEL[plan]} plan</h2>
+      <p className="text-zinc-500 text-sm mb-4">
+        {limit === Infinity ? `${used} monitors` : `${used} / ${limit} monitors`} · checks every{" "}
+        {intervalMin >= 1 ? `${intervalMin} min` : `${PLAN_INTERVAL_SECONDS[plan]}s`}
+      </p>
+      <ul className="grid sm:grid-cols-3 gap-2 text-sm text-zinc-400">
+        {PLAN_FEATURES[plan].map((f) => (
+          <li key={f} className="flex items-center gap-2">
+            <span className="text-brand">✓</span>
+            {f}
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
 }
 
 function BillingPanel({ plan }: { plan: Plan }) {
