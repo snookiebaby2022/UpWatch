@@ -362,16 +362,21 @@ function AdminPage() {
           <div className="text-sm border border-border/60 bg-card/40 rounded-md px-3 py-2">{msg}</div>
         )}
 
-        <div className="flex gap-2 border-b border-border/60">
-          {(["users", "monitors", "waitlist", "incidents"] as const).map((t) => (
+        <div className="flex gap-2 border-b border-border/60 flex-wrap">
+          {(["users", "monitors", "waitlist", "incidents", "channels", "support"] as const).map((t) => (
             <button
               key={t}
-              onClick={() => setTab(t)}
+              onClick={() => { setTab(t); if (t !== "support") setOpenTicket(null); }}
               className={`px-4 py-2 text-sm capitalize border-b-2 -mb-px ${
                 tab === t ? "border-brand text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"
               }`}
             >
               {t}
+              {t === "support" && openTicketCount > 0 && (
+                <span className="ml-2 text-xs bg-brand text-black rounded-full px-2 py-0.5 font-semibold">
+                  {openTicketCount}
+                </span>
+              )}
             </button>
           ))}
         </div>
