@@ -366,7 +366,7 @@ const TIERS: Tier[] = [
     price: "£30",
     features: [
       "Unlimited Monitors",
-      "30-second intervals",
+      "1-minute intervals",
       "Multi-region checking",
       "White-label reports",
     ],
