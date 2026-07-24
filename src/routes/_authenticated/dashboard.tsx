@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { isPublicHttpUrl } from "@/lib/url-safety";
 import { NotificationBell } from "@/components/NotificationBell";
+import { ChannelsPanel } from "@/components/ChannelsPanel";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
