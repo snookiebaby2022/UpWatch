@@ -24,7 +24,7 @@ function Test-Endpoint {
 Write-Host "`n=== UpWatch API / integration checks ===`n" -ForegroundColor Cyan
 
 # Kuma push heartbeat (user-reported URL)
-Test-Endpoint "Kuma push API" "https://status.upwatch.online/api/push/5pyQgQR1m8?status=up&msg=OK&ping=" '"ok":true'
+Test-Endpoint -Name "Kuma push API" -Url 'https://status.upwatch.online/api/push/5pyQgQR1m8?status=up&msg=OK&ping=' -Expect '"ok":true'
 
 # Kuma status page feed
 Test-Endpoint "Kuma status page API" "https://status.upwatch.online/api/status-page/upwatch" "publicGroupList"
@@ -75,6 +75,6 @@ if ($fail -eq 0) {
     Write-Host "All checks passed." -ForegroundColor Green
     exit 0
 } else {
-    Write-Host "$fail check(s) failed — see above." -ForegroundColor Red
+    Write-Host "$fail check(s) failed - see above." -ForegroundColor Red
     exit 1
 }
