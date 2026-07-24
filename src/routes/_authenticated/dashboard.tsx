@@ -135,9 +135,13 @@ function Dashboard() {
           <span className="text-white font-bold tracking-tight text-xl">UpWatch</span>
         </Link>
         <div className="flex items-center gap-3">
+          <Link to="/" className="text-sm text-zinc-400 hover:text-white transition-colors">
+            Home
+          </Link>
           <Link to="/status" className="text-sm text-zinc-400 hover:text-white transition-colors">
             Status page
           </Link>
+
           <Link to="/support" className="text-sm text-zinc-400 hover:text-white transition-colors">
             Support
           </Link>

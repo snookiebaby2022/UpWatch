@@ -369,7 +369,9 @@ function AdminPage() {
             <span className="text-xs uppercase tracking-widest text-muted-foreground">Admin</span>
           </div>
           <div className="flex items-center gap-3 text-sm">
+            <Link to="/" className="text-muted-foreground hover:text-foreground">Home</Link>
             <Link to="/dashboard" className="text-muted-foreground hover:text-foreground">Dashboard</Link>
+
             <button
               onClick={handleSignOut}
               className="text-muted-foreground hover:text-foreground"

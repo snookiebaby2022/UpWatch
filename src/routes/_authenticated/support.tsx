@@ -233,9 +233,13 @@ function SupportPage() {
           <span className="text-white font-bold tracking-tight text-xl">UpWatch</span>
         </Link>
         <div className="flex items-center gap-3">
+          <Link to="/" className="text-sm text-zinc-400 hover:text-white transition-colors">
+            Home
+          </Link>
           <Link to="/dashboard" className="text-sm text-zinc-400 hover:text-white transition-colors">
             Dashboard
           </Link>
+
           <button
             onClick={handleSignOut}
             className="bg-surface border border-brand-border px-4 py-2 rounded-full text-sm font-semibold text-white hover:bg-brand-border transition-colors"
