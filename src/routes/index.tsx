@@ -517,20 +517,29 @@ function LeadCapture() {
       return;
     }
     setStatus("loading");
-    const { error } = await supabase.from("waitlist").insert({ email: trimmed });
-    // Return a generic success message regardless of duplicate-key errors —
-    // returning "already on the list" would expose which emails are enrolled
-    // (email enumeration). Log the real error server-side only.
-    if (error && error.code !== "23505") {
-      console.error("waitlist insert failed", error);
+    try {
+      const { error } = await supabase.from("waitlist").insert({ email: trimmed });
+      // Return a generic success message regardless of duplicate-key errors —
+      // returning "already on the list" would expose which emails are enrolled
+      // (email enumeration). Log the real error server-side only.
+      if (error && error.code !== "23505") {
+        console.error("waitlist insert failed", error);
+        setStatus("error");
+        setMessage("Something went wrong. Try again.");
+        return;
+      }
+      setStatus("success");
+      setMessage("You're on the list. We'll be in touch.");
+      setEmail("");
+    } catch (err) {
+      // Network failure, offline, DNS, etc. — supabase-js throws before we
+      // get a structured error object. Fail closed with a user-safe message.
+      console.error("waitlist insert threw", err);
       setStatus("error");
-      setMessage("Something went wrong. Try again.");
-      return;
+      setMessage("Network error. Please try again.");
     }
-    setStatus("success");
-    setMessage("You're on the list. We'll be in touch.");
-    setEmail("");
   }
+
 
   return (
     <section className="max-w-3xl mx-auto px-6 pb-32">
