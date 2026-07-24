@@ -174,8 +174,11 @@ export const Route = createFileRoute("/api/public/hooks/run-monitors")({
         const due = (monitors ?? []).filter((m) => {
           if (!m.last_checked_at) return true;
           const last = new Date(m.last_checked_at).getTime();
-          return Date.now() - last >= (m.interval_seconds ?? 300) * 1000;
+          const plan = planByUser.get(m.user_id) ?? "starter";
+          const interval = PLAN_INTERVAL[plan] ?? 900;
+          return Date.now() - last >= interval * 1000;
         });
+
 
 
         // Perform a single HTTP probe from one region and return a normalized result.
