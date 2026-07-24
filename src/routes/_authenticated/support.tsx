@@ -153,13 +153,15 @@ function SupportPage() {
     setSubmitting(true);
     setMsg(null);
     try {
+      // Priority is derived server-side from the user's active plan by a
+      // BEFORE INSERT trigger, so it can't be spoofed from the client.
       const { error: err } = await supabase.from("support_tickets").insert({
         user_id: userId,
         subject: s,
         message: m,
-        priority,
       });
       if (err) throw err;
+
       setSubject("");
       setBody("");
       setMsg("Ticket submitted. We'll be in touch shortly.");

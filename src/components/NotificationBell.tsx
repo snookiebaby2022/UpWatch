@@ -1,10 +1,11 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { Bell, Check } from "lucide-react";
-import { Link } from "@tanstack/react-router";
+import { Link, useRouter } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { useSession } from "@/hooks/use-session";
+
 
 type Notification = {
   id: string;
@@ -26,7 +27,9 @@ function timeAgo(iso: string) {
 
 export function NotificationBell() {
   const signedIn = useSession();
+  const router = useRouter();
   const [userId, setUserId] = useState<string | null>(null);
+
 
   useEffect(() => {
     if (!signedIn) {
@@ -85,9 +88,15 @@ export function NotificationBell() {
           toast(n.title, {
             description: n.body ?? undefined,
             action: n.link
-              ? { label: "Open", onClick: () => (window.location.href = n.link!) }
+              ? {
+                  label: "Open",
+                  // SPA navigation — a full reload would drop the auth session,
+                  // realtime subscriptions, and any in-flight state.
+                  onClick: () => router.navigate({ to: n.link! }),
+                }
               : undefined,
           });
+
 
           // Browser push (works while any app tab is open)
           if (

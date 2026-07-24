@@ -80,24 +80,11 @@ function Dashboard() {
     },
   });
 
-  const piStatusQuery = useQuery({
-    queryKey: ["pi-status"],
-    refetchInterval: 30_000,
-    // Don't poll while the tab is hidden — saves requests when users leave it open.
-    refetchIntervalInBackground: false,
-    refetchOnWindowFocus: true,
-    retry: false,
-    queryFn: async () => {
-      try {
-        const res = await fetch("https://api.upwatch.online/api/status", { signal: AbortSignal.timeout(5000) });
-        if (!res.ok) return null;
-        const json = (await res.json()) as { monitors?: Array<{ name?: string; url?: string; status?: string; ping?: number }> };
-        return json.monitors ?? [];
-      } catch {
-        return null;
-      }
-    },
-  });
+  // Note: we intentionally do NOT merge in the external upwatch.online status
+  // feed. Fuzzy-matching by name/URL could surface another tenant's row under
+  // this user's monitor. `monitors.last_status` from our own runner is the
+  // source of truth.
+
 
   const subscriptionQuery = useQuery({
     queryKey: ["subscription", userId],
@@ -180,8 +167,8 @@ function Dashboard() {
           plan={plan}
           used={used}
           limit={limit}
-          liveStatuses={piStatusQuery.data ?? null}
           onChange={() => queryClient.invalidateQueries({ queryKey: ["monitors", userId] })}
+
         />
 
         <ChannelsPanel userId={userId} />
@@ -192,8 +179,6 @@ function Dashboard() {
   );
 }
 
-type LiveStatus = { name?: string; url?: string; status?: string; ping?: number };
-
 function MonitorsPanel({
   monitors,
   isLoading,
@@ -202,7 +187,6 @@ function MonitorsPanel({
   plan,
   used,
   limit,
-  liveStatuses,
   onChange,
 }: {
   monitors: Monitor[];
@@ -212,9 +196,9 @@ function MonitorsPanel({
   plan: Plan;
   used: number;
   limit: number;
-  liveStatuses: LiveStatus[] | null;
   onChange: () => void;
 }) {
+
   const [name, setName] = useState("");
   const [url, setUrl] = useState("");
   const [busy, setBusy] = useState(false);
@@ -345,10 +329,7 @@ function MonitorsPanel({
       ) : (
         <ul className="divide-y divide-brand-border/50 border border-brand-border rounded-xl overflow-hidden">
           {monitors.map((m) => {
-            const live = liveStatuses?.find(
-              (s) => s.url === m.url || s.name?.toLowerCase() === m.name.toLowerCase(),
-            );
-            const status = live?.status ?? m.last_status ?? "pending";
+            const status = m.last_status ?? "pending";
             return (
               <li key={m.id} className="flex items-center justify-between px-5 py-4 bg-bg/40">
                 <div className="min-w-0">
@@ -356,9 +337,7 @@ function MonitorsPanel({
                   <div className="text-xs text-zinc-500 font-mono truncate">{m.url}</div>
                 </div>
                 <div className="flex items-center gap-4">
-                  {typeof live?.ping === "number" && (
-                    <span className="text-xs font-mono text-zinc-500">{Math.round(live.ping)}ms</span>
-                  )}
+
                   <span className="text-xs font-mono text-zinc-500">
                     every {m.interval_seconds < 60 ? `${m.interval_seconds}s` : `${Math.round(m.interval_seconds / 60)}m`}
                   </span>

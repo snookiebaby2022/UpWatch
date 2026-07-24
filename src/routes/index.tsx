@@ -135,18 +135,18 @@ const STRIPE_BUSINESS_URL = "https://buy.stripe.com/5kQ00j7coedA3Tk5qiebu01";
 
 function Index() {
   const navigate = useNavigate();
-  const [gated, setGated] = useState(() => {
-    if (typeof window === "undefined") return false;
-    return sessionStorage.getItem("upwatch:welcomed") !== "1";
-  });
-
+  // Read sessionStorage AFTER hydration only — reading it during initial
+  // render diverges between server (always false) and client (true for
+  // first-time visitors), triggering a React hydration mismatch warning
+  // and re-render. Deferring to useEffect keeps SSR output stable.
   useEffect(() => {
-    if (gated) {
+    if (typeof window === "undefined") return;
+    if (sessionStorage.getItem("upwatch:welcomed") !== "1") {
       navigate({ to: "/welcome", replace: true });
     }
-  }, [gated, navigate]);
+  }, [navigate]);
 
-  if (gated) return null;
+
 
   return (
     <div className="min-h-screen bg-bg text-zinc-300 font-sans selection:bg-brand/30">

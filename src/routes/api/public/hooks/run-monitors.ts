@@ -117,32 +117,27 @@ export const Route = createFileRoute("/api/public/hooks/run-monitors")({
     handlers: {
       POST: async ({ request }) => {
         try {
-        // Accept either the CRON_SECRET (if bound) or the Supabase publishable
-        // key via the standard `apikey` header — the documented pg_cron pattern.
+        // Only accept the server-only CRON_SECRET. The Supabase publishable
+        // key is shipped to every browser (VITE_SUPABASE_PUBLISHABLE_KEY) so
+        // it is NOT a secret and must never gate this endpoint.
         const authHeader = request.headers.get("authorization");
         const provided = request.headers.get("x-cron-secret")
-          ?? request.headers.get("apikey")
           ?? authHeader?.replace("Bearer ", "");
         const cronSecret = process.env.CRON_SECRET;
-        const publishableKey =
-          process.env.SUPABASE_PUBLISHABLE_KEY ??
-          process.env.VITE_SUPABASE_PUBLISHABLE_KEY ??
-          process.env.SUPABASE_ANON_KEY ??
-          import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-        const accepted = [cronSecret, publishableKey].filter(Boolean) as string[];
-        if (accepted.length === 0) {
-          console.error("[run-monitors] no auth secrets bound to worker — refusing to run.");
+        if (!cronSecret) {
+          console.error("[run-monitors] CRON_SECRET not bound — refusing to run.");
           return new Response(JSON.stringify({ error: "server not configured" }), {
             status: 503,
             headers: { "content-type": "application/json" },
           });
         }
-        if (!provided || !accepted.includes(provided)) {
+        if (!provided || provided !== cronSecret) {
           return new Response(JSON.stringify({ error: "unauthorized" }), {
             status: 401,
             headers: { "content-type": "application/json" },
           });
         }
+
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const { isPublicHttpUrl } = await import("@/lib/url-safety");
@@ -160,7 +155,10 @@ export const Route = createFileRoute("/api/public/hooks/run-monitors")({
           });
         }
 
-        // Build user_id -> plan map so business monitors get multi-region checks.
+        // Build user_id -> plan map so we can (a) run business monitors in
+        // multi-region and (b) enforce the correct check interval from the
+        // live plan, not whatever `interval_seconds` was stored at create-time.
+        const PLAN_INTERVAL: Record<string, number> = { starter: 900, pro: 300, business: 60 };
         const userIds = Array.from(new Set((monitors ?? []).map((m) => m.user_id)));
         const planByUser = new Map<string, string>();
         if (userIds.length) {
@@ -172,11 +170,15 @@ export const Route = createFileRoute("/api/public/hooks/run-monitors")({
           for (const s of subs ?? []) planByUser.set(s.user_id, s.plan);
         }
 
+
         const due = (monitors ?? []).filter((m) => {
           if (!m.last_checked_at) return true;
           const last = new Date(m.last_checked_at).getTime();
-          return Date.now() - last >= (m.interval_seconds ?? 300) * 1000;
+          const plan = planByUser.get(m.user_id) ?? "starter";
+          const interval = PLAN_INTERVAL[plan] ?? 900;
+          return Date.now() - last >= interval * 1000;
         });
+
 
 
         // Perform a single HTTP probe from one region and return a normalized result.
@@ -272,8 +274,13 @@ export const Route = createFileRoute("/api/public/hooks/run-monitors")({
                 // Aggregate metrics from probes.
                 const rts = probes.map((p) => p.responseTime).filter((n): n is number => n != null);
                 responseTime = rts.length ? Math.round(rts.reduce((a, b) => a + b, 0) / rts.length) : null;
-                statusCode = probes.find((p) => p.statusCode != null)?.statusCode ?? null;
+                // Representative status code should reflect the consensus, not the first non-null.
+                const consensusProbes = probes.filter((p) => p.status === status);
+                statusCode = consensusProbes.find((p) => p.statusCode != null)?.statusCode
+                  ?? probes.find((p) => p.statusCode != null)?.statusCode
+                  ?? null;
                 const regionSummary = probes.map((p) => `${p.region}:${p.status}${p.errorMessage ? `(${p.errorMessage})` : ""}`).join(" | ");
+
                 errorMessage = status === "down" ? `multi-region consensus DOWN — ${regionSummary}` : null;
                 // Persist an individual row per region for the incident timeline.
                 await supabaseAdmin.from("check_results").insert(
@@ -300,32 +307,46 @@ export const Route = createFileRoute("/api/public/hooks/run-monitors")({
                 });
               }
 
-              await supabaseAdmin
+              // TOCTOU-safe transition: only apply state change if last_status
+              // still matches what we observed. A concurrent runner will lose
+              // the race and skip the alert / incident write.
+              const prev = m.last_status;
+              const { data: updatedRows } = await supabaseAdmin
                 .from("monitors")
                 .update({ last_status: status, last_checked_at: nowIso })
-                .eq("id", m.id);
+                .eq("id", m.id)
+                .eq("last_status", prev ?? "pending")
+                .select("id");
 
-              const prev = m.last_status;
-              if (prev && prev !== "pending" && prev !== status) {
+              const weApplied = (updatedRows?.length ?? 0) > 0;
+
+              if (weApplied && prev && prev !== "pending" && prev !== status) {
                 if (status === "down") {
-                  await supabaseAdmin.from("incidents").insert({
-                    monitor_id: m.id,
-                    error_message: errorMessage,
-                  });
-                  await sendAlert({ monitor: m, transition: "down", errorMessage });
+                  // Partial unique index (incidents_one_open_per_monitor) makes
+                  // duplicate open incidents impossible; ignore the conflict.
+                  const { error: incErr } = await supabaseAdmin
+                    .from("incidents")
+                    .insert({ monitor_id: m.id, error_message: errorMessage });
+                  if (!incErr) {
+                    await sendAlert({ monitor: m, transition: "down", errorMessage });
+                  }
                 } else if (status === "up") {
-                  await supabaseAdmin
+                  const { data: resolved } = await supabaseAdmin
                     .from("incidents")
                     .update({ resolved_at: nowIso })
                     .eq("monitor_id", m.id)
-                    .is("resolved_at", null);
-                  await sendAlert({ monitor: m, transition: "up", errorMessage: null });
+                    .is("resolved_at", null)
+                    .select("id");
+                  if ((resolved?.length ?? 0) > 0) {
+                    await sendAlert({ monitor: m, transition: "up", errorMessage: null });
+                  }
                 }
               }
 
               return { id: m.id, status, previous: prev };
             }),
           );
+
           results.push(...batchResults);
         }
 
