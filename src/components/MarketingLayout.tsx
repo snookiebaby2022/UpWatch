@@ -17,7 +17,8 @@ export function MarketingLayout({ children }: { children: ReactNode }) {
           <div className="flex items-center gap-6 text-sm text-white/70">
             <Link to="/features" className="hover:text-white">Features</Link>
             <Link to="/pricing" className="hover:text-white">Pricing</Link>
-            <Link to="/blog" className="hover:text-white">Blog</Link>
+            <Link to="/compare/uptimerobot" className="hover:text-white">Compare</Link>
+            <Link to="/support" className="hover:text-white">Support</Link>
             <Link to="/status" className="hover:text-white">Status</Link>
             <Link
               to="/auth"

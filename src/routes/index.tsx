@@ -319,7 +319,9 @@ function Pricing() {
               <h3 className="text-xl font-bold text-white mb-2">{tier.name}</h3>
               <div className="text-4xl font-bold text-white">
                 {tier.price}
-                <span className="text-lg text-zinc-500 font-normal">/mo</span>
+                <span className="text-lg text-zinc-500 font-normal">
+                  {tier.price === "£0" ? " forever" : "/mo"}
+                </span>
               </div>
             </div>
             <ul className="space-y-4 mb-10 flex-1">

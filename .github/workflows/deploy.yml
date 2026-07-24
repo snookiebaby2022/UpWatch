@@ -29,12 +29,6 @@ jobs:
           node-version: 22
           cache: npm
 
-      - name: Load .env defaults for build
-        run: |
-          if [ -f .env ]; then
-            grep -v '^#' .env | grep -v '^$' >> "$GITHUB_ENV" || true
-          fi
-
       - name: Install dependencies
         run: npm ci
 
