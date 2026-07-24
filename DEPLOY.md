@@ -5,6 +5,7 @@
 Run in [SQL Editor](https://supabase.com/dashboard/project/vepgivwmulpdacsfucmn/sql/new):
 
 - **Admin can't access `/admin`?** Run `supabase/fix-admin-now.sql` first (grants `has_role` + admin role).
+- **Support tab empty / error?** Run `supabase/fix-tickets-now.sql` (creates ticket tables + priority trigger).
 - Paste and run the full `supabase/setup-complete.sql`, **or**
 - Run only `supabase/migrations/20260724213000_ensure_monitors_columns.sql` if the rest is already applied.
 

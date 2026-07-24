@@ -1,5 +1,5 @@
 import type { AdminTotals, IncidentRow, MonitorRow, TicketRow, UserRow } from "./types";
-import { sortTicketsByPriority } from "@/lib/tickets";
+import { priorityBadgeClass, sortTicketsByPriority } from "@/lib/tickets";
 
 export function Stat({
   label,
@@ -24,12 +24,16 @@ export function AdminOverview({
   monitors,
   incidents,
   tickets,
+  ticketsError,
+  onOpenSupport,
 }: {
   totals: AdminTotals;
   users: UserRow[];
   monitors: MonitorRow[];
   incidents: IncidentRow[];
   tickets: TicketRow[];
+  ticketsError?: string | null;
+  onOpenSupport?: () => void;
 }) {
   const planCounts = users.reduce(
     (acc, u) => {
@@ -127,11 +131,24 @@ export function AdminOverview({
       </div>
 
       <div className="border border-border/60 rounded-lg p-5 bg-card/20 space-y-3">
-        <h3 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">
-          Recent support tickets
-        </h3>
-        {recentTickets.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No tickets</p>
+        <div className="flex items-center justify-between gap-3">
+          <h3 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">
+            Recent support tickets
+          </h3>
+          {onOpenSupport && (
+            <button
+              type="button"
+              onClick={onOpenSupport}
+              className="text-xs px-3 py-1.5 border border-border/60 rounded hover:border-brand"
+            >
+              Open Support tab →
+            </button>
+          )}
+        </div>
+        {ticketsError ? (
+          <p className="text-sm text-amber-300">{ticketsError}</p>
+        ) : recentTickets.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No tickets yet — users open them from /tickets</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -145,9 +162,19 @@ export function AdminOverview({
               </thead>
               <tbody>
                 {recentTickets.map((t) => (
-                  <tr key={t.id} className="border-t border-border/60">
+                  <tr
+                    key={t.id}
+                    className="border-t border-border/60 cursor-pointer hover:bg-card/30"
+                    onClick={onOpenSupport}
+                  >
                     <td className="py-2 max-w-xs truncate">{t.subject}</td>
-                    <td className="py-2 capitalize">{t.priority}</td>
+                    <td className="py-2">
+                      <span
+                        className={`inline-flex capitalize text-xs px-2 py-0.5 rounded border ${priorityBadgeClass(t.priority)}`}
+                      >
+                        {t.priority}
+                      </span>
+                    </td>
                     <td className="py-2 capitalize">{t.status}</td>
                     <td className="py-2 text-muted-foreground">
                       {new Date(t.created_at).toLocaleString()}

@@ -57,7 +57,7 @@ function AdminPage() {
   const [tab, setTab] = useState<AdminTab>("overview");
   const [search, setSearch] = useState("");
   const [incidentFilter, setIncidentFilter] = useState<"all" | "open" | "resolved">("open");
-  const [ticketStatusFilter, setTicketStatusFilter] = useState<TicketStatus | "all">("all");
+  const [ticketStatusFilter, setTicketStatusFilter] = useState<TicketStatus | "all">("open");
   const [ticketPriorityFilter, setTicketPriorityFilter] = useState<TicketPriority | "all">("all");
 
   const admin = useAdminData();
@@ -95,6 +95,20 @@ function AdminPage() {
               Dashboard
             </Link>
             <button
+              type="button"
+              onClick={() => setTab("support")}
+              className={`text-muted-foreground hover:text-foreground ${
+                tab === "support" ? "text-brand font-semibold" : ""
+              }`}
+            >
+              Support
+              {admin.totals.openTickets > 0 && (
+                <span className="ml-1.5 text-xs bg-brand text-black rounded-full px-1.5 py-0.5 font-semibold">
+                  {admin.totals.openTickets}
+                </span>
+              )}
+            </button>
+            <button
               onClick={() => admin.load()}
               disabled={admin.loading}
               className="text-muted-foreground hover:text-foreground disabled:opacity-40"
@@ -113,6 +127,25 @@ function AdminPage() {
         {admin.msg && (
           <div className="text-sm border border-border/60 bg-card/40 rounded-md px-3 py-2">
             {admin.msg}
+          </div>
+        )}
+
+        {admin.ticketsError && (
+          <div className="border border-amber-900/50 bg-amber-950/30 rounded-md p-4 text-sm text-amber-200">
+            <div className="font-semibold mb-1">Support tickets not connected</div>
+            <p className="mb-2">{admin.ticketsError}</p>
+            <p className="text-xs text-amber-200/80">
+              SQL file: <code className="font-mono">supabase/fix-tickets-now.sql</code> — paste in{" "}
+              <a
+                href="https://supabase.com/dashboard/project/vepgivwmulpdacsfucmn/sql/new"
+                className="underline"
+                target="_blank"
+                rel="noreferrer"
+              >
+                Supabase SQL Editor
+              </a>
+              , then click Refresh above.
+            </p>
           </div>
         )}
 
@@ -165,6 +198,8 @@ function AdminPage() {
             monitors={admin.monitors}
             incidents={admin.incidents}
             tickets={admin.tickets}
+            ticketsError={admin.ticketsError}
+            onOpenSupport={() => setTab("support")}
           />
         ) : tab === "users" ? (
           <AdminUsersTab

@@ -24,6 +24,7 @@ export function useAdminData() {
   const [tickets, setTickets] = useState<TicketRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [ticketsError, setTicketsError] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
 
   useEffect(() => {
@@ -33,6 +34,7 @@ export function useAdminData() {
   const load = useCallback(async () => {
     setLoading(true);
     setLoadError(null);
+    setTicketsError(null);
     try {
       const [
         profilesRes,
@@ -75,9 +77,17 @@ export function useAdminData() {
         monsRes.error ??
         waitRes.error ??
         incRes.error ??
-        chanRes.error ??
-        ticketsRes.error;
+        chanRes.error;
       if (firstErr) throw firstErr;
+
+      if (ticketsRes.error) {
+        console.error("support_tickets load failed", ticketsRes.error);
+        setTicketsError(
+          ticketsRes.error.message.includes("support_tickets")
+            ? "Support ticket tables are missing. Run supabase/fix-tickets-now.sql in the Supabase SQL Editor, then Refresh."
+            : ticketsRes.error.message,
+        );
+      }
 
       const profiles = profilesRes.data ?? [];
       const subs = subsRes.data ?? [];
@@ -281,6 +291,7 @@ export function useAdminData() {
     incidents,
     channels,
     tickets,
+    ticketsError,
     loading,
     loadError,
     msg,
