@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { getPublicStatus } from "@/lib/status.functions";
 import { STATUS_PAGE_URL, SITE_URL, OG_IMAGE } from "@/lib/site";
+import { StatusMonitorList, StatusSourceBadge } from "@/components/StatusMonitorList";
+import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/hooks/use-session";
 
 const statusQueryOptions = queryOptions({
