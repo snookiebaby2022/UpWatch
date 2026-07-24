@@ -234,7 +234,7 @@ function MonitorsPanel({
     try {
       const { error: insertError } = await supabase
         .from("monitors")
-        .insert({ user_id: userId, name: trimmedName, url: trimmedUrl });
+        .insert({ user_id: userId, name: trimmedName, url: trimmedUrl, interval_seconds: PLAN_INTERVAL_SECONDS[plan] });
       if (insertError) {
         setMsg(insertError.message);
         return;
