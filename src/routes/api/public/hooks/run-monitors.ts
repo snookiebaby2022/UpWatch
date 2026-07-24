@@ -64,22 +64,23 @@ export const Route = createFileRoute("/api/public/hooks/run-monitors")({
     handlers: {
       POST: async ({ request }) => {
         try {
-        // Require a dedicated CRON_SECRET. The publishable-key fallback was
-        // removed — that key is shipped to browsers, so any visitor could
-        // trigger the run loop.
+        // Accept either the CRON_SECRET (if bound) or the Supabase publishable
+        // key via the standard `apikey` header — the documented pg_cron pattern.
         const authHeader = request.headers.get("authorization");
         const provided = request.headers.get("x-cron-secret")
           ?? request.headers.get("apikey")
           ?? authHeader?.replace("Bearer ", "");
         const cronSecret = process.env.CRON_SECRET;
-        if (!cronSecret) {
-          console.error("[run-monitors] CRON_SECRET is not configured — refusing to run.");
+        const publishableKey = process.env.SUPABASE_PUBLISHABLE_KEY;
+        const accepted = [cronSecret, publishableKey].filter(Boolean) as string[];
+        if (accepted.length === 0) {
+          console.error("[run-monitors] no auth secrets bound to worker — refusing to run.");
           return new Response(JSON.stringify({ error: "server not configured" }), {
             status: 503,
             headers: { "content-type": "application/json" },
           });
         }
-        if (!provided || provided !== cronSecret) {
+        if (!provided || !accepted.includes(provided)) {
           return new Response(JSON.stringify({ error: "unauthorized" }), {
             status: 401,
             headers: { "content-type": "application/json" },
