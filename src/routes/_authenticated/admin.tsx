@@ -14,6 +14,7 @@ import { AdminUsersTab } from "@/components/admin/AdminUsersTab";
 import { AdminWaitlistTab } from "@/components/admin/AdminWaitlistTab";
 import type { AdminTab, TicketStatus } from "@/components/admin/types";
 import { useAdminData } from "@/components/admin/useAdminData";
+import { resolveAdminAccess } from "@/lib/admin-access";
 import { BUILD_LABEL } from "@/lib/build";
 
 export const Route = createFileRoute("/_authenticated/admin")({
@@ -27,14 +28,8 @@ export const Route = createFileRoute("/_authenticated/admin")({
   beforeLoad: async () => {
     const { data: userData } = await supabase.auth.getUser();
     if (!userData.user) throw redirect({ to: "/auth" });
-    const { data: isAdmin, error } = await supabase.rpc("has_role", {
-      _user_id: userData.user.id,
-      _role: "admin",
-    });
-    if (error) {
-      console.error("admin role check failed — run supabase/setup-complete.sql", error);
-      throw redirect({ to: "/dashboard" });
-    }
+    const { isAdmin, roleCheckFailed } = await resolveAdminAccess(userData.user.id);
+    if (roleCheckFailed) throw redirect({ to: "/dashboard" });
     if (!isAdmin) throw redirect({ to: "/dashboard" });
   },
   component: AdminPage,

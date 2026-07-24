@@ -23,7 +23,7 @@ if (-not (Test-Path $wranglerConfig)) {
     exit 1
 }
 
-node -e "const fs=require('fs');const p='.output/server/wrangler.json';const j=JSON.parse(fs.readFileSync(p,'utf8'));j.name='upwatch';if(j.assets?.directory) j.assets.directory=j.assets.directory.replace(/\\\\/g,'/');fs.writeFileSync(p,JSON.stringify(j,null,2));"
+node -e "const fs=require('fs');const p='.output/server/wrangler.json';const j=JSON.parse(fs.readFileSync(p,'utf8'));j.name='upwatch';j.routes=[{pattern:'upwatch.online/*',zone_name:'upwatch.online'},{pattern:'www.upwatch.online/*',zone_name:'upwatch.online'}];if(j.assets?.directory) j.assets.directory=j.assets.directory.replace(/\\\\/g,'/');fs.writeFileSync(p,JSON.stringify(j,null,2));"
 
 if ($env:CLOUDFLARE_API_TOKEN -and $env:CLOUDFLARE_ACCOUNT_ID) {
     Write-Host "Deploying with CLOUDFLARE_* env vars..." -ForegroundColor Cyan

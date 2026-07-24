@@ -46,12 +46,38 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
   SELECT EXISTS (
-    SELECT 1 FROM public.user_roles WHERE user_id = _user_id AND role = _role
+    SELECT 1
+    FROM public.user_roles ur
+    WHERE ur.user_id = _user_id
+      AND ur.role::text = _role::text
   );
 $$;
 
 REVOKE ALL ON FUNCTION public.has_role(UUID, public.app_role) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.has_role(UUID, public.app_role) TO authenticated;
+
+CREATE OR REPLACE FUNCTION public.bootstrap_admin()
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  _email text;
+BEGIN
+  SELECT email INTO _email FROM auth.users WHERE id = auth.uid();
+  IF _email IS NULL OR lower(_email) <> lower('snookiebaby2022@gmail.com') THEN
+    RETURN false;
+  END IF;
+  INSERT INTO public.user_roles (user_id, role)
+  VALUES (auth.uid(), 'admin')
+  ON CONFLICT (user_id, role) DO NOTHING;
+  RETURN true;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.bootstrap_admin() FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.bootstrap_admin() TO authenticated;
 
 -- 4) Admin panel policies (only if tables exist)
 DO $$ BEGIN
@@ -115,7 +141,7 @@ GRANT EXECUTE ON FUNCTION public.get_admin_users() TO authenticated;
 INSERT INTO public.user_roles (user_id, role)
 SELECT id, 'admin'
 FROM auth.users
-WHERE email = 'snookiebaby2022@gmail.com'
+WHERE lower(email) = lower('snookiebaby2022@gmail.com')
 ON CONFLICT (user_id, role) DO NOTHING;
 
 -- 7) Backfill profiles for existing auth users

@@ -6,6 +6,7 @@ import { isPublicHttpUrl } from "@/lib/url-safety";
 import { NotificationBell } from "@/components/NotificationBell";
 import { ChannelsPanel } from "@/components/ChannelsPanel";
 import type { Plan } from "@/lib/plans";
+import { resolveAdminAccess } from "@/lib/admin-access";
 import { PLAN_FEATURES, PLAN_INTERVAL_SECONDS, PLAN_LABEL, PLAN_LIMITS } from "@/lib/plans";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -48,14 +49,13 @@ function Dashboard() {
         if (!data.user) return;
         setEmail(data.user.email ?? "");
         setUserId(data.user.id);
-        const [profileRes, adminRes] = await Promise.all([
+        const [profileRes, adminAccess] = await Promise.all([
           supabase.from("profiles").select("display_name").eq("id", data.user.id).maybeSingle(),
-          supabase.rpc("has_role", { _user_id: data.user.id, _role: "admin" }),
+          resolveAdminAccess(data.user.id),
         ]);
         if (profileRes.error) console.error("profile load failed", profileRes.error);
-        if (adminRes.error) console.error("role check failed", adminRes.error);
         setDisplayName(profileRes.data?.display_name ?? "");
-        setIsAdmin(!!adminRes.data);
+        setIsAdmin(adminAccess.isAdmin);
       } catch (err) {
         console.error("dashboard init failed", err);
       }

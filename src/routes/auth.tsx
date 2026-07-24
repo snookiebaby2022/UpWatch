@@ -20,6 +20,25 @@ const credentialsSchema = z.object({
   password: z.string().min(8, "Password must be at least 8 characters").max(72),
 });
 
+function normalizeEmail(value: string) {
+  return value.trim().toLowerCase();
+}
+
+function authErrorMessage(err: unknown, mode: "signin" | "signup") {
+  if (!(err instanceof Error)) return "Something went wrong";
+  const msg = err.message;
+  if (mode === "signin" && /invalid login credentials/i.test(msg)) {
+    return "No account matches that email and password. Create an account below, use Continue with Google if you signed up that way, or reset your password.";
+  }
+  if (/email not confirmed/i.test(msg)) {
+    return "Confirm your email first — check your inbox (and spam), or resend the verification link below.";
+  }
+  if (/user already registered/i.test(msg)) {
+    return "An account with this email already exists. Sign in instead, or use Forgot password?";
+  }
+  return msg;
+}
+
 function AuthPage() {
   const navigate = useNavigate();
   const [mode, setMode] = useState<"signin" | "signup" | "forgot">("signin");
@@ -71,7 +90,10 @@ function AuthPage() {
       return;
     }
 
-    const parsed = credentialsSchema.safeParse({ email, password });
+    const parsed = credentialsSchema.safeParse({
+      email: normalizeEmail(email),
+      password,
+    });
     if (!parsed.success) {
       setError(parsed.error.issues[0].message);
       return;
@@ -105,7 +127,7 @@ function AuthPage() {
         navigate({ to: "/dashboard", replace: true });
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+      setError(authErrorMessage(err, mode === "signup" ? "signup" : "signin"));
     } finally {
       setLoading(false);
     }
@@ -251,8 +273,21 @@ function AuthPage() {
             )}
 
             {error && (
-              <div className="text-sm text-red-400 bg-red-950/40 border border-red-900/50 rounded-lg px-3 py-2">
-                {error}
+              <div className="text-sm text-red-400 bg-red-950/40 border border-red-900/50 rounded-lg px-3 py-2 space-y-2">
+                <p>{error}</p>
+                {mode === "signin" && /invalid login credentials|no account matches/i.test(error) && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMode("signup");
+                      setError(null);
+                      setInfo("Create a new account with this email, then visit /admin.");
+                    }}
+                    className="text-brand hover:underline font-semibold block"
+                  >
+                    Create an account with {normalizeEmail(email) || "this email"}
+                  </button>
+                )}
               </div>
             )}
             {info && (

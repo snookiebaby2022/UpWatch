@@ -30,6 +30,7 @@ import { Route as CompareBetterstackRouteImport } from './routes/compare.betters
 import { Route as CompareUptimeKumaRouteImport } from './routes/compare.uptime-kuma'
 import { Route as CompareUptimerobotRouteImport } from './routes/compare.uptimerobot'
 import { Route as ApiPublicHooksRunMonitorsRouteImport } from './routes/api/public/hooks/run-monitors'
+import { Route as ApiPublicSetupBootstrapRouteImport } from './routes/api/public/setup/bootstrap'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -136,6 +137,11 @@ const ApiPublicHooksRunMonitorsRoute =
     path: '/api/public/hooks/run-monitors',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicSetupBootstrapRoute = ApiPublicSetupBootstrapRouteImport.update({
+  id: '/api/public/setup/bootstrap',
+  path: '/api/public/setup/bootstrap',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -158,6 +164,7 @@ export interface FileRoutesByFullPath {
   '/compare/uptimerobot': typeof CompareUptimerobotRoute
   '/blog/': typeof BlogIndexRoute
   '/api/public/hooks/run-monitors': typeof ApiPublicHooksRunMonitorsRoute
+  '/api/public/setup/bootstrap': typeof ApiPublicSetupBootstrapRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -179,6 +186,7 @@ export interface FileRoutesByTo {
   '/compare/uptimerobot': typeof CompareUptimerobotRoute
   '/blog': typeof BlogIndexRoute
   '/api/public/hooks/run-monitors': typeof ApiPublicHooksRunMonitorsRoute
+  '/api/public/setup/bootstrap': typeof ApiPublicSetupBootstrapRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -203,6 +211,7 @@ export interface FileRoutesById {
   '/compare/uptimerobot': typeof CompareUptimerobotRoute
   '/blog/': typeof BlogIndexRoute
   '/api/public/hooks/run-monitors': typeof ApiPublicHooksRunMonitorsRoute
+  '/api/public/setup/bootstrap': typeof ApiPublicSetupBootstrapRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -227,6 +236,7 @@ export interface FileRouteTypes {
     | '/compare/uptimerobot'
     | '/blog/'
     | '/api/public/hooks/run-monitors'
+    | '/api/public/setup/bootstrap'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -248,6 +258,7 @@ export interface FileRouteTypes {
     | '/compare/uptimerobot'
     | '/blog'
     | '/api/public/hooks/run-monitors'
+    | '/api/public/setup/bootstrap'
   id:
     | '__root__'
     | '/'
@@ -271,6 +282,7 @@ export interface FileRouteTypes {
     | '/compare/uptimerobot'
     | '/blog/'
     | '/api/public/hooks/run-monitors'
+    | '/api/public/setup/bootstrap'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -290,6 +302,7 @@ export interface RootRouteChildren {
   CompareUptimeKumaRoute: typeof CompareUptimeKumaRoute
   CompareUptimerobotRoute: typeof CompareUptimerobotRoute
   ApiPublicHooksRunMonitorsRoute: typeof ApiPublicHooksRunMonitorsRoute
+  ApiPublicSetupBootstrapRoute: typeof ApiPublicSetupBootstrapRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -441,6 +454,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksRunMonitorsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/setup/bootstrap': {
+      id: '/api/public/setup/bootstrap'
+      path: '/api/public/setup/bootstrap'
+      fullPath: '/api/public/setup/bootstrap'
+      preLoaderRoute: typeof ApiPublicSetupBootstrapRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -488,6 +508,7 @@ const rootRouteChildren: RootRouteChildren = {
   CompareUptimeKumaRoute: CompareUptimeKumaRoute,
   CompareUptimerobotRoute: CompareUptimerobotRoute,
   ApiPublicHooksRunMonitorsRoute: ApiPublicHooksRunMonitorsRoute,
+  ApiPublicSetupBootstrapRoute: ApiPublicSetupBootstrapRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
