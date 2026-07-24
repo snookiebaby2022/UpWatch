@@ -27,7 +27,7 @@ const FAQS = [
   },
   {
     q: "How often do you check my endpoints?",
-    a: "Every 15 minutes on Starter, every 5 minutes on Pro, and every 30 seconds on Business for critical infrastructure.",
+    a: "Every 15 minutes on Starter, every 5 minutes on Pro, and every 1 minute on Business for critical infrastructure.",
   },
   {
     q: "Can I host a public status page?",
