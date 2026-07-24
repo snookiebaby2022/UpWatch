@@ -274,8 +274,13 @@ export const Route = createFileRoute("/api/public/hooks/run-monitors")({
                 // Aggregate metrics from probes.
                 const rts = probes.map((p) => p.responseTime).filter((n): n is number => n != null);
                 responseTime = rts.length ? Math.round(rts.reduce((a, b) => a + b, 0) / rts.length) : null;
-                statusCode = probes.find((p) => p.statusCode != null)?.statusCode ?? null;
+                // Representative status code should reflect the consensus, not the first non-null.
+                const consensusProbes = probes.filter((p) => p.status === status);
+                statusCode = consensusProbes.find((p) => p.statusCode != null)?.statusCode
+                  ?? probes.find((p) => p.statusCode != null)?.statusCode
+                  ?? null;
                 const regionSummary = probes.map((p) => `${p.region}:${p.status}${p.errorMessage ? `(${p.errorMessage})` : ""}`).join(" | ");
+
                 errorMessage = status === "down" ? `multi-region consensus DOWN — ${regionSummary}` : null;
                 // Persist an individual row per region for the incident timeline.
                 await supabaseAdmin.from("check_results").insert(
