@@ -46,7 +46,18 @@ The dashboard toggle alone is **not enough** — Supabase must store both **Clie
 
 1. [Google provider](https://supabase.com/dashboard/project/vepgivwmulpdacsfucmn/auth/providers?provider=Google)
 2. Enable Google, paste **Client ID** and **Client Secret** (not just “Authorized Client IDs”), **Save**
-3. [URL Configuration](https://supabase.com/dashboard/project/vepgivwmulpdacsfucmn/auth/url-configuration): Site URL `https://upwatch.online`, redirect `https://upwatch.online/**`
+3. [URL Configuration](https://supabase.com/dashboard/project/vepgivwmulpdacsfucmn/auth/url-configuration):
+   - **Site URL:** `https://upwatch.online`
+   - **Redirect URLs** (add every line):
+     - `https://upwatch.online/**`
+     - `https://www.upwatch.online/**`
+     - `https://upwatch.online/auth`
+     - `https://uptime-buddy-hq.lovable.app/**` (keep if you still use Lovable preview)
+
+4. **Google Cloud Console** → OAuth client → **Authorized JavaScript origins**:
+   - `https://upwatch.online`
+   - `https://www.upwatch.online`
+   - `https://uptime-buddy-hq.lovable.app` (optional, for Lovable preview)
 
 ### If dashboard Save still fails (`missing OAuth secret`)
 
