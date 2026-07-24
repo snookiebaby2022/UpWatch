@@ -80,24 +80,11 @@ function Dashboard() {
     },
   });
 
-  const piStatusQuery = useQuery({
-    queryKey: ["pi-status"],
-    refetchInterval: 30_000,
-    // Don't poll while the tab is hidden — saves requests when users leave it open.
-    refetchIntervalInBackground: false,
-    refetchOnWindowFocus: true,
-    retry: false,
-    queryFn: async () => {
-      try {
-        const res = await fetch("https://api.upwatch.online/api/status", { signal: AbortSignal.timeout(5000) });
-        if (!res.ok) return null;
-        const json = (await res.json()) as { monitors?: Array<{ name?: string; url?: string; status?: string; ping?: number }> };
-        return json.monitors ?? [];
-      } catch {
-        return null;
-      }
-    },
-  });
+  // Note: we intentionally do NOT merge in the external upwatch.online status
+  // feed. Fuzzy-matching by name/URL could surface another tenant's row under
+  // this user's monitor. `monitors.last_status` from our own runner is the
+  // source of truth.
+
 
   const subscriptionQuery = useQuery({
     queryKey: ["subscription", userId],
