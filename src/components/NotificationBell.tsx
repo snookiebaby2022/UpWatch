@@ -1,10 +1,11 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { Bell, Check } from "lucide-react";
-import { Link } from "@tanstack/react-router";
+import { Link, useRouter } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { useSession } from "@/hooks/use-session";
+
 
 type Notification = {
   id: string;
