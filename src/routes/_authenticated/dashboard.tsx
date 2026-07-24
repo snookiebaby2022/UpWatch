@@ -386,7 +386,7 @@ function BillingPanel({ plan }: { plan: Plan }) {
                 <span className="text-white font-semibold">Pro</span>
                 <span className="text-brand font-mono">£10/mo</span>
               </div>
-              <p className="text-xs text-zinc-500">50 monitors · 1-minute checks · Slack & Discord</p>
+              <p className="text-xs text-zinc-500">50 monitors · 5-minute checks · Slack & Discord</p>
             </a>
           )}
           <a
