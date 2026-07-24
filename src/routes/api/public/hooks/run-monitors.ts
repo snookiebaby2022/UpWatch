@@ -307,32 +307,46 @@ export const Route = createFileRoute("/api/public/hooks/run-monitors")({
                 });
               }
 
-              await supabaseAdmin
+              // TOCTOU-safe transition: only apply state change if last_status
+              // still matches what we observed. A concurrent runner will lose
+              // the race and skip the alert / incident write.
+              const prev = m.last_status;
+              const { data: updatedRows } = await supabaseAdmin
                 .from("monitors")
                 .update({ last_status: status, last_checked_at: nowIso })
-                .eq("id", m.id);
+                .eq("id", m.id)
+                .eq("last_status", prev ?? "pending")
+                .select("id");
 
-              const prev = m.last_status;
-              if (prev && prev !== "pending" && prev !== status) {
+              const weApplied = (updatedRows?.length ?? 0) > 0;
+
+              if (weApplied && prev && prev !== "pending" && prev !== status) {
                 if (status === "down") {
-                  await supabaseAdmin.from("incidents").insert({
-                    monitor_id: m.id,
-                    error_message: errorMessage,
-                  });
-                  await sendAlert({ monitor: m, transition: "down", errorMessage });
+                  // Partial unique index (incidents_one_open_per_monitor) makes
+                  // duplicate open incidents impossible; ignore the conflict.
+                  const { error: incErr } = await supabaseAdmin
+                    .from("incidents")
+                    .insert({ monitor_id: m.id, error_message: errorMessage });
+                  if (!incErr) {
+                    await sendAlert({ monitor: m, transition: "down", errorMessage });
+                  }
                 } else if (status === "up") {
-                  await supabaseAdmin
+                  const { data: resolved } = await supabaseAdmin
                     .from("incidents")
                     .update({ resolved_at: nowIso })
                     .eq("monitor_id", m.id)
-                    .is("resolved_at", null);
-                  await sendAlert({ monitor: m, transition: "up", errorMessage: null });
+                    .is("resolved_at", null)
+                    .select("id");
+                  if ((resolved?.length ?? 0) > 0) {
+                    await sendAlert({ monitor: m, transition: "up", errorMessage: null });
+                  }
                 }
               }
 
               return { id: m.id, status, previous: prev };
             }),
           );
+
           results.push(...batchResults);
         }
 
