@@ -1,0 +1,35 @@
+name: Deploy Uptime Kuma
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "infra/uptime-kuma/**"
+
+jobs:
+  deploy-kuma:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy via SSH
+        env:
+          SSH_HOST: ${{ secrets.KUMA_SSH_HOST }}
+          SSH_USER: ${{ secrets.KUMA_SSH_USER }}
+          SSH_KEY: ${{ secrets.KUMA_SSH_KEY }}
+          TUNNEL_TOKEN: ${{ secrets.CLOUDFLARE_TUNNEL_TOKEN }}
+        run: |
+          if [ -z "$SSH_HOST" ] || [ -z "$SSH_USER" ] || [ -z "$SSH_KEY" ]; then
+            echo "Skipping remote Kuma deploy — set KUMA_SSH_HOST, KUMA_SSH_USER, KUMA_SSH_KEY secrets."
+            echo "Or run locally: cd infra/uptime-kuma && ./setup.sh"
+            exit 0
+          fi
+          mkdir -p ~/.ssh
+          echo "$SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh -o StrictHostKeyChecking=no "$SSH_USER@$SSH_HOST" "mkdir -p ~/upwatch-kuma"
+          scp -o StrictHostKeyChecking=no -r infra/uptime-kuma/* "$SSH_USER@$SSH_HOST:~/upwatch-kuma/"
+          ssh -o StrictHostKeyChecking=no "$SSH_USER@$SSH_HOST" "cd ~/upwatch-kuma && \
+            if [ -n \"$TUNNEL_TOKEN\" ]; then echo CLOUDFLARE_TUNNEL_TOKEN=$TUNNEL_TOKEN >> .env; fi && \
+            docker compose --profile cloudflare up -d || docker compose up -d"

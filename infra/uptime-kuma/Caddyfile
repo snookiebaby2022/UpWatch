@@ -1,0 +1,4 @@
+{$KUMA_DOMAIN:status.upwatch.online} {
+	encode gzip
+	reverse_proxy uptime-kuma:3001
+}

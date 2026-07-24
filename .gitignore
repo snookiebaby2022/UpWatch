@@ -19,6 +19,7 @@ dist-ssr
 # Wrangler / Cloudflare
 .wrangler/
 .dev.vars
+infra/uptime-kuma/.env
 
 # Editor directories and files
 .vscode/*
