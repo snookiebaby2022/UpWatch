@@ -83,6 +83,38 @@ function SupportPage() {
     load();
   }, [load]);
 
+  // Realtime: refresh list on ticket changes and append admin replies to the
+  // currently-open thread so users see responses without reloading.
+  useEffect(() => {
+    if (!userId) return;
+    const channel = supabase
+      .channel(`user-support-${userId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "support_tickets", filter: `user_id=eq.${userId}` },
+        () => load(),
+      )
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "support_ticket_messages" },
+        (payload) => {
+          const m = payload.new as TicketMessage;
+          setOpenTicket((cur) => {
+            if (cur && m.ticket_id === cur.id) {
+              setMessages((prev) =>
+                prev.some((x) => x.id === m.id) ? prev : [...prev, m],
+              );
+            }
+            return cur;
+          });
+        },
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [userId, load]);
+
   async function submitTicket(e: React.FormEvent) {
     e.preventDefault();
     if (!userId) return;
