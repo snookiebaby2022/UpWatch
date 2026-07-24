@@ -207,6 +207,37 @@ function AdminPage() {
     load();
   }, [load]);
 
+  // Realtime: refresh tickets list on any change, and append new messages to
+  // an open thread so admins see user replies without reloading.
+  useEffect(() => {
+    const channel = supabase
+      .channel("admin-support")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "support_tickets" },
+        () => load(),
+      )
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "support_ticket_messages" },
+        (payload) => {
+          const m = payload.new as TicketMessageRow;
+          setOpenTicket((cur) => {
+            if (cur && m.ticket_id === cur.id) {
+              setTicketMessages((prev) =>
+                prev.some((x) => x.id === m.id) ? prev : [...prev, m],
+              );
+            }
+            return cur;
+          });
+        },
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [load]);
+
   async function updatePlan(userId: string, plan: Plan, status: Status) {
     setMsg(null);
     const { error } = await supabase
