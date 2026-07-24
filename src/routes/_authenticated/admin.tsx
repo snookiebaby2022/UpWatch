@@ -62,6 +62,40 @@ type IncidentRow = {
   error_message: string | null;
 };
 
+type ChannelRow = {
+  id: string;
+  user_id: string;
+  type: string;
+  target: string;
+  is_active: boolean;
+  created_at: string;
+};
+
+type TicketPriority = "low" | "normal" | "high";
+type TicketStatus = "open" | "pending" | "resolved" | "closed";
+
+type TicketRow = {
+  id: string;
+  user_id: string;
+  subject: string;
+  message: string;
+  priority: TicketPriority;
+  status: TicketStatus;
+  created_at: string;
+  updated_at: string;
+};
+
+type TicketMessageRow = {
+  id: string;
+  ticket_id: string;
+  author_id: string;
+  is_admin: boolean;
+  body: string;
+  created_at: string;
+};
+
+type AdminTab = "users" | "monitors" | "waitlist" | "incidents" | "channels" | "support";
+
 function AdminPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -70,9 +104,17 @@ function AdminPage() {
   const [monitors, setMonitors] = useState<MonitorRow[]>([]);
   const [waitlist, setWaitlist] = useState<WaitlistRow[]>([]);
   const [incidents, setIncidents] = useState<IncidentRow[]>([]);
+  const [channels, setChannels] = useState<ChannelRow[]>([]);
+  const [tickets, setTickets] = useState<TicketRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<"users" | "monitors" | "waitlist" | "incidents">("users");
+  const [tab, setTab] = useState<AdminTab>("users");
   const [msg, setMsg] = useState<string | null>(null);
+
+  // Ticket thread state
+  const [openTicket, setOpenTicket] = useState<TicketRow | null>(null);
+  const [ticketMessages, setTicketMessages] = useState<TicketMessageRow[]>([]);
+  const [ticketReply, setTicketReply] = useState("");
+  const [ticketBusy, setTicketBusy] = useState(false);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setCurrentUserId(data.user?.id ?? ""));
