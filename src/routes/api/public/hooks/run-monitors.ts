@@ -155,7 +155,10 @@ export const Route = createFileRoute("/api/public/hooks/run-monitors")({
           });
         }
 
-        // Build user_id -> plan map so business monitors get multi-region checks.
+        // Build user_id -> plan map so we can (a) run business monitors in
+        // multi-region and (b) enforce the correct check interval from the
+        // live plan, not whatever `interval_seconds` was stored at create-time.
+        const PLAN_INTERVAL: Record<string, number> = { starter: 900, pro: 300, business: 60 };
         const userIds = Array.from(new Set((monitors ?? []).map((m) => m.user_id)));
         const planByUser = new Map<string, string>();
         if (userIds.length) {
@@ -166,6 +169,7 @@ export const Route = createFileRoute("/api/public/hooks/run-monitors")({
             .eq("status", "active");
           for (const s of subs ?? []) planByUser.set(s.user_id, s.plan);
         }
+
 
         const due = (monitors ?? []).filter((m) => {
           if (!m.last_checked_at) return true;
