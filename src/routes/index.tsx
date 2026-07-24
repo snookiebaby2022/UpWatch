@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, queryOptions } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "@tanstack/react-router";
 import { getKumaStatus, type KumaMonitor } from "@/lib/kuma.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { SITE_URL, OG_IMAGE } from "@/lib/site";
@@ -133,6 +134,20 @@ const STRIPE_PRO_URL = "https://buy.stripe.com/14A5kDeEQb1o61s1a2ebu00";
 const STRIPE_BUSINESS_URL = "https://buy.stripe.com/5kQ00j7coedA3Tk5qiebu01";
 
 function Index() {
+  const navigate = useNavigate();
+  const [gated, setGated] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return sessionStorage.getItem("upwatch:welcomed") !== "1";
+  });
+
+  useEffect(() => {
+    if (gated) {
+      navigate({ to: "/welcome", replace: true });
+    }
+  }, [gated, navigate]);
+
+  if (gated) return null;
+
   return (
     <div className="min-h-screen bg-bg text-zinc-300 font-sans selection:bg-brand/30">
       <Nav />

@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { SITE_URL } from "@/lib/site";
 
@@ -22,17 +22,22 @@ export const Route = createFileRoute("/welcome")({
 });
 
 function WelcomePage() {
+  const navigate = useNavigate();
   const [phase, setPhase] = useState(0);
 
   useEffect(() => {
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem("upwatch:welcomed", "1");
+    }
     const timers = [
       setTimeout(() => setPhase(1), 250),
       setTimeout(() => setPhase(2), 1100),
       setTimeout(() => setPhase(3), 1900),
       setTimeout(() => setPhase(4), 2600),
+      setTimeout(() => navigate({ to: "/", replace: true }), 4200),
     ];
     return () => timers.forEach(clearTimeout);
-  }, []);
+  }, [navigate]);
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-bg text-zinc-200 font-sans flex items-center justify-center px-6">
