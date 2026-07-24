@@ -28,5 +28,5 @@ Write-Host "Checking upwatch.online admin bundle …"
 try {
   $admin = Invoke-WebRequest -Uri "https://upwatch.online/admin" -UseBasicParsing -TimeoutSec 15
   if ($admin.Content -match "Admin Console v2") { Write-Host "  OK: Admin Console v2 deployed" -ForegroundColor Green }
-  elseif ($admin.Content -match "Admin Dashboard") { Write-Host "  STALE: old admin — Lovable Publish → Update or enable GitHub deploy" -ForegroundColor Red }
+  elseif ($admin.Content -match "Admin Dashboard") { Write-Host "  STALE: old admin - Lovable Publish then Update, or enable GitHub deploy" -ForegroundColor Red }
 } catch { Write-Host "  ERROR: $_" -ForegroundColor Red }
