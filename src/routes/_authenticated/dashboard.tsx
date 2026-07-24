@@ -153,6 +153,7 @@ function Dashboard() {
               Admin
             </Link>
           )}
+          <NotificationBell />
           <button
             onClick={handleSignOut}
             className="bg-surface border border-brand-border px-4 py-2 rounded-full text-sm font-semibold text-white hover:bg-brand-border transition-colors"
