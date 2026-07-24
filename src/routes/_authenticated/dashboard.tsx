@@ -335,7 +335,7 @@ function MonitorsPanel({
                     <span className="text-xs font-mono text-zinc-500">{Math.round(live.ping)}ms</span>
                   )}
                   <span className="text-xs font-mono text-zinc-500">
-                    every {Math.round(m.interval_seconds / 60)}m
+                    every {m.interval_seconds < 60 ? `${m.interval_seconds}s` : `${Math.round(m.interval_seconds / 60)}m`}
                   </span>
                   <StatusBadge status={status} />
                   <button
