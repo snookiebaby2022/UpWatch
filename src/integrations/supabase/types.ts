@@ -90,6 +90,7 @@ export type Database = {
           id: string
           interval_seconds: number
           is_active: boolean
+          is_public: boolean
           keyword: string | null
           last_checked_at: string | null
           last_status: string
@@ -104,6 +105,7 @@ export type Database = {
           id?: string
           interval_seconds?: number
           is_active?: boolean
+          is_public?: boolean
           keyword?: string | null
           last_checked_at?: string | null
           last_status?: string
@@ -118,6 +120,7 @@ export type Database = {
           id?: string
           interval_seconds?: number
           is_active?: boolean
+          is_public?: boolean
           keyword?: string | null
           last_checked_at?: string | null
           last_status?: string
