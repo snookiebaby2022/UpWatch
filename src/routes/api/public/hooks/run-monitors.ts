@@ -21,34 +21,87 @@ async function sendAlert(opts: {
   const detail = opts.errorMessage ? `\nReason: ${opts.errorMessage}` : "";
   const text = `${title}\n${opts.monitor.url}${detail}`;
 
+  const BREVO_GATEWAY = "https://connector-gateway.lovable.dev/brevo";
+  const LOVABLE_API_KEY = process.env.LOVABLE_API_KEY;
+  const BREVO_API_KEY = process.env.BREVO_API_KEY;
+  const BREVO_SENDER_EMAIL = process.env.BREVO_SENDER_EMAIL ?? "alerts@upwatch.online";
+  const BREVO_SENDER_NAME = "UpWatch Alerts";
+  const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+
   await Promise.allSettled(
     channels.map(async (c) => {
       try {
-        // SSRF guard on user-supplied webhook targets.
-        const safety = isPublicHttpUrl(c.target);
-        if (!safety.ok) {
-          console.warn("alert target blocked", c.type, safety.reason);
-          return;
-        }
-        if (c.type === "slack" || c.type === "discord") {
-          await fetch(c.target, {
+        if (c.type === "slack" || c.type === "discord" || c.type === "webhook") {
+          const safety = isPublicHttpUrl(c.target);
+          if (!safety.ok) {
+            console.warn("alert target blocked", c.type, safety.reason);
+            return;
+          }
+          if (c.type === "slack") {
+            await fetch(c.target, {
+              method: "POST",
+              headers: { "content-type": "application/json" },
+              body: JSON.stringify({ text }),
+            });
+          } else if (c.type === "discord") {
+            await fetch(c.target, {
+              method: "POST",
+              headers: { "content-type": "application/json" },
+              body: JSON.stringify({ content: text }),
+            });
+          } else {
+            await fetch(c.target, {
+              method: "POST",
+              headers: { "content-type": "application/json" },
+              body: JSON.stringify({
+                monitor: { id: opts.monitor.id, name: opts.monitor.name, url: opts.monitor.url },
+                transition: opts.transition,
+                error: opts.errorMessage,
+              }),
+            });
+          }
+        } else if (c.type === "email") {
+          if (!LOVABLE_API_KEY || !BREVO_API_KEY) {
+            console.warn("email alert skipped — Brevo not configured");
+            return;
+          }
+          const html = `<div style="font-family:Arial,sans-serif;padding:16px"><h2 style="margin:0 0 12px">${title}</h2><p style="margin:0 0 8px"><a href="${opts.monitor.url}">${opts.monitor.url}</a></p>${opts.errorMessage ? `<p style="color:#b91c1c;margin:0">Reason: ${opts.errorMessage}</p>` : ""}<hr style="margin:20px 0;border:none;border-top:1px solid #eee"/><p style="font-size:12px;color:#888;margin:0">UpWatch — automated monitoring alert</p></div>`;
+          const res = await fetch(`${BREVO_GATEWAY}/smtp/email`, {
             method: "POST",
-            headers: { "content-type": "application/json" },
-            // Do not forward user_id to third-party webhooks (PII).
-            body: JSON.stringify(c.type === "discord" ? { content: text } : { text }),
+            headers: {
+              "content-type": "application/json",
+              authorization: `Bearer ${LOVABLE_API_KEY}`,
+              "x-connection-api-key": BREVO_API_KEY,
+            },
+            body: JSON.stringify({
+              sender: { name: BREVO_SENDER_NAME, email: BREVO_SENDER_EMAIL },
+              to: [{ email: c.target }],
+              subject: title,
+              htmlContent: html,
+              textContent: text,
+            }),
           });
-        } else if (c.type === "webhook") {
-          await fetch(c.target, {
+          if (!res.ok) {
+            console.error("brevo email failed", res.status, await res.text());
+          }
+        } else if (c.type === "telegram") {
+          if (!TELEGRAM_BOT_TOKEN) {
+            console.warn("telegram alert skipped — TELEGRAM_BOT_TOKEN not set");
+            return;
+          }
+          const res = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
             method: "POST",
             headers: { "content-type": "application/json" },
             body: JSON.stringify({
-              monitor: { id: opts.monitor.id, name: opts.monitor.name, url: opts.monitor.url },
-              transition: opts.transition,
-              error: opts.errorMessage,
+              chat_id: c.target,
+              text,
+              disable_web_page_preview: true,
             }),
           });
+          if (!res.ok) {
+            console.error("telegram send failed", res.status, await res.text());
+          }
         }
-        // email channel: no managed email domain wired yet — logged as an alert row for now.
       } catch (err) {
         console.error("alert dispatch failed", c.type, err);
       }
