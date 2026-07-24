@@ -28,7 +28,7 @@ function authErrorMessage(err: unknown, mode: "signin" | "signup") {
   if (!(err instanceof Error)) return "Something went wrong";
   const msg = err.message;
   if (mode === "signin" && /invalid login credentials/i.test(msg)) {
-    return "No account matches that email and password. Create an account below, use Continue with Google if you signed up that way, or reset your password.";
+    return "That password didn't work. If you just signed up, confirm your email first — or use Email me a login link below (works without a password).";
   }
   if (/email not confirmed/i.test(msg)) {
     return "Confirm your email first — check your inbox (and spam), or resend the verification link below.";
@@ -134,7 +134,7 @@ function AuthPage() {
   }
 
   async function handleResendVerification() {
-    const target = lastSignupEmail ?? email.trim().toLowerCase();
+    const target = normalizeEmail(lastSignupEmail ?? email);
     if (!target) {
       setError("Enter your email above first.");
       return;
@@ -149,7 +149,25 @@ function AuthPage() {
     });
     setLoading(false);
     if (err) return setError(err.message);
-    setInfo("Verification email sent.");
+    setInfo("Verification email sent — check your inbox and spam folder.");
+  }
+
+  async function handleMagicLink() {
+    const target = normalizeEmail(email);
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(target)) {
+      setError("Enter a valid email above first.");
+      return;
+    }
+    setError(null);
+    setInfo(null);
+    setLoading(true);
+    const { error: err } = await supabase.auth.signInWithOtp({
+      email: target,
+      options: { emailRedirectTo: `${window.location.origin}/dashboard` },
+    });
+    setLoading(false);
+    if (err) return setError(err.message);
+    setInfo(`Login link sent to ${target}. Click it in your email to sign in — no password needed.`);
   }
 
   async function handleGoogle() {
@@ -275,18 +293,25 @@ function AuthPage() {
             {error && (
               <div className="text-sm text-red-400 bg-red-950/40 border border-red-900/50 rounded-lg px-3 py-2 space-y-2">
                 <p>{error}</p>
-                {mode === "signin" && /invalid login credentials|no account matches/i.test(error) && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setMode("signup");
-                      setError(null);
-                      setInfo("Create a new account with this email, then visit /admin.");
-                    }}
-                    className="text-brand hover:underline font-semibold block"
-                  >
-                    Create an account with {normalizeEmail(email) || "this email"}
-                  </button>
+                {mode === "signin" && /password didn't work|invalid login credentials|confirm your email/i.test(error) && (
+                  <div className="flex flex-col gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={handleMagicLink}
+                      disabled={loading}
+                      className="text-brand hover:underline font-semibold text-left"
+                    >
+                      Email me a login link
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleResendVerification}
+                      disabled={loading}
+                      className="text-brand hover:underline font-semibold text-left"
+                    >
+                      Resend confirmation email
+                    </button>
+                  </div>
                 )}
               </div>
             )}
@@ -304,6 +329,17 @@ function AuthPage() {
               {loading ? "…" : mode === "signin" ? "Sign in" : mode === "signup" ? "Create account" : "Send reset link"}
             </button>
           </form>
+
+          {mode === "signin" && (
+            <button
+              type="button"
+              onClick={handleMagicLink}
+              disabled={loading}
+              className="w-full mt-3 text-sm text-zinc-400 hover:text-brand border border-brand-border rounded-xl px-4 py-3 transition-colors disabled:opacity-60"
+            >
+              Email me a login link (no password)
+            </button>
+          )}
 
           {mode === "signup" && lastSignupEmail && (
             <button
