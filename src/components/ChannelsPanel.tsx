@@ -134,10 +134,10 @@ export function ChannelsPanel({ userId, plan }: { userId: string; plan: Plan }) 
       <h2 className="text-white font-semibold text-xl mb-1">Alert channels</h2>
       <p className="text-zinc-500 text-sm mb-6">
         {plan === "starter"
-          ? "Starter includes email alerts. Upgrade to Pro for Slack and Discord."
+          ? "Starter includes email alerts only. Upgrade to Pro for Slack and Discord."
           : plan === "pro"
             ? "Pro includes email, Slack, and Discord alerts."
-            : "Business includes all alert channels including Telegram and custom webhooks."}
+            : "Business includes email, Slack, Discord, Telegram, and custom webhooks."}
       </p>
 
       <form onSubmit={addChannel} className="grid grid-cols-1 md:grid-cols-[160px_1fr_auto] gap-3 mb-3">

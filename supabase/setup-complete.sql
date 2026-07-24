@@ -147,3 +147,12 @@ SELECT cron.schedule(
   ) AS request_id;
   $$
 );
+
+-- 10) Ensure monitors columns exist (fixes "interval_seconds not in schema cache")
+ALTER TABLE public.monitors
+  ADD COLUMN IF NOT EXISTS interval_seconds integer NOT NULL DEFAULT 900,
+  ADD COLUMN IF NOT EXISTS type text NOT NULL DEFAULT 'http',
+  ADD COLUMN IF NOT EXISTS keyword text,
+  ADD COLUMN IF NOT EXISTS last_status text NOT NULL DEFAULT 'pending',
+  ADD COLUMN IF NOT EXISTS last_checked_at timestamptz,
+  ADD COLUMN IF NOT EXISTS is_public boolean NOT NULL DEFAULT true;

@@ -17,12 +17,12 @@ const statusQueryOptions = queryOptions({
 });
 const HOME_TITLE = "UpWatch — Website Uptime Monitoring That Doesn't Sleep";
 const HOME_DESC =
-  "Monitor your websites and APIs from every region. Instant Slack, Discord, email and SMS alerts the moment something breaks. From £0/mo.";
+  "Monitor your websites and APIs from every region. Starter includes email alerts; Pro adds Slack and Discord. From £0/mo.";
 
 const FAQS = [
   {
     q: "What happens if my site goes down?",
-    a: "The instant a check fails, we retry from a secondary path to confirm it's real — not a network blip. Then we fire alerts through every channel you've enabled: email, Slack, Discord, SMS, or webhook. You get a full trace log, timestamp, and the exact error.",
+    a: "The instant a check fails, we confirm it is real — not a network blip. Then we alert you on the channels your plan includes: email on Starter, plus Slack and Discord on Pro, and all channels on Business.",
   },
   {
     q: "How often do you check my endpoints?",
@@ -217,8 +217,7 @@ function Hero() {
         <span className="text-brand">we watch your website.</span>
       </h1>
       <p className="max-w-2xl mx-auto text-lg text-zinc-400 mb-10">
-        Professional uptime monitoring for modern stacks. Instant alerts via Slack, Email, or SMS
-        the second your site hiccups.
+        Professional uptime monitoring for modern stacks. Email alerts on Starter — Slack and Discord on Pro.
       </p>
       <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
         <Link

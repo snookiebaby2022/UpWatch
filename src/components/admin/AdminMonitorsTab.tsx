@@ -1,4 +1,5 @@
 import { Input } from "@/components/ui/input";
+import { PLAN_INTERVAL_SECONDS, type Plan } from "@/lib/plans";
 import type { MonitorRow, UserRow } from "./types";
 
 function formatInterval(seconds: number) {
@@ -67,7 +68,9 @@ export function AdminMonitorsTab({
                     {m.url}
                   </td>
                   <td className="px-4 py-3 capitalize">{m.type}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{formatInterval(m.interval_seconds)}</td>
+                  <td className="px-4 py-3 text-muted-foreground">
+                    {formatInterval(PLAN_INTERVAL_SECONDS[(owner?.plan ?? "starter") as Plan])}
+                  </td>
                   <td className="px-4 py-3">
                     <span
                       className={

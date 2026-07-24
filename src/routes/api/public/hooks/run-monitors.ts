@@ -155,7 +155,7 @@ export const Route = createFileRoute("/api/public/hooks/run-monitors")({
         const nowIso = new Date().toISOString();
         const { data: monitors, error } = await supabaseAdmin
           .from("monitors")
-          .select("id, user_id, name, url, type, keyword, interval_seconds, last_status, last_checked_at, is_active")
+          .select("id, user_id, name, url, type, keyword, last_status, last_checked_at, is_active")
           .eq("is_active", true);
 
         if (error) {

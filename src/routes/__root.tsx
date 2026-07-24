@@ -82,7 +82,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "UpWatch — Website Uptime Monitoring" },
-      { name: "description", content: "Professional website uptime monitoring with instant Slack, email, and SMS alerts. Sub-minute checks, custom status pages, global regions." },
+      { name: "description", content: "Professional website uptime monitoring with email, Slack, and Discord alerts. Sub-minute checks, public status pages, multi-region on Business." },
       { name: "theme-color", content: "#0a0a0a" },
       { property: "og:site_name", content: "UpWatch" },
       { property: "og:type", content: "website" },

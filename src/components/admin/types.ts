@@ -29,7 +29,6 @@ export type MonitorRow = {
   name: string;
   url: string;
   type: string;
-  interval_seconds: number;
   last_status: string | null;
   last_checked_at: string | null;
   user_id: string;

@@ -25,7 +25,6 @@ type Monitor = {
   id: string;
   name: string;
   url: string;
-  interval_seconds: number;
   is_active: boolean;
   is_public: boolean;
   created_at: string;
@@ -226,7 +225,7 @@ function MonitorsPanel({
     try {
       const { error: insertError } = await supabase
         .from("monitors")
-        .insert({ user_id: userId, name: trimmedName, url: trimmedUrl, interval_seconds: PLAN_INTERVAL_SECONDS[plan] });
+        .insert({ user_id: userId, name: trimmedName, url: trimmedUrl });
       if (insertError) {
         setMsg(insertError.message);
         return;
@@ -336,7 +335,7 @@ function MonitorsPanel({
                 <div className="flex items-center gap-4">
 
                   <span className="text-xs font-mono text-zinc-500">
-                    every {m.interval_seconds < 60 ? `${m.interval_seconds}s` : `${Math.round(m.interval_seconds / 60)}m`}
+                    every {PLAN_INTERVAL_SECONDS[plan] < 60 ? `${PLAN_INTERVAL_SECONDS[plan]}s` : `${Math.round(PLAN_INTERVAL_SECONDS[plan] / 60)}m`}
                   </span>
                   <StatusBadge status={status} />
                   <label className="flex items-center gap-1.5 text-xs font-mono text-zinc-500 cursor-pointer select-none" title="Show this monitor on the public /status page">
