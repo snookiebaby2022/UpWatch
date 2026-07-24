@@ -29,7 +29,7 @@ export const Route = createFileRoute("/compare/uptime-kuma")({
         ["Setup time", "Minutes (hosted)", "Docker + reverse proxy"],
         ["Multi-region checks", "Built-in", "Manual — run multiple nodes"],
         ["Upgrades & patches", "Automatic", "Your responsibility"],
-        ["Alert channels", "Email, Slack, Discord, Telegram", "Many, self-configured"],
+        ["Alert channels", "Starter: email · Pro: Slack & Discord · Business: all", "Many, self-configured"],
         ["Public status pages", "One-click", "Yes"],
         ["Where downtime notices arrive when your server is down", "Externally hosted", "Depends on where Kuma runs"],
       ]}

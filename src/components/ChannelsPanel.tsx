@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import type { Plan } from "@/lib/plans";
+import { PLAN_CHANNELS, planAllowsChannel } from "@/lib/plans";
 
 type Channel = {
   id: string;
@@ -32,10 +34,11 @@ const CHANNEL_META: Record<string, { label: string; placeholder: string; hint: s
   },
 };
 
-export function ChannelsPanel({ userId }: { userId: string }) {
+export function ChannelsPanel({ userId, plan }: { userId: string; plan: Plan }) {
+  const allowedTypes = PLAN_CHANNELS[plan];
   const [rows, setRows] = useState<Channel[]>([]);
   const [loading, setLoading] = useState(true);
-  const [type, setType] = useState<keyof typeof CHANNEL_META>("email");
+  const [type, setType] = useState<string>(allowedTypes[0] ?? "email");
   const [target, setTarget] = useState("");
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
@@ -67,6 +70,10 @@ export function ChannelsPanel({ userId }: { userId: string }) {
     e.preventDefault();
     const t = target.trim();
     if (!t) return;
+    if (!planAllowsChannel(plan, type)) {
+      setMsg(`${type} alerts require a Pro or Business plan.`);
+      return;
+    }
     if (type === "email" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(t)) {
       setMsg("Enter a valid email address.");
       return;
@@ -126,16 +133,22 @@ export function ChannelsPanel({ userId }: { userId: string }) {
     <section className="bg-surface rounded-2xl border border-brand-border p-8">
       <h2 className="text-white font-semibold text-xl mb-1">Alert channels</h2>
       <p className="text-zinc-500 text-sm mb-6">
-        Get notified the instant a monitor goes down — email, Slack, Discord, or Telegram.
+        {plan === "starter"
+          ? "Starter includes email alerts only. Upgrade to Pro for Slack and Discord."
+          : plan === "pro"
+            ? "Pro includes email, Slack, and Discord alerts."
+            : "Business includes email, Slack, Discord, Telegram, and custom webhooks."}
       </p>
 
       <form onSubmit={addChannel} className="grid grid-cols-1 md:grid-cols-[160px_1fr_auto] gap-3 mb-3">
         <select
           value={type}
-          onChange={(e) => setType(e.target.value as keyof typeof CHANNEL_META)}
+          onChange={(e) => setType(e.target.value)}
           className="bg-bg border border-brand-border rounded-lg px-3 py-3 text-sm text-white focus:outline-none focus:border-brand"
         >
-          {Object.entries(CHANNEL_META).map(([k, v]) => (
+          {Object.entries(CHANNEL_META)
+            .filter(([k]) => allowedTypes.includes(k))
+            .map(([k, v]) => (
             <option key={k} value={k}>{v.label}</option>
           ))}
         </select>

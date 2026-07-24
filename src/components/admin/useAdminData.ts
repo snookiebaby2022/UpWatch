@@ -51,7 +51,7 @@ export function useAdminData() {
         supabase
           .from("monitors")
           .select(
-            "id, name, url, type, interval_seconds, last_status, last_checked_at, user_id, is_active, is_public, created_at",
+            "id, name, url, type, last_status, last_checked_at, user_id, is_active, is_public, created_at",
           )
           .order("created_at", { ascending: false }),
         supabase.from("waitlist").select("*").order("created_at", { ascending: false }),

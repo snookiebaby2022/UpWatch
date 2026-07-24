@@ -1,5 +1,4 @@
 # Deploy GitHub main to Cloudflare Workers on every push.
-# Lovable Git sync does NOT publish to upwatch.online — this workflow does.
 
 name: Deploy production
 
@@ -60,8 +59,35 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
-            echo "Build OK. Skipping Cloudflare deploy — add CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID secrets."
-            echo "Until then: Lovable → Publish → Update for upwatch.online"
-            exit 0
+            echo "::error::Add CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID to GitHub repo secrets to publish upwatch.online"
+            exit 1
           fi
           npx wrangler deploy --config .output/server/wrangler.json
+
+      - name: Sync Worker runtime secrets
+        if: success()
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        run: |
+          sync_secret() {
+            local name="$1"
+            local val="$2"
+            if [ -n "$val" ]; then
+              printf '%s' "$val" | npx wrangler secret put "$name" --config .output/server/wrangler.json
+            fi
+          }
+          sync_secret SUPABASE_URL "$SUPABASE_URL"
+          sync_secret SUPABASE_PUBLISHABLE_KEY "$SUPABASE_PUBLISHABLE_KEY"
+          sync_secret SUPABASE_SERVICE_ROLE_KEY "$SUPABASE_SERVICE_ROLE_KEY"
+          sync_secret CRON_SECRET "$CRON_SECRET"
+          sync_secret BREVO_API_KEY "$BREVO_API_KEY"
+          sync_secret TELEGRAM_BOT_TOKEN "$TELEGRAM_BOT_TOKEN"
+          sync_secret KUMA_BASE_URL "https://status.upwatch.online"
+          sync_secret KUMA_STATUS_PAGE_SLUG "upwatch"

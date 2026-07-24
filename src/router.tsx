@@ -2,13 +2,13 @@ import { QueryClient } from "@tanstack/react-query";
 import { createRouter, Link, useRouter } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { routeTree } from "./routeTree.gen";
-import { reportLovableError } from "./lib/lovable-error-reporting";
+import { reportClientError } from "./lib/error-reporting";
 
 function DefaultErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   const router = useRouter();
   useEffect(() => {
     console.error(error);
-    reportLovableError(error, { boundary: "tanstack_default_error_component" });
+    reportClientError(error, { boundary: "tanstack_default_error_component" });
   }, [error]);
   return (
     <div className="min-h-screen flex items-center justify-center bg-bg text-zinc-300 px-6">

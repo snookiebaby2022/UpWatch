@@ -5,6 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { isPublicHttpUrl } from "@/lib/url-safety";
 import { NotificationBell } from "@/components/NotificationBell";
 import { ChannelsPanel } from "@/components/ChannelsPanel";
+import type { Plan } from "@/lib/plans";
+import { PLAN_FEATURES, PLAN_INTERVAL_SECONDS, PLAN_LABEL, PLAN_LIMITS } from "@/lib/plans";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
@@ -23,19 +25,12 @@ type Monitor = {
   id: string;
   name: string;
   url: string;
-  interval_seconds: number;
   is_active: boolean;
   is_public: boolean;
   created_at: string;
   last_status?: string | null;
   last_checked_at?: string | null;
 };
-
-
-type Plan = "starter" | "pro" | "business";
-const PLAN_LIMITS: Record<Plan, number> = { starter: 5, pro: 50, business: Infinity };
-const PLAN_INTERVAL_SECONDS: Record<Plan, number> = { starter: 900, pro: 300, business: 60 };
-const PLAN_LABEL: Record<Plan, string> = { starter: "Starter", pro: "Pro", business: "Business" };
 
 function Dashboard() {
   const navigate = useNavigate();
@@ -168,10 +163,11 @@ function Dashboard() {
           used={used}
           limit={limit}
           onChange={() => queryClient.invalidateQueries({ queryKey: ["monitors", userId] })}
-
         />
 
-        <ChannelsPanel userId={userId} />
+        <PlanFeaturesPanel plan={plan} used={used} limit={limit} />
+
+        <ChannelsPanel userId={userId} plan={plan} />
 
         <BillingPanel plan={plan} />
       </main>
@@ -229,7 +225,7 @@ function MonitorsPanel({
     try {
       const { error: insertError } = await supabase
         .from("monitors")
-        .insert({ user_id: userId, name: trimmedName, url: trimmedUrl, interval_seconds: PLAN_INTERVAL_SECONDS[plan] });
+        .insert({ user_id: userId, name: trimmedName, url: trimmedUrl });
       if (insertError) {
         setMsg(insertError.message);
         return;
@@ -339,7 +335,7 @@ function MonitorsPanel({
                 <div className="flex items-center gap-4">
 
                   <span className="text-xs font-mono text-zinc-500">
-                    every {m.interval_seconds < 60 ? `${m.interval_seconds}s` : `${Math.round(m.interval_seconds / 60)}m`}
+                    every {PLAN_INTERVAL_SECONDS[plan] < 60 ? `${PLAN_INTERVAL_SECONDS[plan]}s` : `${Math.round(PLAN_INTERVAL_SECONDS[plan] / 60)}m`}
                   </span>
                   <StatusBadge status={status} />
                   <label className="flex items-center gap-1.5 text-xs font-mono text-zinc-500 cursor-pointer select-none" title="Show this monitor on the public /status page">
@@ -377,6 +373,27 @@ function StatusBadge({ status }: { status: string }) {
         : "text-zinc-500";
   const label = status === "up" ? "● up" : status === "down" ? "● down" : "○ pending";
   return <span className={`text-xs font-mono ${cls}`}>{label}</span>;
+}
+
+function PlanFeaturesPanel({ plan, used, limit }: { plan: Plan; used: number; limit: number }) {
+  const intervalMin = PLAN_INTERVAL_SECONDS[plan] / 60;
+  return (
+    <section className="bg-surface rounded-2xl border border-brand-border p-6">
+      <h2 className="text-white font-semibold text-lg mb-1">Your {PLAN_LABEL[plan]} plan</h2>
+      <p className="text-zinc-500 text-sm mb-4">
+        {limit === Infinity ? `${used} monitors` : `${used} / ${limit} monitors`} · checks every{" "}
+        {intervalMin >= 1 ? `${intervalMin} min` : `${PLAN_INTERVAL_SECONDS[plan]}s`}
+      </p>
+      <ul className="grid sm:grid-cols-3 gap-2 text-sm text-zinc-400">
+        {PLAN_FEATURES[plan].map((f) => (
+          <li key={f} className="flex items-center gap-2">
+            <span className="text-brand">✓</span>
+            {f}
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
 }
 
 function BillingPanel({ plan }: { plan: Plan }) {

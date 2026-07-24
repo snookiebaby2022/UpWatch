@@ -14,6 +14,17 @@ async function sendAlert(opts: {
     .eq("is_active", true);
   if (!channels?.length) return;
 
+  const { data: sub } = await supabaseAdmin
+    .from("subscriptions")
+    .select("plan, status")
+    .eq("user_id", opts.monitor.user_id)
+    .maybeSingle();
+  const plan =
+    sub?.status === "active" && sub?.plan ? (sub.plan as import("@/lib/plans").Plan) : "starter";
+  const { planAllowsChannel } = await import("@/lib/plans");
+  const allowed = channels.filter((c) => planAllowsChannel(plan, c.type));
+  if (!allowed.length) return;
+
   const title =
     opts.transition === "down"
       ? `🔴 ${opts.monitor.name ?? opts.monitor.url} is DOWN`
@@ -21,15 +32,13 @@ async function sendAlert(opts: {
   const detail = opts.errorMessage ? `\nReason: ${opts.errorMessage}` : "";
   const text = `${title}\n${opts.monitor.url}${detail}`;
 
-  const BREVO_GATEWAY = "https://connector-gateway.lovable.dev/brevo";
-  const LOVABLE_API_KEY = process.env.LOVABLE_API_KEY;
   const BREVO_API_KEY = process.env.BREVO_API_KEY;
   const BREVO_SENDER_EMAIL = process.env.BREVO_SENDER_EMAIL ?? "alerts@upwatch.online";
   const BREVO_SENDER_NAME = "UpWatch Alerts";
   const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 
   await Promise.allSettled(
-    channels.map(async (c) => {
+    allowed.map(async (c) => {
       try {
         if (c.type === "slack" || c.type === "discord" || c.type === "webhook") {
           const safety = isPublicHttpUrl(c.target);
@@ -61,17 +70,16 @@ async function sendAlert(opts: {
             });
           }
         } else if (c.type === "email") {
-          if (!LOVABLE_API_KEY || !BREVO_API_KEY) {
-            console.warn("email alert skipped — Brevo not configured");
+          if (!BREVO_API_KEY) {
+            console.warn("email alert skipped — BREVO_API_KEY not set");
             return;
           }
           const html = `<div style="font-family:Arial,sans-serif;padding:16px"><h2 style="margin:0 0 12px">${title}</h2><p style="margin:0 0 8px"><a href="${opts.monitor.url}">${opts.monitor.url}</a></p>${opts.errorMessage ? `<p style="color:#b91c1c;margin:0">Reason: ${opts.errorMessage}</p>` : ""}<hr style="margin:20px 0;border:none;border-top:1px solid #eee"/><p style="font-size:12px;color:#888;margin:0">UpWatch — automated monitoring alert</p></div>`;
-          const res = await fetch(`${BREVO_GATEWAY}/smtp/email`, {
+          const res = await fetch("https://api.brevo.com/v3/smtp/email", {
             method: "POST",
             headers: {
               "content-type": "application/json",
-              authorization: `Bearer ${LOVABLE_API_KEY}`,
-              "x-connection-api-key": BREVO_API_KEY,
+              "api-key": BREVO_API_KEY,
             },
             body: JSON.stringify({
               sender: { name: BREVO_SENDER_NAME, email: BREVO_SENDER_EMAIL },
@@ -147,7 +155,7 @@ export const Route = createFileRoute("/api/public/hooks/run-monitors")({
         const nowIso = new Date().toISOString();
         const { data: monitors, error } = await supabaseAdmin
           .from("monitors")
-          .select("id, user_id, name, url, type, keyword, interval_seconds, last_status, last_checked_at, is_active")
+          .select("id, user_id, name, url, type, keyword, last_status, last_checked_at, is_active")
           .eq("is_active", true);
 
         if (error) {
@@ -160,7 +168,8 @@ export const Route = createFileRoute("/api/public/hooks/run-monitors")({
         // Build user_id -> plan map so we can (a) run business monitors in
         // multi-region and (b) enforce the correct check interval from the
         // live plan, not whatever `interval_seconds` was stored at create-time.
-        const PLAN_INTERVAL: Record<string, number> = { starter: 900, pro: 300, business: 60 };
+        const { PLAN_INTERVAL_SECONDS } = await import("@/lib/plans");
+        const PLAN_INTERVAL = PLAN_INTERVAL_SECONDS;
         const userIds = Array.from(new Set((monitors ?? []).map((m) => m.user_id)));
         const planByUser = new Map<string, string>();
         if (userIds.length) {
