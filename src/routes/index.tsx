@@ -344,7 +344,7 @@ const TIERS: Tier[] = [
   {
     name: "Starter",
     price: "£0",
-    features: ["5 Monitors", "5-minute intervals", "Email alerts"],
+    features: ["5 Monitors", "15-minute intervals", "Email alerts"],
     cta: "Join Free",
     href: "/auth",
   },
@@ -353,7 +353,7 @@ const TIERS: Tier[] = [
     price: "£10",
     features: [
       "50 Monitors",
-      "1-minute intervals",
+      "5-minute intervals",
       "Slack & Discord integrations",
       "Custom Status Pages",
     ],
