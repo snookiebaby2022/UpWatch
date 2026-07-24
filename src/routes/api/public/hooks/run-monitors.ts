@@ -71,7 +71,11 @@ export const Route = createFileRoute("/api/public/hooks/run-monitors")({
           ?? request.headers.get("apikey")
           ?? authHeader?.replace("Bearer ", "");
         const cronSecret = process.env.CRON_SECRET;
-        const publishableKey = process.env.SUPABASE_PUBLISHABLE_KEY;
+        const publishableKey =
+          process.env.SUPABASE_PUBLISHABLE_KEY ??
+          process.env.VITE_SUPABASE_PUBLISHABLE_KEY ??
+          process.env.SUPABASE_ANON_KEY ??
+          import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
         const accepted = [cronSecret, publishableKey].filter(Boolean) as string[];
         if (accepted.length === 0) {
           console.error("[run-monitors] no auth secrets bound to worker — refusing to run.");
