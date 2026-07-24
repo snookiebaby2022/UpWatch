@@ -332,16 +332,14 @@ function SupportPage() {
                   <label className="block text-xs uppercase tracking-widest text-zinc-500 mb-1">
                     Priority
                   </label>
-                  <select
-                    value={priority}
-                    onChange={(e) => setPriority(e.target.value as Priority)}
-                    className="bg-bg border border-brand-border rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-brand"
-                  >
-                    <option value="low">Low</option>
-                    <option value="normal">Normal</option>
-                    <option value="high">High</option>
-                  </select>
+                  <div className="flex items-center gap-3 bg-bg border border-brand-border rounded-lg px-4 py-2.5">
+                    <span className="text-white capitalize font-medium">{priority}</span>
+                    <span className="text-xs text-zinc-500">
+                      · set automatically from your <span className="capitalize">{plan}</span> plan
+                    </span>
+                  </div>
                 </div>
+
                 <div>
                   <label className="block text-xs uppercase tracking-widest text-zinc-500 mb-1">
                     Message
