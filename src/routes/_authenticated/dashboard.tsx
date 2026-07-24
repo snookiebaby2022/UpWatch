@@ -358,6 +358,15 @@ function MonitorsPanel({
                     every {m.interval_seconds < 60 ? `${m.interval_seconds}s` : `${Math.round(m.interval_seconds / 60)}m`}
                   </span>
                   <StatusBadge status={status} />
+                  <label className="flex items-center gap-1.5 text-xs font-mono text-zinc-500 cursor-pointer select-none" title="Show this monitor on the public /status page">
+                    <input
+                      type="checkbox"
+                      checked={m.is_public}
+                      onChange={(e) => togglePublic(m.id, e.target.checked)}
+                      className="accent-brand"
+                    />
+                    Public
+                  </label>
                   <button
                     onClick={() => removeMonitor(m.id)}
                     className="text-xs text-zinc-500 hover:text-red-400 transition-colors"
@@ -365,6 +374,7 @@ function MonitorsPanel({
                     Delete
                   </button>
                 </div>
+
               </li>
             );
           })}
