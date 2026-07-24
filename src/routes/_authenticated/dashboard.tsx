@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { isPublicHttpUrl } from "@/lib/url-safety";
+import { NotificationBell } from "@/components/NotificationBell";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
@@ -152,6 +153,7 @@ function Dashboard() {
               Admin
             </Link>
           )}
+          <NotificationBell />
           <button
             onClick={handleSignOut}
             className="bg-surface border border-brand-border px-4 py-2 rounded-full text-sm font-semibold text-white hover:bg-brand-border transition-colors"

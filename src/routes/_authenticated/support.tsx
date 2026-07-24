@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { NotificationBell } from "@/components/NotificationBell";
 
 export const Route = createFileRoute("/_authenticated/support")({
   head: () => ({
@@ -240,6 +241,7 @@ function SupportPage() {
             Dashboard
           </Link>
 
+          <NotificationBell />
           <button
             onClick={handleSignOut}
             className="bg-surface border border-brand-border px-4 py-2 rounded-full text-sm font-semibold text-white hover:bg-brand-border transition-colors"

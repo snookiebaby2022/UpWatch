@@ -2,6 +2,7 @@ import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-ro
 import { useEffect, useState, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { NotificationBell } from "@/components/NotificationBell";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({
@@ -372,6 +373,7 @@ function AdminPage() {
             <Link to="/" className="text-muted-foreground hover:text-foreground">Home</Link>
             <Link to="/dashboard" className="text-muted-foreground hover:text-foreground">Dashboard</Link>
 
+            <NotificationBell />
             <button
               onClick={handleSignOut}
               className="text-muted-foreground hover:text-foreground"
