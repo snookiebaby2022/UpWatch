@@ -27,7 +27,9 @@ function timeAgo(iso: string) {
 
 export function NotificationBell() {
   const signedIn = useSession();
+  const router = useRouter();
   const [userId, setUserId] = useState<string | null>(null);
+
 
   useEffect(() => {
     if (!signedIn) {
