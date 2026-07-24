@@ -37,10 +37,19 @@ type TicketMessage = {
   created_at: string;
 };
 
+type Plan = "starter" | "pro" | "business";
+
+const PLAN_PRIORITY: Record<Plan, Priority> = {
+  starter: "low",
+  pro: "normal",
+  business: "high",
+};
+
 function SupportPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [userId, setUserId] = useState("");
+  const [plan, setPlan] = useState<Plan>("starter");
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -49,7 +58,7 @@ function SupportPage() {
   // New-ticket form
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
-  const [priority, setPriority] = useState<Priority>("normal");
+  const priority: Priority = PLAN_PRIORITY[plan];
   const [submitting, setSubmitting] = useState(false);
 
   // Thread view
@@ -59,8 +68,20 @@ function SupportPage() {
   const [replying, setReplying] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setUserId(data.user?.id ?? ""));
+    supabase.auth.getUser().then(async ({ data }) => {
+      const uid = data.user?.id ?? "";
+      setUserId(uid);
+      if (!uid) return;
+      const { data: sub } = await supabase
+        .from("subscriptions")
+        .select("plan,status")
+        .eq("user_id", uid)
+        .maybeSingle();
+      const p = (sub?.plan as Plan | undefined) ?? "starter";
+      if (p === "starter" || p === "pro" || p === "business") setPlan(p);
+    });
   }, []);
+
 
   const load = useCallback(async () => {
     setLoading(true);
