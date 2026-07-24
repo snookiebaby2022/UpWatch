@@ -30,9 +30,36 @@ Then: Actions → **Deploy production** → Run workflow.
 
 ## 3. Google OAuth (optional)
 
-Supabase → Authentication → Providers → Google → add redirect URL:
+The dashboard toggle alone is **not enough** — Supabase must store both **Client ID** and **Client Secret**.
 
-`https://upwatch.online/dashboard`
+### Google Cloud Console
+
+1. [Credentials](https://console.cloud.google.com/apis/credentials) → OAuth 2.0 Client ID → **Web application**
+2. **Authorized redirect URI** (exact, no wildcards):
+
+   `https://vepgivwmulpdacsfucmn.supabase.co/auth/v1/callback`
+
+3. Copy **Client ID** and **Client Secret** (create a new secret if the old one was lost)
+
+### Supabase Dashboard
+
+1. [Google provider](https://supabase.com/dashboard/project/vepgivwmulpdacsfucmn/auth/providers?provider=Google)
+2. Enable Google, paste **Client ID** and **Client Secret** (not just “Authorized Client IDs”), **Save**
+3. [URL Configuration](https://supabase.com/dashboard/project/vepgivwmulpdacsfucmn/auth/url-configuration): Site URL `https://upwatch.online`, redirect `https://upwatch.online/**`
+
+### If dashboard Save still fails (`missing OAuth secret`)
+
+Use the Management API script (bypasses a broken dashboard save):
+
+```powershell
+# Token: https://supabase.com/dashboard/account/tokens
+$env:SUPABASE_ACCESS_TOKEN = "sbp_..."
+$env:GOOGLE_CLIENT_ID = "....apps.googleusercontent.com"
+$env:GOOGLE_CLIENT_SECRET = "GOCSPX-..."
+.\infra\configure-google-oauth.ps1
+```
+
+Success = script prints “authorize returns redirect 302”. Then test https://upwatch.online/auth .
 
 ## 4. Verify
 

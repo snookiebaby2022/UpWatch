@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
-import { completeAuthFromUrl, googleOAuthRedirectUrl } from "@/lib/auth-oauth";
+import { completeAuthFromUrl, googleOAuthRedirectUrl, googleOAuthReady } from "@/lib/auth-oauth";
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
@@ -51,6 +51,8 @@ function AuthPage() {
   const [info, setInfo] = useState<string | null>(null);
   const [lastSignupEmail, setLastSignupEmail] = useState<string | null>(null);
 
+  const [googleReady, setGoogleReady] = useState<boolean | null>(null);
+
   // Complete OAuth / magic-link callback, then bounce to dashboard if signed in.
   useEffect(() => {
     (async () => {
@@ -71,6 +73,12 @@ function AuthPage() {
       }
     })();
   }, [navigate]);
+
+  useEffect(() => {
+    googleOAuthReady()
+      .then((r) => setGoogleReady(r.ready))
+      .catch(() => setGoogleReady(null));
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -184,8 +192,23 @@ function AuthPage() {
 
   async function handleGoogle() {
     setError(null);
+    setInfo(null);
     setLoading(true);
     try {
+      const check = await googleOAuthReady();
+      if (!check.ready) {
+        if (check.reason === "missing_secret") {
+          setError(
+            "Google is enabled in Supabase but the Client Secret is not saved on the server. In Supabase → Authentication → Providers → Google, paste both Client ID and Client Secret, click Save, or run infra/configure-google-oauth.ps1 with a Supabase access token.",
+          );
+        } else if (check.reason === "provider_error") {
+          setError(check.message ?? "Google sign-in is not configured in Supabase.");
+        } else {
+          setError("Google sign-in is not available right now.");
+        }
+        return;
+      }
+
       const { error: err } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
@@ -227,7 +250,7 @@ function AuthPage() {
             <>
               <button
                 onClick={handleGoogle}
-                disabled={loading}
+                disabled={loading || googleReady === false}
                 className="w-full flex items-center justify-center gap-3 bg-white text-black px-4 py-3 rounded-xl font-semibold hover:bg-zinc-200 transition-colors disabled:opacity-60"
               >
                 <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden>
@@ -238,6 +261,20 @@ function AuthPage() {
                 </svg>
                 Continue with Google
               </button>
+              {googleReady === false && (
+                <p className="text-xs text-amber-400/90 mt-2">
+                  Google sign-in needs Client ID + Secret saved in{" "}
+                  <a
+                    href="https://supabase.com/dashboard/project/vepgivwmulpdacsfucmn/auth/providers?provider=Google"
+                    className="underline"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Supabase → Google provider
+                  </a>
+                  . Use email login below in the meantime.
+                </p>
+              )}
               <div className="flex items-center gap-3 my-6">
                 <div className="flex-1 h-px bg-brand-border" />
                 <span className="text-xs font-mono text-zinc-600 uppercase tracking-wider">or</span>
