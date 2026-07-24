@@ -184,6 +184,8 @@ function Dashboard() {
           onChange={() => queryClient.invalidateQueries({ queryKey: ["monitors", userId] })}
         />
 
+        <ChannelsPanel userId={userId} />
+
         <BillingPanel plan={plan} />
       </main>
     </div>
