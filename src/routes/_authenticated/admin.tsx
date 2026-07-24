@@ -513,7 +513,7 @@ function AdminPage() {
               </tbody>
             </table>
           </div>
-        ) : (
+        ) : tab === "incidents" ? (
           (() => {
             // Build id→monitor once so the incidents render is O(N) instead of O(N×M).
             const monitorById = new Map(monitors.map((m) => [m.id, m]));
@@ -552,6 +552,173 @@ function AdminPage() {
               </tbody>
             </table>
           </div>
+            );
+          })()
+        ) : tab === "channels" ? (
+          (() => {
+            const userById = new Map(users.map((u) => [u.id, u]));
+            return (
+              <div className="overflow-x-auto border border-border/60 rounded-lg">
+                <table className="w-full text-sm">
+                  <thead className="bg-card/40 text-xs uppercase tracking-widest text-muted-foreground">
+                    <tr>
+                      <th className="text-left px-4 py-3">Owner</th>
+                      <th className="text-left px-4 py-3">Type</th>
+                      <th className="text-left px-4 py-3">Target</th>
+                      <th className="text-left px-4 py-3">Active</th>
+                      <th className="text-left px-4 py-3">Added</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {channels.map((c) => {
+                      const owner = userById.get(c.user_id);
+                      return (
+                        <tr key={c.id} className="border-t border-border/60">
+                          <td className="px-4 py-3">
+                            <div>{owner?.display_name || "—"}</div>
+                            <div className="text-xs font-mono text-muted-foreground">{c.user_id.slice(0, 8)}…</div>
+                          </td>
+                          <td className="px-4 py-3 capitalize">{c.type}</td>
+                          <td className="px-4 py-3 font-mono text-xs text-muted-foreground truncate max-w-xs">{c.target}</td>
+                          <td className="px-4 py-3">
+                            <span className={c.is_active ? "text-emerald-400" : "text-muted-foreground"}>
+                              {c.is_active ? "yes" : "no"}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-muted-foreground text-xs">{new Date(c.created_at).toLocaleString()}</td>
+                        </tr>
+                      );
+                    })}
+                    {channels.length === 0 && (
+                      <tr><td colSpan={5} className="px-4 py-6 text-center text-muted-foreground">No notification channels</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            );
+          })()
+        ) : (
+          // Support tab
+          (() => {
+            const userById = new Map(users.map((u) => [u.id, u]));
+            if (openTicket) {
+              const owner = userById.get(openTicket.user_id);
+              return (
+                <div className="border border-border/60 rounded-lg p-6 space-y-5 bg-card/20">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <div className="text-xs uppercase tracking-widest text-muted-foreground mb-1">
+                        {new Date(openTicket.created_at).toLocaleString()} · {openTicket.priority} priority · from {owner?.display_name || openTicket.user_id.slice(0, 8)}
+                      </div>
+                      <h2 className="text-xl font-semibold">{openTicket.subject}</h2>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <select
+                        value={openTicket.status}
+                        onChange={(e) => updateTicketStatus(openTicket.id, e.target.value as TicketStatus)}
+                        className="bg-background border border-border/60 rounded px-2 py-1 text-sm"
+                      >
+                        <option value="open">open</option>
+                        <option value="pending">pending</option>
+                        <option value="resolved">resolved</option>
+                        <option value="closed">closed</option>
+                      </select>
+                      <button
+                        onClick={() => setOpenTicket(null)}
+                        className="text-sm text-muted-foreground hover:text-foreground"
+                      >
+                        ← Back
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <TicketBubble mine={false} label={owner?.display_name || "User"} body={openTicket.message} at={openTicket.created_at} />
+                    {ticketMessages.map((m) => (
+                      <TicketBubble
+                        key={m.id}
+                        mine={m.is_admin}
+                        label={m.is_admin ? "Admin" : owner?.display_name || "User"}
+                        body={m.body}
+                        at={m.created_at}
+                      />
+                    ))}
+                  </div>
+
+                  <div className="space-y-3">
+                    <textarea
+                      value={ticketReply}
+                      onChange={(e) => setTicketReply(e.target.value)}
+                      rows={4}
+                      maxLength={5000}
+                      placeholder="Reply as admin…"
+                      className="w-full bg-background border border-border/60 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-brand"
+                    />
+                    <button
+                      onClick={sendAdminReply}
+                      disabled={ticketBusy || !ticketReply.trim()}
+                      className="bg-brand text-black font-semibold px-5 py-2 rounded-full text-sm disabled:opacity-40"
+                    >
+                      {ticketBusy ? "Sending…" : "Send reply"}
+                    </button>
+                  </div>
+                </div>
+              );
+            }
+            return (
+              <div className="overflow-x-auto border border-border/60 rounded-lg">
+                <table className="w-full text-sm">
+                  <thead className="bg-card/40 text-xs uppercase tracking-widest text-muted-foreground">
+                    <tr>
+                      <th className="text-left px-4 py-3">Subject</th>
+                      <th className="text-left px-4 py-3">User</th>
+                      <th className="text-left px-4 py-3">Priority</th>
+                      <th className="text-left px-4 py-3">Status</th>
+                      <th className="text-left px-4 py-3">Opened</th>
+                      <th className="text-right px-4 py-3">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {tickets.map((t) => {
+                      const owner = userById.get(t.user_id);
+                      return (
+                        <tr key={t.id} className="border-t border-border/60">
+                          <td className="px-4 py-3 max-w-sm truncate">{t.subject}</td>
+                          <td className="px-4 py-3">
+                            <div>{owner?.display_name || "—"}</div>
+                            <div className="text-xs font-mono text-muted-foreground">{t.user_id.slice(0, 8)}…</div>
+                          </td>
+                          <td className="px-4 py-3 capitalize">{t.priority}</td>
+                          <td className="px-4 py-3">
+                            <select
+                              value={t.status}
+                              onChange={(e) => updateTicketStatus(t.id, e.target.value as TicketStatus)}
+                              className="bg-background border border-border/60 rounded px-2 py-1 text-xs"
+                            >
+                              <option value="open">open</option>
+                              <option value="pending">pending</option>
+                              <option value="resolved">resolved</option>
+                              <option value="closed">closed</option>
+                            </select>
+                          </td>
+                          <td className="px-4 py-3 text-muted-foreground text-xs">{new Date(t.created_at).toLocaleString()}</td>
+                          <td className="px-4 py-3 text-right">
+                            <button
+                              onClick={() => openTicketThread(t)}
+                              className="text-xs px-3 py-1.5 border border-border/60 rounded hover:border-brand"
+                            >
+                              Open
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                    {tickets.length === 0 && (
+                      <tr><td colSpan={6} className="px-4 py-6 text-center text-muted-foreground">No tickets</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
             );
           })()
         )}
