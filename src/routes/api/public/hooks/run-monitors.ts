@@ -117,32 +117,27 @@ export const Route = createFileRoute("/api/public/hooks/run-monitors")({
     handlers: {
       POST: async ({ request }) => {
         try {
-        // Accept either the CRON_SECRET (if bound) or the Supabase publishable
-        // key via the standard `apikey` header — the documented pg_cron pattern.
+        // Only accept the server-only CRON_SECRET. The Supabase publishable
+        // key is shipped to every browser (VITE_SUPABASE_PUBLISHABLE_KEY) so
+        // it is NOT a secret and must never gate this endpoint.
         const authHeader = request.headers.get("authorization");
         const provided = request.headers.get("x-cron-secret")
-          ?? request.headers.get("apikey")
           ?? authHeader?.replace("Bearer ", "");
         const cronSecret = process.env.CRON_SECRET;
-        const publishableKey =
-          process.env.SUPABASE_PUBLISHABLE_KEY ??
-          process.env.VITE_SUPABASE_PUBLISHABLE_KEY ??
-          process.env.SUPABASE_ANON_KEY ??
-          import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-        const accepted = [cronSecret, publishableKey].filter(Boolean) as string[];
-        if (accepted.length === 0) {
-          console.error("[run-monitors] no auth secrets bound to worker — refusing to run.");
+        if (!cronSecret) {
+          console.error("[run-monitors] CRON_SECRET not bound — refusing to run.");
           return new Response(JSON.stringify({ error: "server not configured" }), {
             status: 503,
             headers: { "content-type": "application/json" },
           });
         }
-        if (!provided || !accepted.includes(provided)) {
+        if (!provided || provided !== cronSecret) {
           return new Response(JSON.stringify({ error: "unauthorized" }), {
             status: 401,
             headers: { "content-type": "application/json" },
           });
         }
+
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const { isPublicHttpUrl } = await import("@/lib/url-safety");
