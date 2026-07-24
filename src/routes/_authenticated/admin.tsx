@@ -24,10 +24,14 @@ export const Route = createFileRoute("/_authenticated/admin")({
   beforeLoad: async () => {
     const { data: userData } = await supabase.auth.getUser();
     if (!userData.user) throw redirect({ to: "/auth" });
-    const { data: isAdmin } = await supabase.rpc("has_role", {
+    const { data: isAdmin, error } = await supabase.rpc("has_role", {
       _user_id: userData.user.id,
       _role: "admin",
     });
+    if (error) {
+      console.error("admin role check failed — run supabase/setup-complete.sql", error);
+      throw redirect({ to: "/dashboard" });
+    }
     if (!isAdmin) throw redirect({ to: "/dashboard" });
   },
   component: AdminPage,
@@ -73,7 +77,9 @@ function AdminPage() {
             <Link to="/" className="font-semibold tracking-tight">
               UpWatch
             </Link>
-            <span className="text-xs uppercase tracking-widest text-muted-foreground">Admin</span>
+            <span className="text-xs uppercase tracking-widest text-muted-foreground">
+              Admin Console v2
+            </span>
           </div>
           <div className="flex items-center gap-3 text-sm">
             <Link to="/" className="text-muted-foreground hover:text-foreground">
