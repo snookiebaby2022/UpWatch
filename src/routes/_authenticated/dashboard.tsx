@@ -30,7 +30,7 @@ type Monitor = {
 
 type Plan = "starter" | "pro" | "business";
 const PLAN_LIMITS: Record<Plan, number> = { starter: 5, pro: 50, business: Infinity };
-const PLAN_INTERVAL_SECONDS: Record<Plan, number> = { starter: 900, pro: 300, business: 30 };
+const PLAN_INTERVAL_SECONDS: Record<Plan, number> = { starter: 900, pro: 300, business: 60 };
 const PLAN_LABEL: Record<Plan, string> = { starter: "Starter", pro: "Pro", business: "Business" };
 
 function Dashboard() {
@@ -399,7 +399,7 @@ function BillingPanel({ plan }: { plan: Plan }) {
               <span className="text-white font-semibold">Business</span>
               <span className="text-brand font-mono">£30/mo</span>
             </div>
-            <p className="text-xs text-zinc-500">Unlimited monitors · 30s checks · Multi-region</p>
+            <p className="text-xs text-zinc-500">Unlimited monitors · 1-minute checks · Multi-region</p>
           </a>
         </div>
       )}
