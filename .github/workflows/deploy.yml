@@ -1,14 +1,5 @@
 # Deploy GitHub main to Cloudflare Workers on every push.
 # Lovable Git sync does NOT publish to upwatch.online — this workflow does.
-#
-# Required GitHub repo secrets (Settings → Secrets → Actions):
-#   CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID
-#   SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, SUPABASE_SERVICE_ROLE_KEY
-#   VITE_SUPABASE_URL, VITE_SUPABASE_PUBLISHABLE_KEY
-# Optional: KUMA_BASE_URL, KUMA_STATUS_PAGE_SLUG, VITE_KUMA_PUBLIC_URL, CRON_SECRET, BREVO_API_KEY
-#
-# After first deploy: Cloudflare dashboard → Workers → upwatch → Settings → Domains & Routes
-# Add custom domain upwatch.online (and remove/disable the stale Lovable publish for that domain).
 
 name: Deploy production
 
@@ -26,6 +17,11 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    env:
+      VITE_STATUS_PAGE_URL: https://upwatch.online/status
+      KUMA_BASE_URL: https://status.upwatch.online
+      KUMA_STATUS_PAGE_SLUG: upwatch
+      VITE_KUMA_PUBLIC_URL: https://status.upwatch.online/status/upwatch
     steps:
       - uses: actions/checkout@v4
 
@@ -33,6 +29,12 @@ jobs:
         with:
           node-version: 22
           cache: npm
+
+      - name: Load .env defaults for build
+        run: |
+          if [ -f .env ]; then
+            grep -v '^#' .env | grep -v '^$' >> "$GITHUB_ENV" || true
+          fi
 
       - name: Install dependencies
         run: npm ci
@@ -43,13 +45,9 @@ jobs:
           VITE_BUILD_SHA: ${{ github.sha }}
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
-          VITE_STATUS_PAGE_URL: https://upwatch.online/status
-          VITE_KUMA_PUBLIC_URL: ${{ secrets.VITE_KUMA_PUBLIC_URL }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          KUMA_BASE_URL: ${{ secrets.KUMA_BASE_URL }}
-          KUMA_STATUS_PAGE_SLUG: ${{ secrets.KUMA_STATUS_PAGE_SLUG }}
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
           BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
 
@@ -57,14 +55,13 @@ jobs:
         run: node -e "const fs=require('fs');const p='.output/server/wrangler.json';const j=JSON.parse(fs.readFileSync(p,'utf8'));j.name='upwatch';if(j.assets?.directory) j.assets.directory=j.assets.directory.replace(/\\\\/g,'/');fs.writeFileSync(p,JSON.stringify(j,null,2));"
 
       - name: Deploy to Cloudflare Workers
-        if: ${{ secrets.CLOUDFLARE_API_TOKEN != '' && secrets.CLOUDFLARE_ACCOUNT_ID != '' }}
-        run: npx wrangler deploy --config .output/server/wrangler.json
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-
-      - name: Deploy skipped (add Cloudflare secrets)
-        if: ${{ secrets.CLOUDFLARE_API_TOKEN == '' || secrets.CLOUDFLARE_ACCOUNT_ID == '' }}
         run: |
-          echo "Build succeeded. Add CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID to GitHub Actions secrets to auto-deploy."
-          echo "Until then, publish from Lovable: Publish → Update on upwatch.online."
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "Build OK. Skipping Cloudflare deploy — add CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID secrets."
+            echo "Until then: Lovable → Publish → Update for upwatch.online"
+            exit 0
+          fi
+          npx wrangler deploy --config .output/server/wrangler.json

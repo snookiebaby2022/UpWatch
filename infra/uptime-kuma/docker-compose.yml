@@ -1,0 +1,61 @@
+# Uptime Kuma for status.upwatch.online
+# Quick start: copy .env.example → .env, fill CLOUDFLARE_TUNNEL_TOKEN, then:
+#   docker compose --profile cloudflare up -d
+#
+# Without Cloudflare Tunnel (VPS + A record): docker compose up -d
+# Then point status.upwatch.online A record to this server's public IP (proxied OK).
+
+services:
+  uptime-kuma:
+    image: louislam/uptime-kuma:1
+    container_name: upwatch-uptime-kuma
+    restart: unless-stopped
+    volumes:
+      - kuma-data:/app/data
+    environment:
+      UPTIME_KUMA_HOST: 0.0.0.0
+      UPTIME_KUMA_PORT: 3001
+    ports:
+      - "${KUMA_HOST_PORT:-3001}:3001"
+    healthcheck:
+      test: ["CMD", "node", "extra/healthcheck.js"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # Routes status.upwatch.online → uptime-kuma:3001 (replaces Umami on that subdomain).
+  # Create tunnel: Cloudflare Zero Trust → Networks → Tunnels → Create → Docker install command.
+  cloudflared:
+    profiles: ["cloudflare"]
+    image: cloudflare/cloudflared:latest
+    container_name: upwatch-kuma-tunnel
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN}
+    depends_on:
+      uptime-kuma:
+        condition: service_healthy
+
+  # Optional: Caddy HTTPS when using a direct VPS IP (no Cloudflare Tunnel).
+  caddy:
+    profiles: ["caddy"]
+    image: caddy:2-alpine
+    container_name: upwatch-kuma-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      uptime-kuma:
+        condition: service_healthy
+
+volumes:
+  kuma-data:
+  caddy-data:
+  caddy-config:

@@ -13,4 +13,4 @@ export const STATUS_PAGE_URL =
 export const KUMA_PUBLIC_URL =
   (typeof import.meta !== "undefined" && import.meta.env?.VITE_KUMA_PUBLIC_URL) ||
   process.env.VITE_KUMA_PUBLIC_URL ||
-  "";
+  "https://status.upwatch.online/status/upwatch";
