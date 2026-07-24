@@ -268,6 +268,20 @@ function MonitorsPanel({
     }
   }
 
+  async function togglePublic(id: string, next: boolean) {
+    try {
+      const { error: updErr } = await supabase.from("monitors").update({ is_public: next }).eq("id", id);
+      if (updErr) {
+        setMsg(updErr.message);
+        return;
+      }
+      onChange();
+    } catch (err) {
+      setMsg(err instanceof Error ? err.message : "Failed to update monitor.");
+    }
+  }
+
+
   return (
     <section className="bg-surface rounded-2xl border border-brand-border p-8">
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
