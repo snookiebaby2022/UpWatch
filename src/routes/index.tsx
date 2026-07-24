@@ -575,11 +575,22 @@ function Footer() {
           <div className="size-2 rounded-full bg-brand" />
           <span className="text-white font-bold">UpWatch</span>
         </div>
-        <div className="flex gap-8 text-sm">
+        <div className="flex gap-8 text-sm items-center">
           <Link to="/privacy" className="hover:text-white">Privacy</Link>
           <Link to="/terms" className="hover:text-white">Terms</Link>
           <Link to="/status" className="hover:text-white">Status</Link>
+          <a
+            href="https://t.me/upwatchonline"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-white inline-flex items-center gap-1.5"
+            aria-label="Telegram @upwatchonline"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="size-4" fill="currentColor" aria-hidden="true"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.334-.373-.121l-6.869 4.326-2.96-.924c-.643-.204-.657-.643.136-.953l11.566-4.458c.538-.196 1.006.128.832.949z"/></svg>
+            @upwatchonline
+          </a>
         </div>
+
         <div className="text-xs text-zinc-600 font-mono">
           © {new Date().getFullYear()} UPWATCH.ONLINE // STATUS: NOMINAL
         </div>
