@@ -102,11 +102,24 @@ export const Route = createFileRoute("/api/public/hooks/run-monitors")({
           });
         }
 
+        // Build user_id -> plan map so business monitors get multi-region checks.
+        const userIds = Array.from(new Set((monitors ?? []).map((m) => m.user_id)));
+        const planByUser = new Map<string, string>();
+        if (userIds.length) {
+          const { data: subs } = await supabaseAdmin
+            .from("subscriptions")
+            .select("user_id, plan, status")
+            .in("user_id", userIds)
+            .eq("status", "active");
+          for (const s of subs ?? []) planByUser.set(s.user_id, s.plan);
+        }
+
         const due = (monitors ?? []).filter((m) => {
           if (!m.last_checked_at) return true;
           const last = new Date(m.last_checked_at).getTime();
           return Date.now() - last >= (m.interval_seconds ?? 300) * 1000;
         });
+
 
         // Batch check execution to cap concurrent outbound fetches (protects the
         // Worker and downstream targets when the monitor set grows).
