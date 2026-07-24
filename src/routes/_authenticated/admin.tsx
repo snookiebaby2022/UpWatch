@@ -126,7 +126,7 @@ function AdminPage() {
     setLoading(true);
     setLoadError(null);
     try {
-      const [profilesRes, subsRes, rolesRes, monsRes, waitRes, incRes] = await Promise.all([
+      const [profilesRes, subsRes, rolesRes, monsRes, waitRes, incRes, chanRes, ticketsRes] = await Promise.all([
         supabase.from("profiles").select("id, display_name, created_at"),
         supabase.from("subscriptions").select("user_id, plan, status"),
         supabase.from("user_roles").select("user_id, role"),
@@ -140,11 +140,20 @@ function AdminPage() {
           .select("id, monitor_id, started_at, resolved_at, error_message")
           .order("started_at", { ascending: false })
           .limit(100),
+        supabase
+          .from("notification_channels")
+          .select("id, user_id, type, target, is_active, created_at")
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("support_tickets")
+          .select("*")
+          .order("created_at", { ascending: false }),
       ]);
 
       // Surface the first table that failed rather than silently rendering empty tabs.
       const firstErr =
-        profilesRes.error ?? subsRes.error ?? rolesRes.error ?? monsRes.error ?? waitRes.error ?? incRes.error;
+        profilesRes.error ?? subsRes.error ?? rolesRes.error ?? monsRes.error ??
+        waitRes.error ?? incRes.error ?? chanRes.error ?? ticketsRes.error;
       if (firstErr) throw firstErr;
 
       const profiles = profilesRes.data ?? [];
@@ -153,6 +162,8 @@ function AdminPage() {
       const mons = monsRes.data ?? [];
       const wait = waitRes.data ?? [];
       const inc = incRes.data ?? [];
+      const chans = chanRes.data ?? [];
+      const tix = ticketsRes.data ?? [];
 
       type SubRow = { user_id: string; plan: Plan; status: Status };
       type RoleRow = { user_id: string; role: string };
@@ -182,6 +193,8 @@ function AdminPage() {
       setMonitors(mons as MonitorRow[]);
       setWaitlist(wait as WaitlistRow[]);
       setIncidents(inc as IncidentRow[]);
+      setChannels(chans as ChannelRow[]);
+      setTickets(tix as TicketRow[]);
     } catch (err) {
       console.error("admin load failed", err);
       setLoadError(err instanceof Error ? err.message : "Failed to load admin data.");
