@@ -23,10 +23,12 @@ type Monitor = {
   url: string;
   interval_seconds: number;
   is_active: boolean;
+  is_public: boolean;
   created_at: string;
   last_status?: string | null;
   last_checked_at?: string | null;
 };
+
 
 type Plan = "starter" | "pro" | "business";
 const PLAN_LIMITS: Record<Plan, number> = { starter: 5, pro: 50, business: Infinity };
