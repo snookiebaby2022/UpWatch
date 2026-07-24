@@ -23,10 +23,12 @@ type Monitor = {
   url: string;
   interval_seconds: number;
   is_active: boolean;
+  is_public: boolean;
   created_at: string;
   last_status?: string | null;
   last_checked_at?: string | null;
 };
+
 
 type Plan = "starter" | "pro" | "business";
 const PLAN_LIMITS: Record<Plan, number> = { starter: 5, pro: 50, business: Infinity };
@@ -266,6 +268,20 @@ function MonitorsPanel({
     }
   }
 
+  async function togglePublic(id: string, next: boolean) {
+    try {
+      const { error: updErr } = await supabase.from("monitors").update({ is_public: next }).eq("id", id);
+      if (updErr) {
+        setMsg(updErr.message);
+        return;
+      }
+      onChange();
+    } catch (err) {
+      setMsg(err instanceof Error ? err.message : "Failed to update monitor.");
+    }
+  }
+
+
   return (
     <section className="bg-surface rounded-2xl border border-brand-border p-8">
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
@@ -342,6 +358,15 @@ function MonitorsPanel({
                     every {m.interval_seconds < 60 ? `${m.interval_seconds}s` : `${Math.round(m.interval_seconds / 60)}m`}
                   </span>
                   <StatusBadge status={status} />
+                  <label className="flex items-center gap-1.5 text-xs font-mono text-zinc-500 cursor-pointer select-none" title="Show this monitor on the public /status page">
+                    <input
+                      type="checkbox"
+                      checked={m.is_public}
+                      onChange={(e) => togglePublic(m.id, e.target.checked)}
+                      className="accent-brand"
+                    />
+                    Public
+                  </label>
                   <button
                     onClick={() => removeMonitor(m.id)}
                     className="text-xs text-zinc-500 hover:text-red-400 transition-colors"
@@ -349,6 +374,7 @@ function MonitorsPanel({
                     Delete
                   </button>
                 </div>
+
               </li>
             );
           })}
