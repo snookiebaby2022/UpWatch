@@ -167,8 +167,8 @@ function Dashboard() {
           plan={plan}
           used={used}
           limit={limit}
-          liveStatuses={piStatusQuery.data ?? null}
           onChange={() => queryClient.invalidateQueries({ queryKey: ["monitors", userId] })}
+
         />
 
         <ChannelsPanel userId={userId} />
