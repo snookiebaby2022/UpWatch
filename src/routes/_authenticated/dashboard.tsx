@@ -128,7 +128,7 @@ function Dashboard() {
             Status page
           </Link>
 
-          <Link to="/support" className="text-sm text-zinc-400 hover:text-white transition-colors">
+          <Link to="/tickets" className="text-sm text-zinc-400 hover:text-white transition-colors">
             Support
           </Link>
           {isAdmin && (

@@ -12,9 +12,10 @@ import { AdminSupportTab } from "@/components/admin/AdminSupportTab";
 import { AdminSystemTab } from "@/components/admin/AdminSystemTab";
 import { AdminUsersTab } from "@/components/admin/AdminUsersTab";
 import { AdminWaitlistTab } from "@/components/admin/AdminWaitlistTab";
-import type { AdminTab, TicketStatus } from "@/components/admin/types";
+import type { AdminTab, TicketPriority, TicketStatus } from "@/components/admin/types";
 import { useAdminData } from "@/components/admin/useAdminData";
 import { resolveAdminAccess } from "@/lib/admin-access";
+import { completeAuthFromUrl } from "@/lib/auth-oauth";
 import { BUILD_LABEL } from "@/lib/build";
 
 export const Route = createFileRoute("/_authenticated/admin")({
@@ -26,6 +27,9 @@ export const Route = createFileRoute("/_authenticated/admin")({
     ],
   }),
   beforeLoad: async () => {
+    if (typeof window !== "undefined") {
+      await completeAuthFromUrl();
+    }
     const { data: userData } = await supabase.auth.getUser();
     if (!userData.user) throw redirect({ to: "/auth" });
     const { isAdmin, roleCheckFailed } = await resolveAdminAccess(userData.user.id);
@@ -54,6 +58,7 @@ function AdminPage() {
   const [search, setSearch] = useState("");
   const [incidentFilter, setIncidentFilter] = useState<"all" | "open" | "resolved">("open");
   const [ticketStatusFilter, setTicketStatusFilter] = useState<TicketStatus | "all">("all");
+  const [ticketPriorityFilter, setTicketPriorityFilter] = useState<TicketPriority | "all">("all");
 
   const admin = useAdminData();
 
@@ -213,8 +218,10 @@ function AdminPage() {
             currentUserId={admin.currentUserId}
             search={search}
             statusFilter={ticketStatusFilter}
+            priorityFilter={ticketPriorityFilter}
             onSearchChange={setSearch}
             onStatusFilterChange={setTicketStatusFilter}
+            onPriorityFilterChange={setTicketPriorityFilter}
             onUpdateStatus={admin.updateTicketStatus}
             onLoadMessages={admin.loadTicketMessages}
             onSendReply={(ticket, body) => admin.sendAdminReply(ticket, body, admin.currentUserId)}

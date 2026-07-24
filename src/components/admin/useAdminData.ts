@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { sortTicketsByPriority } from "@/lib/tickets";
 import type {
   AdminTotals,
   ChannelRow,
@@ -122,7 +123,7 @@ export function useAdminData() {
       setWaitlist(wait as WaitlistRow[]);
       setIncidents(inc as IncidentRow[]);
       setChannels(chans as ChannelRow[]);
-      setTickets(tix as TicketRow[]);
+      setTickets(sortTicketsByPriority(tix as TicketRow[]));
     } catch (err) {
       console.error("admin load failed", err);
       setLoadError(err instanceof Error ? err.message : "Failed to load admin data.");

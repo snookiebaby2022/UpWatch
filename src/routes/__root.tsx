@@ -9,6 +9,7 @@ import {
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { completeAuthFromUrl } from "@/lib/auth-oauth";
 import { Toaster } from "@/components/ui/sonner";
 
 
@@ -151,6 +152,8 @@ function RootComponent() {
   const router = useRouter();
 
   useEffect(() => {
+    completeAuthFromUrl().catch((err) => console.error("auth callback failed", err));
+
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
       if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
       router.invalidate();

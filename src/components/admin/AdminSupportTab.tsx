@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
-import type { TicketMessageRow, TicketRow, TicketStatus, UserRow } from "./types";
+import { priorityBadgeClass, sortTicketsByPriority } from "@/lib/tickets";
+import type { TicketMessageRow, TicketPriority, TicketRow, TicketStatus, UserRow } from "./types";
 
 function TicketBubble({
   mine,
@@ -38,8 +39,10 @@ export function AdminSupportTab({
   currentUserId,
   search,
   statusFilter,
+  priorityFilter,
   onSearchChange,
   onStatusFilterChange,
+  onPriorityFilterChange,
   onUpdateStatus,
   onLoadMessages,
   onSendReply,
@@ -50,8 +53,10 @@ export function AdminSupportTab({
   currentUserId: string;
   search: string;
   statusFilter: TicketStatus | "all";
+  priorityFilter: TicketPriority | "all";
   onSearchChange: (v: string) => void;
   onStatusFilterChange: (v: TicketStatus | "all") => void;
+  onPriorityFilterChange: (v: TicketPriority | "all") => void;
   onUpdateStatus: (id: string, status: TicketStatus) => Promise<boolean | undefined>;
   onLoadMessages: (ticketId: string) => Promise<TicketMessageRow[]>;
   onSendReply: (ticket: TicketRow, body: string) => Promise<void>;
@@ -64,17 +69,20 @@ export function AdminSupportTab({
   const [ticketBusy, setTicketBusy] = useState(false);
 
   const q = search.trim().toLowerCase();
-  const filtered = tickets.filter((t) => {
-    if (statusFilter !== "all" && t.status !== statusFilter) return false;
-    if (!q) return true;
-    const owner = userById.get(t.user_id);
-    return (
-      t.subject.toLowerCase().includes(q) ||
-      t.message.toLowerCase().includes(q) ||
-      owner?.email?.toLowerCase().includes(q) ||
-      owner?.display_name?.toLowerCase().includes(q)
-    );
-  });
+  const filtered = sortTicketsByPriority(
+    tickets.filter((t) => {
+      if (statusFilter !== "all" && t.status !== statusFilter) return false;
+      if (priorityFilter !== "all" && t.priority !== priorityFilter) return false;
+      if (!q) return true;
+      const owner = userById.get(t.user_id);
+      return (
+        t.subject.toLowerCase().includes(q) ||
+        t.message.toLowerCase().includes(q) ||
+        owner?.email?.toLowerCase().includes(q) ||
+        owner?.display_name?.toLowerCase().includes(q)
+      );
+    }),
+  );
 
   async function openTicketThread(t: TicketRow) {
     setOpenTicket(t);
@@ -223,6 +231,16 @@ export function AdminSupportTab({
           <option value="resolved">Resolved</option>
           <option value="closed">Closed</option>
         </select>
+        <select
+          value={priorityFilter}
+          onChange={(e) => onPriorityFilterChange(e.target.value as TicketPriority | "all")}
+          className="bg-background border border-border/60 rounded px-3 py-2 text-sm"
+        >
+          <option value="all">All priorities</option>
+          <option value="high">High first</option>
+          <option value="normal">Normal</option>
+          <option value="low">Low</option>
+        </select>
       </div>
       <div className="overflow-x-auto border border-border/60 rounded-lg">
         <table className="w-full text-sm">
@@ -246,7 +264,13 @@ export function AdminSupportTab({
                     <div>{owner?.email ?? owner?.display_name ?? "—"}</div>
                     <div className="text-xs font-mono text-muted-foreground">{t.user_id.slice(0, 8)}…</div>
                   </td>
-                  <td className="px-4 py-3 capitalize">{t.priority}</td>
+                  <td className="px-4 py-3">
+                    <span
+                      className={`inline-flex capitalize text-xs px-2 py-0.5 rounded border ${priorityBadgeClass(t.priority)}`}
+                    >
+                      {t.priority}
+                    </span>
+                  </td>
                   <td className="px-4 py-3">
                     <select
                       value={t.status}

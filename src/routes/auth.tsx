@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
+import { completeAuthFromUrl, googleOAuthRedirectUrl } from "@/lib/auth-oauth";
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
@@ -50,14 +51,25 @@ function AuthPage() {
   const [info, setInfo] = useState<string | null>(null);
   const [lastSignupEmail, setLastSignupEmail] = useState<string | null>(null);
 
-  // If already signed in, bounce to dashboard.
+  // Complete OAuth / magic-link callback, then bounce to dashboard if signed in.
   useEffect(() => {
-    supabase.auth
-      .getUser()
-      .then(({ data }) => {
+    (async () => {
+      try {
+        const { session, error: callbackErr } = await completeAuthFromUrl();
+        if (callbackErr) {
+          setError(callbackErr.message);
+          return;
+        }
+        if (session) {
+          navigate({ to: "/dashboard", replace: true });
+          return;
+        }
+        const { data } = await supabase.auth.getUser();
         if (data.user) navigate({ to: "/dashboard", replace: true });
-      })
-      .catch((err) => console.error("auth getUser failed", err));
+      } catch (err) {
+        console.error("auth init failed", err);
+      }
+    })();
   }, [navigate]);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -176,7 +188,10 @@ function AuthPage() {
     try {
       const { error: err } = await supabase.auth.signInWithOAuth({
         provider: "google",
-        options: { redirectTo: `${window.location.origin}/dashboard` },
+        options: {
+          redirectTo: googleOAuthRedirectUrl(),
+          queryParams: { access_type: "online", prompt: "select_account" },
+        },
       });
       if (err) throw err;
     } catch (err) {

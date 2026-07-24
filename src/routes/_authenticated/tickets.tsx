@@ -3,11 +3,12 @@ import { useEffect, useState, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { NotificationBell } from "@/components/NotificationBell";
+import { PLAN_TICKET_PRIORITY, sortTicketsByPriority } from "@/lib/tickets";
 
-export const Route = createFileRoute("/_authenticated/support")({
+export const Route = createFileRoute("/_authenticated/tickets")({
   head: () => ({
     meta: [
-      { title: "Support — UpWatch" },
+      { title: "My tickets — UpWatch" },
       { name: "description", content: "Contact UpWatch support and track your tickets." },
       { name: "robots", content: "noindex,nofollow" },
     ],
@@ -40,11 +41,7 @@ type TicketMessage = {
 
 type Plan = "starter" | "pro" | "business";
 
-const PLAN_PRIORITY: Record<Plan, Priority> = {
-  starter: "low",
-  pro: "normal",
-  business: "high",
-};
+const PLAN_PRIORITY = PLAN_TICKET_PRIORITY;
 
 function SupportPage() {
   const navigate = useNavigate();
@@ -93,7 +90,7 @@ function SupportPage() {
         .select("*")
         .order("created_at", { ascending: false });
       if (err) throw err;
-      setTickets((data ?? []) as Ticket[]);
+      setTickets(sortTicketsByPriority((data ?? []) as Ticket[]));
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load tickets.");
     } finally {

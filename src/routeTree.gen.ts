@@ -19,11 +19,12 @@ import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as StatusRouteImport } from './routes/status'
+import { Route as SupportRouteImport } from './routes/support'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as WelcomeRouteImport } from './routes/welcome'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
-import { Route as AuthenticatedSupportRouteImport } from './routes/_authenticated/support'
+import { Route as AuthenticatedTicketsRouteImport } from './routes/_authenticated/tickets'
 import { Route as BlogIndexRouteImport } from './routes/blog.index'
 import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
 import { Route as CompareBetterstackRouteImport } from './routes/compare.betterstack'
@@ -81,6 +82,11 @@ const StatusRoute = StatusRouteImport.update({
   path: '/status',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SupportRoute = SupportRouteImport.update({
+  id: '/support',
+  path: '/support',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
@@ -101,9 +107,9 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedSupportRoute = AuthenticatedSupportRouteImport.update({
-  id: '/support',
-  path: '/support',
+const AuthenticatedTicketsRoute = AuthenticatedTicketsRouteImport.update({
+  id: '/tickets',
+  path: '/tickets',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const BlogIndexRoute = BlogIndexRouteImport.update({
@@ -153,11 +159,12 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/status': typeof StatusRoute
+  '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
   '/welcome': typeof WelcomeRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
-  '/support': typeof AuthenticatedSupportRoute
+  '/tickets': typeof AuthenticatedTicketsRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/compare/betterstack': typeof CompareBetterstackRoute
   '/compare/uptime-kuma': typeof CompareUptimeKumaRoute
@@ -175,11 +182,12 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/status': typeof StatusRoute
+  '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
   '/welcome': typeof WelcomeRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
-  '/support': typeof AuthenticatedSupportRoute
+  '/tickets': typeof AuthenticatedTicketsRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/compare/betterstack': typeof CompareBetterstackRoute
   '/compare/uptime-kuma': typeof CompareUptimeKumaRoute
@@ -200,11 +208,12 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/status': typeof StatusRoute
+  '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
   '/welcome': typeof WelcomeRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
-  '/_authenticated/support': typeof AuthenticatedSupportRoute
+  '/_authenticated/tickets': typeof AuthenticatedTicketsRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/compare/betterstack': typeof CompareBetterstackRoute
   '/compare/uptime-kuma': typeof CompareUptimeKumaRoute
@@ -225,11 +234,12 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/sitemap.xml'
     | '/status'
+    | '/support'
     | '/terms'
     | '/welcome'
     | '/admin'
     | '/dashboard'
-    | '/support'
+    | '/tickets'
     | '/blog/$slug'
     | '/compare/betterstack'
     | '/compare/uptime-kuma'
@@ -247,11 +257,12 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/sitemap.xml'
     | '/status'
+    | '/support'
     | '/terms'
     | '/welcome'
     | '/admin'
     | '/dashboard'
-    | '/support'
+    | '/tickets'
     | '/blog/$slug'
     | '/compare/betterstack'
     | '/compare/uptime-kuma'
@@ -271,11 +282,12 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/sitemap.xml'
     | '/status'
+    | '/support'
     | '/terms'
     | '/welcome'
     | '/_authenticated/admin'
     | '/_authenticated/dashboard'
-    | '/_authenticated/support'
+    | '/_authenticated/tickets'
     | '/blog/$slug'
     | '/compare/betterstack'
     | '/compare/uptime-kuma'
@@ -296,6 +308,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   StatusRoute: typeof StatusRoute
+  SupportRoute: typeof SupportRoute
   TermsRoute: typeof TermsRoute
   WelcomeRoute: typeof WelcomeRoute
   CompareBetterstackRoute: typeof CompareBetterstackRoute
@@ -377,6 +390,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StatusRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/support': {
+      id: '/support'
+      path: '/support'
+      fullPath: '/support'
+      preLoaderRoute: typeof SupportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/terms': {
       id: '/terms'
       path: '/terms'
@@ -405,11 +425,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/support': {
-      id: '/_authenticated/support'
-      path: '/support'
-      fullPath: '/support'
-      preLoaderRoute: typeof AuthenticatedSupportRouteImport
+    '/_authenticated/tickets': {
+      id: '/_authenticated/tickets'
+      path: '/tickets'
+      fullPath: '/tickets'
+      preLoaderRoute: typeof AuthenticatedTicketsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/blog/': {
@@ -467,13 +487,13 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
-  AuthenticatedSupportRoute: typeof AuthenticatedSupportRoute
+  AuthenticatedTicketsRoute: typeof AuthenticatedTicketsRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
-  AuthenticatedSupportRoute: AuthenticatedSupportRoute,
+  AuthenticatedTicketsRoute: AuthenticatedTicketsRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -502,6 +522,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   StatusRoute: StatusRoute,
+  SupportRoute: SupportRoute,
   TermsRoute: TermsRoute,
   WelcomeRoute: WelcomeRoute,
   CompareBetterstackRoute: CompareBetterstackRoute,

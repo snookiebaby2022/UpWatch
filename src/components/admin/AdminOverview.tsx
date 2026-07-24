@@ -1,4 +1,5 @@
 import type { AdminTotals, IncidentRow, MonitorRow, TicketRow, UserRow } from "./types";
+import { sortTicketsByPriority } from "@/lib/tickets";
 
 export function Stat({
   label,
@@ -40,7 +41,7 @@ export function AdminOverview({
 
   const openIncidents = incidents.filter((i) => !i.resolved_at).slice(0, 5);
   const recentUsers = users.slice(0, 5);
-  const recentTickets = tickets.slice(0, 5);
+  const recentTickets = sortTicketsByPriority(tickets).slice(0, 5);
   const monitorById = new Map(monitors.map((m) => [m.id, m]));
   const pending = monitors.filter((m) => m.is_active && (!m.last_status || m.last_status === "pending")).length;
   const inactive = monitors.filter((m) => !m.is_active).length;
