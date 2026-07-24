@@ -399,7 +399,7 @@ function BillingPanel({ plan }: { plan: Plan }) {
               <span className="text-white font-semibold">Business</span>
               <span className="text-brand font-mono">£30/mo</span>
             </div>
-            <p className="text-xs text-zinc-500">Unlimited monitors · 30s checks · Multi-region</p>
+            <p className="text-xs text-zinc-500">Unlimited monitors · 1-minute checks · Multi-region</p>
           </a>
         </div>
       )}
