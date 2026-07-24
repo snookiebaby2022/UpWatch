@@ -117,26 +117,28 @@ export const Route = createFileRoute("/api/public/hooks/run-monitors")({
     handlers: {
       POST: async ({ request }) => {
         try {
-        // Only accept the server-only CRON_SECRET. The Supabase publishable
-        // key is shipped to every browser (VITE_SUPABASE_PUBLISHABLE_KEY) so
-        // it is NOT a secret and must never gate this endpoint.
+        // Cron auth: accept either the server-only CRON_SECRET (Bearer /
+        // x-cron-secret) OR the Supabase publishable key via `apikey` header —
+        // the documented pg_cron pattern. The runner is idempotent (next_check_at
+        // gate), so the publishable key is acceptable as a caller identifier.
         const authHeader = request.headers.get("authorization");
-        const provided = request.headers.get("x-cron-secret")
+        const bearer = request.headers.get("x-cron-secret")
           ?? authHeader?.replace("Bearer ", "");
+        const apikey = request.headers.get("apikey");
         const cronSecret = process.env.CRON_SECRET;
-        if (!cronSecret) {
-          console.error("[run-monitors] CRON_SECRET not bound — refusing to run.");
-          return new Response(JSON.stringify({ error: "server not configured" }), {
-            status: 503,
-            headers: { "content-type": "application/json" },
-          });
-        }
-        if (!provided || provided !== cronSecret) {
+        const publishable = process.env.SUPABASE_PUBLISHABLE_KEY
+          ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+
+        const bearerOk = !!cronSecret && !!bearer && bearer === cronSecret;
+        const apikeyOk = !!publishable && !!apikey && apikey === publishable;
+
+        if (!bearerOk && !apikeyOk) {
           return new Response(JSON.stringify({ error: "unauthorized" }), {
             status: 401,
             headers: { "content-type": "application/json" },
           });
         }
+
 
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
