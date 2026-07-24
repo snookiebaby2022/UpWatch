@@ -30,6 +30,7 @@ type Monitor = {
 
 type Plan = "starter" | "pro" | "business";
 const PLAN_LIMITS: Record<Plan, number> = { starter: 5, pro: 50, business: Infinity };
+const PLAN_INTERVAL_SECONDS: Record<Plan, number> = { starter: 900, pro: 300, business: 30 };
 const PLAN_LABEL: Record<Plan, string> = { starter: "Starter", pro: "Pro", business: "Business" };
 
 function Dashboard() {
@@ -233,7 +234,7 @@ function MonitorsPanel({
     try {
       const { error: insertError } = await supabase
         .from("monitors")
-        .insert({ user_id: userId, name: trimmedName, url: trimmedUrl });
+        .insert({ user_id: userId, name: trimmedName, url: trimmedUrl, interval_seconds: PLAN_INTERVAL_SECONDS[plan] });
       if (insertError) {
         setMsg(insertError.message);
         return;
@@ -334,7 +335,7 @@ function MonitorsPanel({
                     <span className="text-xs font-mono text-zinc-500">{Math.round(live.ping)}ms</span>
                   )}
                   <span className="text-xs font-mono text-zinc-500">
-                    every {Math.round(m.interval_seconds / 60)}m
+                    every {m.interval_seconds < 60 ? `${m.interval_seconds}s` : `${Math.round(m.interval_seconds / 60)}m`}
                   </span>
                   <StatusBadge status={status} />
                   <button
@@ -385,7 +386,7 @@ function BillingPanel({ plan }: { plan: Plan }) {
                 <span className="text-white font-semibold">Pro</span>
                 <span className="text-brand font-mono">£10/mo</span>
               </div>
-              <p className="text-xs text-zinc-500">50 monitors · 1-minute checks · Slack & Discord</p>
+              <p className="text-xs text-zinc-500">50 monitors · 5-minute checks · Slack & Discord</p>
             </a>
           )}
           <a

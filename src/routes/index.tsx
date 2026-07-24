@@ -27,7 +27,7 @@ const FAQS = [
   },
   {
     q: "How often do you check my endpoints?",
-    a: "Every 60 seconds on all plans. Business tier adds 30-second checks for critical infrastructure.",
+    a: "Every 15 minutes on Starter, every 5 minutes on Pro, and every 30 seconds on Business for critical infrastructure.",
   },
   {
     q: "Can I host a public status page?",
@@ -344,7 +344,7 @@ const TIERS: Tier[] = [
   {
     name: "Starter",
     price: "£0",
-    features: ["5 Monitors", "5-minute intervals", "Email alerts"],
+    features: ["5 Monitors", "15-minute intervals", "Email alerts"],
     cta: "Join Free",
     href: "/auth",
   },
@@ -353,7 +353,7 @@ const TIERS: Tier[] = [
     price: "£10",
     features: [
       "50 Monitors",
-      "1-minute intervals",
+      "5-minute intervals",
       "Slack & Discord integrations",
       "Custom Status Pages",
     ],
