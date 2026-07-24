@@ -88,9 +88,15 @@ export function NotificationBell() {
           toast(n.title, {
             description: n.body ?? undefined,
             action: n.link
-              ? { label: "Open", onClick: () => (window.location.href = n.link!) }
+              ? {
+                  label: "Open",
+                  // SPA navigation — a full reload would drop the auth session,
+                  // realtime subscriptions, and any in-flight state.
+                  onClick: () => router.navigate({ to: n.link! }),
+                }
               : undefined,
           });
+
 
           // Browser push (works while any app tab is open)
           if (
