@@ -5,6 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { isPublicHttpUrl } from "@/lib/url-safety";
 import { NotificationBell } from "@/components/NotificationBell";
 import { ChannelsPanel } from "@/components/ChannelsPanel";
+import type { Plan } from "@/lib/plans";
+import { PLAN_INTERVAL_SECONDS, PLAN_LABEL, PLAN_LIMITS } from "@/lib/plans";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
@@ -30,12 +32,6 @@ type Monitor = {
   last_status?: string | null;
   last_checked_at?: string | null;
 };
-
-
-type Plan = "starter" | "pro" | "business";
-const PLAN_LIMITS: Record<Plan, number> = { starter: 5, pro: 50, business: Infinity };
-const PLAN_INTERVAL_SECONDS: Record<Plan, number> = { starter: 900, pro: 300, business: 60 };
-const PLAN_LABEL: Record<Plan, string> = { starter: "Starter", pro: "Pro", business: "Business" };
 
 function Dashboard() {
   const navigate = useNavigate();
@@ -171,7 +167,7 @@ function Dashboard() {
 
         />
 
-        <ChannelsPanel userId={userId} />
+        <ChannelsPanel userId={userId} plan={plan} />
 
         <BillingPanel plan={plan} />
       </main>
