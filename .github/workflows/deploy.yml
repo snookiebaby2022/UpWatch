@@ -1,0 +1,65 @@
+# Deploy GitHub main to Cloudflare Workers on every push.
+# Lovable Git sync does NOT publish to upwatch.online — this workflow does.
+#
+# Required GitHub repo secrets (Settings → Secrets → Actions):
+#   CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID
+#   SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, SUPABASE_SERVICE_ROLE_KEY
+#   VITE_SUPABASE_URL, VITE_SUPABASE_PUBLISHABLE_KEY
+# Optional: KUMA_BASE_URL, KUMA_STATUS_PAGE_SLUG, VITE_KUMA_PUBLIC_URL, CRON_SECRET, BREVO_API_KEY
+#
+# After first deploy: Cloudflare dashboard → Workers → upwatch → Settings → Domains & Routes
+# Add custom domain upwatch.online (and remove/disable the stale Lovable publish for that domain).
+
+name: Deploy production
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+        env:
+          VITE_BUILD_SHA: ${{ github.sha }}
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+          VITE_STATUS_PAGE_URL: https://upwatch.online/status
+          VITE_KUMA_PUBLIC_URL: ${{ secrets.VITE_KUMA_PUBLIC_URL }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          KUMA_BASE_URL: ${{ secrets.KUMA_BASE_URL }}
+          KUMA_STATUS_PAGE_SLUG: ${{ secrets.KUMA_STATUS_PAGE_SLUG }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
+
+      - name: Set Cloudflare worker name
+        run: node -e "const fs=require('fs');const p='.output/server/wrangler.json';const j=JSON.parse(fs.readFileSync(p,'utf8'));j.name='upwatch';fs.writeFileSync(p,JSON.stringify(j,null,2));"
+
+      - name: Deploy to Cloudflare Workers
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy
+          workingDirectory: .output/server

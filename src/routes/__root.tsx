@@ -13,6 +13,7 @@ import { Toaster } from "@/components/ui/sonner";
 
 
 import appCss from "../styles.css?url";
+import { BUILD_SHA } from "../lib/build";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 
 function NotFoundComponent() {
@@ -88,6 +89,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:locale", content: "en_GB" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:site", content: "@upwatch" },
+      { name: "upwatch-build", content: BUILD_SHA },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
