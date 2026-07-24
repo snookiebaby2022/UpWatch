@@ -25,7 +25,16 @@ function timeAgo(iso: string) {
 }
 
 export function NotificationBell() {
-  const { userId } = useSession();
+  const signedIn = useSession();
+  const [userId, setUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!signedIn) {
+      setUserId(null);
+      return;
+    }
+    supabase.auth.getUser().then(({ data }) => setUserId(data.user?.id ?? null));
+  }, [signedIn]);
   const [items, setItems] = useState<Notification[]>([]);
   const [open, setOpen] = useState(false);
   const [pushEnabled, setPushEnabled] = useState(
