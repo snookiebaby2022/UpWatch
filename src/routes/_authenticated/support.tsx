@@ -161,9 +161,9 @@ function SupportPage() {
       if (err) throw err;
       setSubject("");
       setBody("");
-      setPriority("normal");
       setMsg("Ticket submitted. We'll be in touch shortly.");
       load();
+
     } catch (e) {
       setMsg(e instanceof Error ? e.message : "Failed to submit ticket.");
     } finally {
