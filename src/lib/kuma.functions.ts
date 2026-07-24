@@ -20,10 +20,14 @@ export type KumaStatus = {
 };
 
 export const getKumaStatus = createServerFn({ method: "GET" }).handler(async (): Promise<KumaStatus> => {
+  // Bound both external requests so a slow/hung upstream can never stall SSR
+  // or a client fetch beyond a few seconds.
+  const ac = new AbortController();
+  const timer = setTimeout(() => ac.abort(), 5000);
   try {
     const [configRes, hbRes] = await Promise.all([
-      fetch(`${KUMA_BASE}/api/status-page/${KUMA_SLUG}`, { headers: { accept: "application/json" } }),
-      fetch(`${KUMA_BASE}/api/status-page/heartbeat/${KUMA_SLUG}`, { headers: { accept: "application/json" } }),
+      fetch(`${KUMA_BASE}/api/status-page/${KUMA_SLUG}`, { headers: { accept: "application/json" }, signal: ac.signal }),
+      fetch(`${KUMA_BASE}/api/status-page/heartbeat/${KUMA_SLUG}`, { headers: { accept: "application/json" }, signal: ac.signal }),
     ]);
     if (!configRes.ok || !hbRes.ok) return { ok: false, monitors: [], incident: null };
 
@@ -38,14 +42,14 @@ export const getKumaStatus = createServerFn({ method: "GET" }).handler(async ():
 
     const monitors: KumaMonitor[] = [];
     for (const group of config.publicGroupList ?? []) {
-      for (const m of group.monitorList) {
-        const beats = hb.heartbeatList[String(m.id)] ?? [];
+      for (const m of group.monitorList ?? []) {
+        const beats = hb.heartbeatList?.[String(m.id)] ?? [];
         const latest = beats[beats.length - 1];
         monitors.push({
           id: m.id,
           name: m.name,
           url: m.url ?? "",
-          uptime: hb.uptimeList[`${m.id}_24`] ?? hb.uptimeList[String(m.id)] ?? null,
+          uptime: hb.uptimeList?.[`${m.id}_24`] ?? hb.uptimeList?.[String(m.id)] ?? null,
           latestPing: latest?.ping ?? null,
           latestStatus: latest?.status ?? null,
           heartbeats: beats.slice(-24),
@@ -59,7 +63,12 @@ export const getKumaStatus = createServerFn({ method: "GET" }).handler(async ():
       incident: config.incident ? config.incident.title : null,
     };
   } catch (err) {
+    // Timeout, DNS failure, upstream 5xx, malformed JSON — all fall through
+    // to a safe empty payload so the UI can render its "unavailable" state.
     console.error("[kuma] fetch failed", err);
     return { ok: false, monitors: [], incident: null };
+  } finally {
+    clearTimeout(timer);
   }
 });
+

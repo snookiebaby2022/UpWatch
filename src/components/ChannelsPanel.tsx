@@ -43,13 +43,19 @@ export function ChannelsPanel({ userId }: { userId: string }) {
   async function refresh() {
     if (!userId) return;
     setLoading(true);
-    const { data, error } = await supabase
-      .from("notification_channels")
-      .select("*")
-      .order("created_at", { ascending: false });
-    if (error) setMsg(error.message);
-    setRows((data ?? []) as Channel[]);
-    setLoading(false);
+    try {
+      const { data, error } = await supabase
+        .from("notification_channels")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      setRows((data ?? []) as Channel[]);
+    } catch (err) {
+      console.error("channels: refresh failed", err);
+      setMsg(err instanceof Error ? err.message : "Failed to load channels.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(() => {
@@ -75,32 +81,46 @@ export function ChannelsPanel({ userId }: { userId: string }) {
     }
     setBusy(true);
     setMsg(null);
-    const { error } = await supabase
-      .from("notification_channels")
-      .insert({ user_id: userId, type, target: t, is_active: true });
-    setBusy(false);
-    if (error) {
-      setMsg(error.message);
-      return;
+    try {
+      const { error } = await supabase
+        .from("notification_channels")
+        .insert({ user_id: userId, type, target: t, is_active: true });
+      if (error) throw error;
+      setTarget("");
+      await refresh();
+    } catch (err) {
+      console.error("channels: insert failed", err);
+      setMsg(err instanceof Error ? err.message : "Failed to add channel.");
+    } finally {
+      setBusy(false);
     }
-    setTarget("");
-    refresh();
   }
 
   async function toggle(id: string, next: boolean) {
-    const { error } = await supabase
-      .from("notification_channels")
-      .update({ is_active: next })
-      .eq("id", id);
-    if (error) setMsg(error.message);
-    else refresh();
+    try {
+      const { error } = await supabase
+        .from("notification_channels")
+        .update({ is_active: next })
+        .eq("id", id);
+      if (error) throw error;
+      await refresh();
+    } catch (err) {
+      console.error("channels: toggle failed", err);
+      setMsg(err instanceof Error ? err.message : "Failed to update channel.");
+    }
   }
 
   async function remove(id: string) {
-    const { error } = await supabase.from("notification_channels").delete().eq("id", id);
-    if (error) setMsg(error.message);
-    else refresh();
+    try {
+      const { error } = await supabase.from("notification_channels").delete().eq("id", id);
+      if (error) throw error;
+      await refresh();
+    } catch (err) {
+      console.error("channels: delete failed", err);
+      setMsg(err instanceof Error ? err.message : "Failed to delete channel.");
+    }
   }
+
 
   return (
     <section className="bg-surface rounded-2xl border border-brand-border p-8">
