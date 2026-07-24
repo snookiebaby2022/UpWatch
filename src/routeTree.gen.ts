@@ -15,9 +15,17 @@ import { Route as StatusRouteImport } from './routes/status'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as PricingRouteImport } from './routes/pricing'
+import { Route as FeaturesRouteImport } from './routes/features'
+import { Route as BlogRouteImport } from './routes/blog'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as BlogIndexRouteImport } from './routes/blog.index'
+import { Route as CompareUptimerobotRouteImport } from './routes/compare.uptimerobot'
+import { Route as CompareUptimeKumaRouteImport } from './routes/compare.uptime-kuma'
+import { Route as CompareBetterstackRouteImport } from './routes/compare.betterstack'
+import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
 import { Route as AuthenticatedSupportRouteImport } from './routes/_authenticated/support'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
@@ -53,6 +61,21 @@ const PrivacyRoute = PrivacyRouteImport.update({
   path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PricingRoute = PricingRouteImport.update({
+  id: '/pricing',
+  path: '/pricing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FeaturesRoute = FeaturesRouteImport.update({
+  id: '/features',
+  path: '/features',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BlogRoute = BlogRouteImport.update({
+  id: '/blog',
+  path: '/blog',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
@@ -66,6 +89,31 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const BlogIndexRoute = BlogIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => BlogRoute,
+} as any)
+const CompareUptimerobotRoute = CompareUptimerobotRouteImport.update({
+  id: '/compare/uptimerobot',
+  path: '/compare/uptimerobot',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CompareUptimeKumaRoute = CompareUptimeKumaRouteImport.update({
+  id: '/compare/uptime-kuma',
+  path: '/compare/uptime-kuma',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CompareBetterstackRoute = CompareBetterstackRouteImport.update({
+  id: '/compare/betterstack',
+  path: '/compare/betterstack',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BlogSlugRoute = BlogSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => BlogRoute,
 } as any)
 const AuthenticatedSupportRoute = AuthenticatedSupportRouteImport.update({
   id: '/support',
@@ -92,6 +140,9 @@ const ApiPublicHooksRunMonitorsRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/blog': typeof BlogRouteWithChildren
+  '/features': typeof FeaturesRoute
+  '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -101,11 +152,18 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AuthenticatedAdminRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/support': typeof AuthenticatedSupportRoute
+  '/blog/$slug': typeof BlogSlugRoute
+  '/compare/betterstack': typeof CompareBetterstackRoute
+  '/compare/uptime-kuma': typeof CompareUptimeKumaRoute
+  '/compare/uptimerobot': typeof CompareUptimerobotRoute
+  '/blog/': typeof BlogIndexRoute
   '/api/public/hooks/run-monitors': typeof ApiPublicHooksRunMonitorsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/features': typeof FeaturesRoute
+  '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -115,6 +173,11 @@ export interface FileRoutesByTo {
   '/admin': typeof AuthenticatedAdminRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/support': typeof AuthenticatedSupportRoute
+  '/blog/$slug': typeof BlogSlugRoute
+  '/compare/betterstack': typeof CompareBetterstackRoute
+  '/compare/uptime-kuma': typeof CompareUptimeKumaRoute
+  '/compare/uptimerobot': typeof CompareUptimerobotRoute
+  '/blog': typeof BlogIndexRoute
   '/api/public/hooks/run-monitors': typeof ApiPublicHooksRunMonitorsRoute
 }
 export interface FileRoutesById {
@@ -122,6 +185,9 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/blog': typeof BlogRouteWithChildren
+  '/features': typeof FeaturesRoute
+  '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -131,6 +197,11 @@ export interface FileRoutesById {
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/support': typeof AuthenticatedSupportRoute
+  '/blog/$slug': typeof BlogSlugRoute
+  '/compare/betterstack': typeof CompareBetterstackRoute
+  '/compare/uptime-kuma': typeof CompareUptimeKumaRoute
+  '/compare/uptimerobot': typeof CompareUptimerobotRoute
+  '/blog/': typeof BlogIndexRoute
   '/api/public/hooks/run-monitors': typeof ApiPublicHooksRunMonitorsRoute
 }
 export interface FileRouteTypes {
@@ -138,6 +209,9 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/blog'
+    | '/features'
+    | '/pricing'
     | '/privacy'
     | '/reset-password'
     | '/sitemap.xml'
@@ -147,11 +221,18 @@ export interface FileRouteTypes {
     | '/admin'
     | '/dashboard'
     | '/support'
+    | '/blog/$slug'
+    | '/compare/betterstack'
+    | '/compare/uptime-kuma'
+    | '/compare/uptimerobot'
+    | '/blog/'
     | '/api/public/hooks/run-monitors'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
+    | '/features'
+    | '/pricing'
     | '/privacy'
     | '/reset-password'
     | '/sitemap.xml'
@@ -161,12 +242,20 @@ export interface FileRouteTypes {
     | '/admin'
     | '/dashboard'
     | '/support'
+    | '/blog/$slug'
+    | '/compare/betterstack'
+    | '/compare/uptime-kuma'
+    | '/compare/uptimerobot'
+    | '/blog'
     | '/api/public/hooks/run-monitors'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/blog'
+    | '/features'
+    | '/pricing'
     | '/privacy'
     | '/reset-password'
     | '/sitemap.xml'
@@ -176,6 +265,11 @@ export interface FileRouteTypes {
     | '/_authenticated/admin'
     | '/_authenticated/dashboard'
     | '/_authenticated/support'
+    | '/blog/$slug'
+    | '/compare/betterstack'
+    | '/compare/uptime-kuma'
+    | '/compare/uptimerobot'
+    | '/blog/'
     | '/api/public/hooks/run-monitors'
   fileRoutesById: FileRoutesById
 }
@@ -183,12 +277,18 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  BlogRoute: typeof BlogRouteWithChildren
+  FeaturesRoute: typeof FeaturesRoute
+  PricingRoute: typeof PricingRoute
   PrivacyRoute: typeof PrivacyRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   StatusRoute: typeof StatusRoute
   TermsRoute: typeof TermsRoute
   WelcomeRoute: typeof WelcomeRoute
+  CompareBetterstackRoute: typeof CompareBetterstackRoute
+  CompareUptimeKumaRoute: typeof CompareUptimeKumaRoute
+  CompareUptimerobotRoute: typeof CompareUptimerobotRoute
   ApiPublicHooksRunMonitorsRoute: typeof ApiPublicHooksRunMonitorsRoute
 }
 
@@ -236,6 +336,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/pricing': {
+      id: '/pricing'
+      path: '/pricing'
+      fullPath: '/pricing'
+      preLoaderRoute: typeof PricingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/features': {
+      id: '/features'
+      path: '/features'
+      fullPath: '/features'
+      preLoaderRoute: typeof FeaturesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/blog': {
+      id: '/blog'
+      path: '/blog'
+      fullPath: '/blog'
+      preLoaderRoute: typeof BlogRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth': {
       id: '/auth'
       path: '/auth'
@@ -256,6 +377,41 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/blog/': {
+      id: '/blog/'
+      path: '/'
+      fullPath: '/blog/'
+      preLoaderRoute: typeof BlogIndexRouteImport
+      parentRoute: typeof BlogRoute
+    }
+    '/compare/uptimerobot': {
+      id: '/compare/uptimerobot'
+      path: '/compare/uptimerobot'
+      fullPath: '/compare/uptimerobot'
+      preLoaderRoute: typeof CompareUptimerobotRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/compare/uptime-kuma': {
+      id: '/compare/uptime-kuma'
+      path: '/compare/uptime-kuma'
+      fullPath: '/compare/uptime-kuma'
+      preLoaderRoute: typeof CompareUptimeKumaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/compare/betterstack': {
+      id: '/compare/betterstack'
+      path: '/compare/betterstack'
+      fullPath: '/compare/betterstack'
+      preLoaderRoute: typeof CompareBetterstackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/blog/$slug': {
+      id: '/blog/$slug'
+      path: '/$slug'
+      fullPath: '/blog/$slug'
+      preLoaderRoute: typeof BlogSlugRouteImport
+      parentRoute: typeof BlogRoute
     }
     '/_authenticated/support': {
       id: '/_authenticated/support'
@@ -303,16 +459,34 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
+interface BlogRouteChildren {
+  BlogSlugRoute: typeof BlogSlugRoute
+  BlogIndexRoute: typeof BlogIndexRoute
+}
+
+const BlogRouteChildren: BlogRouteChildren = {
+  BlogSlugRoute: BlogSlugRoute,
+  BlogIndexRoute: BlogIndexRoute,
+}
+
+const BlogRouteWithChildren = BlogRoute._addFileChildren(BlogRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  BlogRoute: BlogRouteWithChildren,
+  FeaturesRoute: FeaturesRoute,
+  PricingRoute: PricingRoute,
   PrivacyRoute: PrivacyRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   StatusRoute: StatusRoute,
   TermsRoute: TermsRoute,
   WelcomeRoute: WelcomeRoute,
+  CompareBetterstackRoute: CompareBetterstackRoute,
+  CompareUptimeKumaRoute: CompareUptimeKumaRoute,
+  CompareUptimerobotRoute: CompareUptimerobotRoute,
   ApiPublicHooksRunMonitorsRoute: ApiPublicHooksRunMonitorsRoute,
 }
 export const routeTree = rootRouteImport

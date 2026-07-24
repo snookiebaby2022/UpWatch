@@ -10,6 +10,7 @@ export const Route = createFileRoute("/welcome")({
     meta: [
       { title: TITLE },
       { name: "description", content: DESC },
+      { name: "robots", content: "noindex, nofollow" },
       { property: "og:title", content: TITLE },
       { property: "og:description", content: DESC },
       { property: "og:url", content: `${SITE_URL}/welcome` },
@@ -17,6 +18,7 @@ export const Route = createFileRoute("/welcome")({
       { name: "twitter:description", content: DESC },
     ],
     links: [{ rel: "canonical", href: `${SITE_URL}/welcome` }],
+
   }),
   component: WelcomePage,
 });
