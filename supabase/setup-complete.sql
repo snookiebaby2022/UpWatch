@@ -133,3 +133,17 @@ SELECT u.id, 'starter', 'active'
 FROM auth.users u
 LEFT JOIN public.subscriptions s ON s.user_id = u.id
 WHERE s.user_id IS NULL;
+
+-- 9) Fix monitor runner cron (was calling old lovable.app preview URL)
+SELECT cron.unschedule('upwatch-run-monitors');
+SELECT cron.schedule(
+  'upwatch-run-monitors',
+  '* * * * *',
+  $$
+  SELECT net.http_post(
+    url := 'https://upwatch.online/api/public/hooks/run-monitors',
+    headers := '{"Content-Type": "application/json", "apikey": "sb_publishable_DN7TI6X612A8S8FwSLw2qA_PEQTMHHW"}'::jsonb,
+    body := '{}'::jsonb
+  ) AS request_id;
+  $$
+);

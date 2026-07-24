@@ -2,20 +2,16 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, queryOptions } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { getKumaStatus, type KumaMonitor } from "@/lib/kuma.functions";
-import { supabase } from "@/integrations/supabase/client";
-import { SITE_URL, OG_IMAGE } from "@/lib/site";
+import { getPublicStatus } from "@/lib/status.functions";
+import { STATUS_PAGE_URL, SITE_URL, OG_IMAGE } from "@/lib/site";
 import { useSession } from "@/hooks/use-session";
 
-
-const kumaQueryOptions = (fn: typeof getKumaStatus) =>
-  queryOptions({
-    queryKey: ["kuma-status"],
-    queryFn: () => fn(),
-    refetchInterval: 30_000,
-    staleTime: 15_000,
-  });
-
+const statusQueryOptions = queryOptions({
+  queryKey: ["public-status"],
+  queryFn: () => getPublicStatus(),
+  refetchInterval: 30_000,
+  staleTime: 15_000,
+});
 const HOME_TITLE = "UpWatch — Website Uptime Monitoring That Doesn't Sleep";
 const HOME_DESC =
   "Monitor your websites and APIs from every region. Instant Slack, Discord, email and SMS alerts the moment something breaks. From £0/mo.";
@@ -31,7 +27,7 @@ const FAQS = [
   },
   {
     q: "Can I host a public status page?",
-    a: "Yes — every plan includes a hosted status page at status.yourdomain.com with full SSL. Share it with customers, embed it in your app, or link it from your support docs.",
+    a: "Yes — every plan includes a public status page at upwatch.online/status. Mark monitors as public in your dashboard and they appear automatically. Connect Uptime Kuma at status.upwatch.online for a dedicated Kuma status page.",
   },
   {
     q: "Is my data secure?",
@@ -49,7 +45,7 @@ const FAQS = [
 
 export const Route = createFileRoute("/")({
   loader: ({ context }) =>
-    context.queryClient.ensureQueryData(kumaQueryOptions(getKumaStatus)),
+    context.queryClient.ensureQueryData(statusQueryOptions),
   head: () => ({
     meta: [
       { title: HOME_TITLE },
@@ -240,7 +236,7 @@ function Hero() {
 }
 
 function LiveDemo() {
-  const { data, isLoading, isError } = useQuery(kumaQueryOptions(getKumaStatus));
+  const { data, isLoading, isError } = useQuery(statusQueryOptions);
   const monitors = data?.monitors ?? [];
   const ok = data?.ok ?? false;
   const failed = isError || (data && !data.ok);
@@ -248,7 +244,7 @@ function LiveDemo() {
   return (
     <section id="demo" className="max-w-5xl mx-auto px-6 mb-32">
       <div className="bg-surface rounded-2xl border border-brand-border p-6 shadow-2xl">
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-8 gap-4 flex-wrap">
           <h3 className="text-white font-semibold flex items-center gap-2">
             <span
               className={`text-xs ${
@@ -263,71 +259,19 @@ function LiveDemo() {
                 ? "Live status temporarily unavailable"
                 : "Fetching live status…"}
           </h3>
-          <Link
-            to="/status"
-            className="text-xs font-mono text-zinc-500 uppercase tracking-widest hover:text-brand transition-colors"
-          >
-            Live from status.upwatch.online →
-          </Link>
+          <div className="flex flex-col items-end gap-1">
+            {data && <StatusSourceBadge source={data.source} />}
+            <Link
+              to="/status"
+              className="text-xs font-mono text-zinc-500 uppercase tracking-widest hover:text-brand transition-colors"
+            >
+              Live status → {STATUS_PAGE_URL.replace("https://", "")}
+            </Link>
+          </div>
         </div>
-        <div className="space-y-6">
-          {isLoading && (
-            <div className="text-sm text-zinc-500 py-8 text-center font-mono">
-              Waiting for heartbeats…
-            </div>
-          )}
-          {failed && (
-            <div className="text-sm text-zinc-500 py-8 text-center font-mono border border-dashed border-brand-border rounded-xl">
-              Couldn't reach the status API. Retrying automatically…
-            </div>
-          )}
-          {!isLoading && !failed && monitors.length === 0 && (
-            <div className="text-sm text-zinc-500 py-8 text-center font-mono">
-              No monitors reporting right now.
-            </div>
-          )}
-          {monitors.map((m) => (
-            <MonitorRow key={m.id} monitor={m} />
-          ))}
-        </div>
+        <StatusMonitorList monitors={monitors} loading={isLoading} failed={!!failed} compact />
       </div>
     </section>
-  );
-}
-
-function MonitorRow({ monitor }: { monitor: KumaMonitor }) {
-  const beats = monitor.heartbeats.length
-    ? monitor.heartbeats
-    : Array.from({ length: 20 }, () => ({ status: 0, time: "", msg: "", ping: null }));
-  const uptime =
-    monitor.uptime != null ? `${(monitor.uptime * 100).toFixed(2)}%` : "—";
-
-  return (
-    <div className="flex flex-col md:flex-row md:items-center gap-4">
-      <div className="w-48">
-        <div className="text-white font-medium truncate">{monitor.name}</div>
-        <div className="text-xs text-zinc-500 font-mono truncate">
-          {monitor.latestPing != null ? `${monitor.latestPing}ms` : "no data"}
-        </div>
-      </div>
-      <div className="flex-1 flex gap-1 h-8 items-end">
-        {beats.map((b, i) => {
-          const color =
-            b.status === 1
-              ? "bg-brand/20 border-brand"
-              : b.status === 2
-                ? "bg-yellow-500/20 border-yellow-500"
-                : b.status === 0
-                  ? "bg-zinc-800 border-zinc-700"
-                  : "bg-red-500/20 border-red-500";
-          const h = b.status === 1 ? "h-6" : b.status === 2 ? "h-4" : b.status === 0 ? "h-3" : "h-5";
-          return <div key={i} className={`flex-1 rounded-sm border-b-2 ${h} ${color}`} />;
-        })}
-      </div>
-      <div className="text-right w-20">
-        <div className="text-brand font-mono text-sm">{uptime}</div>
-      </div>
-    </div>
   );
 }
 
