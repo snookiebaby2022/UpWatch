@@ -1,0 +1,49 @@
+# Apply nexlify.live Cloudflare resilience (keep-warm worker, 502 analytics).
+name: Nexlify resilience
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "infra/nexlify/**"
+      - ".github/workflows/nexlify-resilience.yml"
+
+jobs:
+  cloudflare:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Apply Cloudflare keep-warm + diagnostics
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          NEXLIFY_DOMAIN: nexlify.live
+        run: node infra/nexlify/apply-resilience.mjs
+
+  kuma-http-monitors:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Tune Kuma HTTP monitors via SSH
+        env:
+          SSH_HOST: ${{ secrets.KUMA_SSH_HOST }}
+          SSH_USER: ${{ secrets.KUMA_SSH_USER }}
+          SSH_KEY: ${{ secrets.KUMA_SSH_KEY }}
+        run: |
+          if [ -z "$SSH_HOST" ] || [ -z "$SSH_USER" ] || [ -z "$SSH_KEY" ]; then
+            echo "Skipping Kuma SSH — set KUMA_SSH_HOST, KUMA_SSH_USER, KUMA_SSH_KEY to auto-apply."
+            echo "Or run on Pi: bash infra/uptime-kuma/fix-http-monitors.sh"
+            exit 0
+          fi
+          mkdir -p ~/.ssh
+          echo "$SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          scp -o StrictHostKeyChecking=no infra/uptime-kuma/fix-http-monitors.sh "$SSH_USER@$SSH_HOST:~/fix-http-monitors.sh"
+          ssh -o StrictHostKeyChecking=no "$SSH_USER@$SSH_HOST" "bash ~/fix-http-monitors.sh"

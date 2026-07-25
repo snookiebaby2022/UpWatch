@@ -32,4 +32,5 @@ jobs:
           scp -o StrictHostKeyChecking=no -r infra/uptime-kuma/* "$SSH_USER@$SSH_HOST:~/upwatch-kuma/"
           ssh -o StrictHostKeyChecking=no "$SSH_USER@$SSH_HOST" "cd ~/upwatch-kuma && \
             if [ -n \"$TUNNEL_TOKEN\" ]; then echo CLOUDFLARE_TUNNEL_TOKEN=$TUNNEL_TOKEN >> .env; fi && \
-            docker compose --profile cloudflare up -d || docker compose up -d"
+            docker compose --profile cloudflare up -d || docker compose up -d && \
+            bash fix-http-monitors.sh"

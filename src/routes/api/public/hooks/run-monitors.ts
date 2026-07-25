@@ -199,57 +199,25 @@ export const Route = createFileRoute("/api/public/hooks/run-monitors")({
 
 
 
-        // Perform a single HTTP probe from one region and return a normalized result.
+        // Perform an HTTP probe with retries for transient 502/503/504/timeouts.
         async function probe(m: typeof due[number], region: string) {
-          const started = Date.now();
-          let status: "up" | "down" = "down";
-          let statusCode: number | null = null;
-          let errorMessage: string | null = null;
-          let responseTime: number | null = null;
-          try {
-            const controller = new AbortController();
-            const timer = setTimeout(() => controller.abort(), 15_000);
-            const res = await fetch(m.url, {
-              method: "GET",
-              signal: controller.signal,
-              redirect: "follow",
-              headers: {
-                "user-agent": `UpWatch-Monitor/1.0 (${region})`,
-                "accept-language": region === "eu-west" ? "en-GB,en;q=0.9" : region === "ap-south" ? "en-IN,en;q=0.9" : "en-US,en;q=0.9",
-              },
-            });
-            clearTimeout(timer);
-            responseTime = Date.now() - started;
-            statusCode = res.status;
-            if (res.ok) {
-              if (m.type === "keyword" && m.keyword) {
-                const reader = res.body?.getReader();
-                const decoder = new TextDecoder();
-                let body = "";
-                const CAP = 512 * 1024;
-                if (reader) {
-                  while (body.length < CAP) {
-                    const { value, done } = await reader.read();
-                    if (done) break;
-                    body += decoder.decode(value, { stream: true });
-                  }
-                  await reader.cancel().catch(() => {});
-                }
-                status = body.includes(m.keyword) ? "up" : "down";
-                if (status === "down") errorMessage = `keyword "${m.keyword}" missing`;
-              } else {
-                status = "up";
-              }
-            } else {
-              status = "down";
-              errorMessage = `HTTP ${res.status}`;
-            }
-          } catch (err) {
-            responseTime = Date.now() - started;
-            status = "down";
-            errorMessage = err instanceof Error ? err.message : "check failed";
-          }
-          return { region, status, statusCode, errorMessage, responseTime };
+          const { probeHttpWithRetries } = await import("@/lib/monitor-probe");
+          const result = await probeHttpWithRetries({
+            url: m.url,
+            region,
+            timeoutMs: 30_000,
+            maxAttempts: 3,
+            retryDelayMs: 2_000,
+            keyword: m.keyword,
+            monitorType: m.type,
+          });
+          return {
+            region,
+            status: result.status,
+            statusCode: result.statusCode,
+            errorMessage: result.errorMessage,
+            responseTime: result.responseTime,
+          };
         }
 
         // Batch check execution to cap concurrent outbound fetches.
