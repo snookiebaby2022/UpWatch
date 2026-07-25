@@ -17,7 +17,7 @@ const statusQueryOptions = queryOptions({
 });
 const HOME_TITLE = "UpWatch — Website Uptime Monitoring That Doesn't Sleep";
 const HOME_DESC =
-  "Monitor your websites and APIs from every region. Starter includes email alerts; Pro adds Slack and Discord. From £0/mo.";
+  "Monitor your websites and APIs with HTTP uptime checks. Starter includes email alerts; Pro adds Slack and Discord. From £0/mo.";
 
 const FAQS = [
   {
@@ -42,7 +42,7 @@ const FAQS = [
   },
   {
     q: "Can I monitor APIs, not just websites?",
-    a: "Absolutely. We check HTTP/HTTPS endpoints, TCP ports, ping, DNS resolution, and keyword presence on any page.",
+    a: "Yes. Any public HTTP or HTTPS endpoint works — REST APIs, webhooks, health checks, or static sites. We send GET requests and alert you on non-2xx responses or timeouts.",
   },
 ];
 
@@ -129,9 +129,6 @@ function HomeError({ error, reset }: { error: Error; reset: () => void }) {
   );
 }
 
-const STRIPE_PRO_URL = "https://buy.stripe.com/14A5kDeEQb1o61s1a2ebu00";
-const STRIPE_BUSINESS_URL = "https://buy.stripe.com/5kQ00j7coedA3Tk5qiebu01";
-
 function Index() {
   const navigate = useNavigate();
   // Read sessionStorage AFTER hydration only — reading it during initial
@@ -153,7 +150,7 @@ function Index() {
       <Hero />
       <LiveDemo />
       <Pricing />
-      <Testimonials />
+      <Highlights />
       <FAQ />
       <LeadCapture />
       <Footer />
@@ -289,8 +286,8 @@ const TIERS: Tier[] = PLAN_ORDER.map((plan) => ({
   name: PLAN_LABEL[plan],
   price: PLAN_PRICE[plan],
   features: PLAN_FEATURES[plan],
-  cta: plan === "starter" ? "Join Free" : "Subscribe Now",
-  href: plan === "starter" ? "/auth" : plan === "pro" ? STRIPE_PRO_URL : STRIPE_BUSINESS_URL,
+  cta: plan === "starter" ? "Join Free" : "Sign up to upgrade",
+  href: "/auth",
   popular: plan === "pro",
 }));
 
@@ -363,35 +360,25 @@ function Pricing() {
   );
 }
 
-const TESTIMONIALS = [
+const HIGHLIGHTS = [
   {
-    quote:
-      "UpWatch caught a database leak 15 minutes before our users did. It literally saved our launch day.",
-    name: "Sarah Jenkins",
-    role: "CTO at DataFlow",
+    title: "Built for indie hackers",
+    body: "Start free with 5 monitors and email alerts. No credit card, no sales call — just add a URL and get notified when it breaks.",
   },
   {
-    quote:
-      "Alerts land in Slack within seconds of an incident. The retry-from-a-second-region logic has killed every false positive we used to chase.",
-    name: "Marcus Thorne",
-    role: "Independent Developer",
+    title: "Honest uptime checks",
+    body: "HTTP GET probes with retries, SSRF protection, and plan-enforced intervals. Business runs three parallel probes before declaring downtime.",
   },
 ];
 
-function Testimonials() {
+function Highlights() {
   return (
     <section className="max-w-7xl mx-auto px-6 mb-32">
       <div className="grid md:grid-cols-2 gap-6">
-        {TESTIMONIALS.map((t) => (
-          <div key={t.name} className="p-8 rounded-2xl bg-zinc-900/50 border border-brand-border">
-            <p className="text-lg italic text-zinc-300 mb-6">"{t.quote}"</p>
-            <div className="flex items-center gap-4">
-              <div className="size-10 rounded-full bg-zinc-700" />
-              <div>
-                <div className="text-white font-bold">{t.name}</div>
-                <div className="text-xs text-zinc-500">{t.role}</div>
-              </div>
-            </div>
+        {HIGHLIGHTS.map((item) => (
+          <div key={item.title} className="p-8 rounded-2xl bg-zinc-900/50 border border-brand-border">
+            <h3 className="text-white font-bold text-lg mb-3">{item.title}</h3>
+            <p className="text-zinc-400 text-sm leading-relaxed">{item.body}</p>
           </div>
         ))}
       </div>

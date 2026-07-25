@@ -4,7 +4,7 @@ import { ComparePage } from "@/components/ComparePage";
 
 const TITLE = "UpWatch vs Uptime Kuma — hosted vs self-hosted";
 const DESC =
-  "Comparing UpWatch's hosted uptime monitoring to running Uptime Kuma yourself: setup, alerts, multi-region and total cost of ownership.";
+  "Comparing UpWatch's hosted uptime monitoring to running Uptime Kuma yourself: setup, alerts, and total cost of ownership.";
 
 export const Route = createFileRoute("/compare/uptime-kuma")({
   head: () => ({
@@ -27,7 +27,7 @@ export const Route = createFileRoute("/compare/uptime-kuma")({
       intro="Uptime Kuma is an excellent open-source uptime monitor — but you own the server, the updates, and the outages. UpWatch is the hosted alternative for teams who want the results without babysitting infrastructure."
       rows={[
         ["Setup time", "Minutes (hosted)", "Docker + reverse proxy"],
-        ["Multi-region checks", "Built-in", "Manual — run multiple nodes"],
+        ["Triple-probe checks (Business)", "Built-in", "Manual — run multiple nodes"],
         ["Upgrades & patches", "Automatic", "Your responsibility"],
         ["Alert channels", "Starter: email · Pro: Slack & Discord · Business: all", "Many, self-configured"],
         ["Public status pages", "One-click", "Yes"],

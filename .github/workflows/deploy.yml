@@ -98,6 +98,18 @@ jobs:
           sync_secret KUMA_BASE_URL "https://status.upwatch.online"
           sync_secret KUMA_STATUS_PAGE_SLUG "upwatch"
           sync_secret KUMA_PUSH_URL "https://status.upwatch.online/api/push/5pyQgQR1m8"
+          if [ -n "${{ secrets.STRIPE_SECRET_KEY }}" ]; then
+            sync_secret STRIPE_SECRET_KEY "${{ secrets.STRIPE_SECRET_KEY }}"
+          fi
+          if [ -n "${{ secrets.STRIPE_WEBHOOK_SECRET }}" ]; then
+            sync_secret STRIPE_WEBHOOK_SECRET "${{ secrets.STRIPE_WEBHOOK_SECRET }}"
+          fi
+          if [ -n "${{ secrets.STRIPE_PRICE_PRO }}" ]; then
+            sync_secret STRIPE_PRICE_PRO "${{ secrets.STRIPE_PRICE_PRO }}"
+          fi
+          if [ -n "${{ secrets.STRIPE_PRICE_BUSINESS }}" ]; then
+            sync_secret STRIPE_PRICE_BUSINESS "${{ secrets.STRIPE_PRICE_BUSINESS }}"
+          fi
 
       - name: Verify Supabase auth keys
         if: success()

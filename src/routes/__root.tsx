@@ -10,7 +10,7 @@ import {
 import { useEffect, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { completeAuthFromUrl } from "@/lib/auth-oauth";
-import { Toaster } from "@/components/ui/sonner";
+import { CookieConsent } from "@/components/CookieConsent";
 
 
 import appCss from "../styles.css?url";
@@ -83,7 +83,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "UpWatch — Website Uptime Monitoring" },
-      { name: "description", content: "Professional website uptime monitoring with email, Slack, and Discord alerts. Sub-minute checks, public status pages, multi-region on Business." },
+      { name: "description", content: "HTTP uptime monitoring with email, Slack, and Discord alerts. Public status pages and 1-minute checks on Business." },
       { name: "theme-color", content: "#0a0a0a" },
       { property: "og:site_name", content: "UpWatch" },
       { property: "og:type", content: "website" },
@@ -166,6 +166,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
+      <CookieConsent />
       <Toaster />
     </QueryClientProvider>
   );

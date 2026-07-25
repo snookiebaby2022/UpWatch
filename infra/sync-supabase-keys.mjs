@@ -220,6 +220,10 @@ for (const name of [
   "SUPABASE_URL",
   "SUPABASE_PUBLISHABLE_KEY",
   "SUPABASE_SERVICE_ROLE_KEY",
+  "STRIPE_SECRET_KEY",
+  "STRIPE_WEBHOOK_SECRET",
+  "STRIPE_PRICE_PRO",
+  "STRIPE_PRICE_BUSINESS",
   "KUMA_BASE_URL",
   "KUMA_STATUS_PAGE_SLUG",
   "KUMA_PUSH_URL",
@@ -259,20 +263,27 @@ if (post.status !== 0) {
   process.exit(post.status ?? 1);
 }
 
-console.log("\nResetting admin password via bootstrap API…");
-const boot = spawnSync(
-  "curl",
-  [
-    "-s",
-    "-X",
-    "POST",
-    "https://upwatch.online/api/public/setup/bootstrap?token=upwatch-fix-2026",
-  ],
-  { cwd: root, encoding: "utf8", shell: true },
-);
-console.log(boot.stdout?.trim() || boot.stderr?.trim());
+console.log("\nResetting admin via bootstrap API (requires SETUP_TOKEN on Worker)…");
+if (process.env.SETUP_TOKEN?.trim()) {
+  const boot = spawnSync(
+    "curl",
+    [
+      "-s",
+      "-X",
+      "POST",
+      "https://upwatch.online/api/public/setup/bootstrap",
+      "-H",
+      `x-setup-token: ${process.env.SETUP_TOKEN}`,
+    ],
+    { cwd: root, encoding: "utf8", shell: true },
+  );
+  console.log(boot.stdout?.trim() || boot.stderr?.trim());
+} else {
+  console.log("  skipped — SETUP_TOKEN not set in .env");
+}
 
 console.log("\nDone. Sign in at https://upwatch.online/auth");
-console.log("  Email: snookiebaby2022@gmail.com");
-console.log("  Password: UpWatch2026!Admin (change after login)");
-console.log("  Google sign-in should work again.\n");
+if (process.env.SETUP_TOKEN?.trim()) {
+  console.log("  Admin bootstrap available when SETUP_TOKEN is set on Worker.");
+}
+console.log("  Google sign-in and dashboard billing should work when Stripe secrets are configured.\n");

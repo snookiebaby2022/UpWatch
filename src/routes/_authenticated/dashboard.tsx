@@ -10,6 +10,20 @@ import { resolveAdminAccess } from "@/lib/admin-access";
 import { PLAN_FEATURES, PLAN_INTERVAL_SECONDS, PLAN_LABEL, PLAN_LIMITS } from "@/lib/plans";
 import { normalizeMonitorStatus } from "@/lib/monitor-status";
 
+async function authFetch(path: string, init?: RequestInit) {
+  const { data } = await supabase.auth.getSession();
+  const token = data.session?.access_token;
+  if (!token) throw new Error("Not signed in");
+  return fetch(path, {
+    ...init,
+    headers: {
+      "content-type": "application/json",
+      authorization: `Bearer ${token}`,
+      ...(init?.headers ?? {}),
+    },
+  });
+}
+
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
     meta: [
@@ -19,9 +33,6 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
   }),
   component: Dashboard,
 });
-
-const STRIPE_PRO_URL = "https://buy.stripe.com/14A5kDeEQb1o61s1a2ebu00";
-const STRIPE_BUSINESS_URL = "https://buy.stripe.com/5kQ00j7coedA3Tk5qiebu01";
 
 type Monitor = {
   id: string;
@@ -88,17 +99,17 @@ function Dashboard() {
     queryFn: async () => {
       const { data } = await supabase
         .from("subscriptions")
-        .select("plan, status, current_period_end")
+        .select("plan, status, current_period_end, stripe_customer_id")
         .eq("user_id", userId)
         .maybeSingle();
       return data;
     },
   });
 
+  const subStatus = subscriptionQuery.data?.status;
+  const subPlan = subscriptionQuery.data?.plan as Plan | undefined;
   const plan: Plan =
-    subscriptionQuery.data?.status === "active" && subscriptionQuery.data?.plan
-      ? ((subscriptionQuery.data.plan as Plan) ?? "starter")
-      : "starter";
+    (subStatus === "active" || subStatus === "trialing") && subPlan ? subPlan : "starter";
   const limit = PLAN_LIMITS[plan];
   const used = monitorsQuery.data?.length ?? 0;
 
@@ -170,7 +181,12 @@ function Dashboard() {
 
         <ChannelsPanel userId={userId} plan={plan} />
 
-        <BillingPanel plan={plan} />
+        <BillingPanel
+          plan={plan}
+          hasStripeCustomer={!!subscriptionQuery.data?.stripe_customer_id}
+        />
+
+        <AccountPanel onDeleted={handleSignOut} />
       </main>
     </div>
   );
@@ -407,44 +423,167 @@ function PlanFeaturesPanel({ plan, used, limit }: { plan: Plan; used: number; li
   );
 }
 
-function BillingPanel({ plan }: { plan: Plan }) {
+function BillingPanel({
+  plan,
+  hasStripeCustomer,
+}: {
+  plan: Plan;
+  hasStripeCustomer: boolean;
+}) {
+  const [busy, setBusy] = useState<string | null>(null);
+  const [msg, setMsg] = useState<string | null>(null);
+
+  async function startCheckout(target: "pro" | "business") {
+    setMsg(null);
+    setBusy(target);
+    try {
+      const res = await authFetch("/api/stripe/checkout", {
+        method: "POST",
+        body: JSON.stringify({ plan: target }),
+      });
+      const data = (await res.json()) as { url?: string; error?: string };
+      if (!res.ok || !data.url) {
+        setMsg(data.error ?? "Checkout failed");
+        return;
+      }
+      window.location.href = data.url;
+    } catch (err) {
+      setMsg(err instanceof Error ? err.message : "Checkout failed");
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function openPortal() {
+    setMsg(null);
+    setBusy("portal");
+    try {
+      const res = await authFetch("/api/stripe/portal", { method: "POST", body: "{}" });
+      const data = (await res.json()) as { url?: string; error?: string };
+      if (!res.ok || !data.url) {
+        setMsg(data.error ?? "Could not open billing portal");
+        return;
+      }
+      window.location.href = data.url;
+    } catch (err) {
+      setMsg(err instanceof Error ? err.message : "Portal failed");
+    } finally {
+      setBusy(null);
+    }
+  }
+
   return (
     <section className="bg-surface rounded-2xl border border-brand-border p-8">
       <h2 className="text-white font-semibold text-xl mb-1">Billing</h2>
       <p className="text-zinc-500 text-sm mb-6">
         You're currently on the <span className="text-brand font-semibold">{PLAN_LABEL[plan]}</span> plan.
-        {plan === "starter" ? " Upgrade any time — no migration, no downtime." : " Manage your subscription in Stripe."}
+        {plan === "starter"
+          ? " Upgrade any time — no migration, no downtime."
+          : " Manage payment method, invoices, or cancel in the Stripe billing portal."}
       </p>
+
+      {hasStripeCustomer && (
+        <button
+          type="button"
+          onClick={openPortal}
+          disabled={!!busy}
+          className="mb-6 text-sm font-semibold text-brand hover:text-white transition-colors disabled:opacity-60"
+        >
+          {busy === "portal" ? "Opening portal…" : "Open Stripe billing portal →"}
+        </button>
+      )}
+
+      {msg && <p className="text-sm text-red-400 mb-4">{msg}</p>}
+
       {plan !== "business" && (
         <div className="grid md:grid-cols-2 gap-4">
           {plan === "starter" && (
-            <a
-              href={STRIPE_PRO_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block rounded-xl border border-brand-border bg-bg/40 p-5 hover:border-brand transition-colors"
+            <button
+              type="button"
+              onClick={() => startCheckout("pro")}
+              disabled={!!busy}
+              className="text-left rounded-xl border border-brand-border bg-bg/40 p-5 hover:border-brand transition-colors disabled:opacity-60"
             >
               <div className="flex items-baseline justify-between mb-1">
                 <span className="text-white font-semibold">Pro</span>
                 <span className="text-brand font-mono">£10/mo</span>
               </div>
               <p className="text-xs text-zinc-500">50 monitors · 5-minute checks · Slack & Discord</p>
-            </a>
+              {busy === "pro" && <p className="text-xs text-brand mt-2">Redirecting to checkout…</p>}
+            </button>
           )}
-          <a
-            href={STRIPE_BUSINESS_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="block rounded-xl border border-brand-border bg-bg/40 p-5 hover:border-brand transition-colors"
+          <button
+            type="button"
+            onClick={() => startCheckout("business")}
+            disabled={!!busy}
+            className="text-left rounded-xl border border-brand-border bg-bg/40 p-5 hover:border-brand transition-colors disabled:opacity-60"
           >
             <div className="flex items-baseline justify-between mb-1">
               <span className="text-white font-semibold">Business</span>
               <span className="text-brand font-mono">£30/mo</span>
             </div>
-            <p className="text-xs text-zinc-500">Unlimited monitors · 1-minute checks · Multi-region</p>
-          </a>
+            <p className="text-xs text-zinc-500">Unlimited monitors · 1-minute checks · Triple-probe consensus</p>
+            {busy === "business" && <p className="text-xs text-brand mt-2">Redirecting to checkout…</p>}
+          </button>
         </div>
       )}
+    </section>
+  );
+}
+
+function AccountPanel({ onDeleted }: { onDeleted: () => void }) {
+  const [confirmText, setConfirmText] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
+
+  async function deleteAccount() {
+    if (confirmText !== "DELETE") {
+      setMsg('Type DELETE to confirm.');
+      return;
+    }
+    setBusy(true);
+    setMsg(null);
+    try {
+      const res = await authFetch("/api/account/delete", {
+        method: "POST",
+        body: JSON.stringify({ confirm: "DELETE" }),
+      });
+      const data = (await res.json()) as { ok?: boolean; error?: string };
+      if (!res.ok || !data.ok) {
+        setMsg(data.error ?? "Deletion failed");
+        return;
+      }
+      onDeleted();
+    } catch (err) {
+      setMsg(err instanceof Error ? err.message : "Deletion failed");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <section className="bg-surface rounded-2xl border border-red-900/40 p-8">
+      <h2 className="text-white font-semibold text-xl mb-1">Account</h2>
+      <p className="text-zinc-500 text-sm mb-4">
+        Permanently delete your account, monitors, alerts, and subscription data. This cannot be undone.
+      </p>
+      <div className="flex flex-col sm:flex-row gap-3 max-w-md">
+        <input
+          value={confirmText}
+          onChange={(e) => setConfirmText(e.target.value)}
+          placeholder='Type DELETE to confirm'
+          className="flex-1 bg-bg border border-brand-border rounded-lg px-4 py-3 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-red-500"
+        />
+        <button
+          type="button"
+          onClick={deleteAccount}
+          disabled={busy}
+          className="bg-red-600/20 border border-red-600/50 text-red-300 font-semibold px-5 py-3 rounded-lg text-sm hover:bg-red-600/30 disabled:opacity-60"
+        >
+          {busy ? "Deleting…" : "Delete account"}
+        </button>
+      </div>
+      {msg && <p className="text-sm text-red-400 mt-3">{msg}</p>}
     </section>
   );
 }

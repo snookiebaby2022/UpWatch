@@ -12,7 +12,7 @@ import { MarketingLayout } from "@/components/MarketingLayout";
 
 const TITLE = "Features — UpWatch";
 const DESC =
-  "HTTP uptime checks, multi-region consensus, Slack, Discord and email alerts, public status pages, keyword monitoring, and a real-time admin console.";
+  "HTTP uptime checks, triple-probe consensus on Business, Slack, Discord and email alerts, public status pages, and a real-time admin console.";
 
 export const Route = createFileRoute("/features")({
   head: () => ({
@@ -38,16 +38,16 @@ const FEATURES = [
     p: "Starter runs every 15 minutes, Pro every 5 minutes, Business every 1 minute — enforced server-side so intervals always match what you paid for.",
   },
   {
-    h: "Multi-region consensus",
-    p: "Business plan probes from us-east, eu-west and ap-south in parallel. Downtime is only declared when the majority agree.",
+    h: "Triple-probe consensus (Business)",
+    p: "Business plan runs three parallel HTTP probes with different client hints. Downtime is only declared when the majority agree — reducing false positives.",
   },
   {
     h: "Email, Slack & Discord alerts",
     p: "Starter gets email. Pro adds Slack and Discord webhooks. Business unlocks Telegram and custom webhooks too.",
   },
   {
-    h: "Keyword monitoring",
-    p: "Watch for a string in the response body — catch blank pages, error banners, or missing content even when HTTP 200 returns.",
+    h: "HTTP & HTTPS monitoring",
+    p: "Monitor any public URL — websites, REST APIs, health endpoints. We alert on non-2xx responses, timeouts, and connection failures.",
   },
   {
     h: "Public status pages",
@@ -81,7 +81,7 @@ function FeaturesPage() {
       <section className="max-w-5xl mx-auto px-6 pt-20 pb-12">
         <h1 className="text-4xl md:text-5xl font-bold tracking-tight">Everything you need to know your site is up.</h1>
         <p className="mt-4 text-lg text-white/70 max-w-3xl">
-          UpWatch is a focused uptime monitor — fast checks, honest alerts, and an admin console that scales with you.
+          UpWatch is a focused uptime monitor — fast HTTP checks, honest alerts, and an admin console that scales with you.
         </p>
       </section>
       <section className="max-w-5xl mx-auto px-6 grid md:grid-cols-2 gap-6">

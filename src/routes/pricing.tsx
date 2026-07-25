@@ -8,12 +8,9 @@ import {
 } from "@/lib/plans";
 import { MarketingLayout } from "@/components/MarketingLayout";
 
-const STRIPE_PRO_URL = "https://buy.stripe.com/14A5kDeEQb1o61s1a2ebu00";
-const STRIPE_BUSINESS_URL = "https://buy.stripe.com/5kQ00j7coedA3Tk5qiebu01";
-
 const TITLE = "Pricing — UpWatch";
 const DESC =
-  "Simple uptime monitoring pricing. Starter free forever, Pro £10/mo, Business £30/mo with 1-minute multi-region checks. No credit card to start.";
+  "Simple uptime monitoring pricing. Starter free forever, Pro £10/mo, Business £30/mo with 1-minute triple-probe checks. No credit card to start.";
 
 export const Route = createFileRoute("/pricing")({
   head: () => ({
@@ -54,11 +51,11 @@ export const Route = createFileRoute("/pricing")({
 
 const PLAN_CTA: Record<
   (typeof PLAN_ORDER)[number],
-  { label: string; to: "/auth" | null; href: string | null; period: string; highlight?: boolean }
+  { label: string; period: string; highlight?: boolean }
 > = {
-  starter: { label: "Start free", to: "/auth", href: null, period: "forever" },
-  pro: { label: "Upgrade to Pro", to: null, href: STRIPE_PRO_URL, period: "per month", highlight: true },
-  business: { label: "Upgrade to Business", to: null, href: STRIPE_BUSINESS_URL, period: "per month" },
+  starter: { label: "Start free", period: "forever" },
+  pro: { label: "Sign up to upgrade", period: "per month", highlight: true },
+  business: { label: "Sign up to upgrade", period: "per month" },
 };
 
 function PricingPage() {
@@ -66,7 +63,7 @@ function PricingPage() {
     <MarketingLayout>
       <section className="max-w-5xl mx-auto px-6 pt-20 pb-8 text-center">
         <h1 className="text-4xl md:text-5xl font-bold tracking-tight">Simple, transparent pricing.</h1>
-        <p className="mt-4 text-white/70">Start free. Upgrade when your side project grows up.</p>
+        <p className="mt-4 text-white/70">Start free. Upgrade from your dashboard when you need more.</p>
       </section>
       <section className="max-w-5xl mx-auto px-6 grid md:grid-cols-3 gap-6 pb-12">
         {PLAN_ORDER.map((plan) => {
@@ -88,29 +85,22 @@ function PricingPage() {
                   <li key={f}>✓ {f}</li>
                 ))}
               </ul>
-              {cta.to ? (
-                <Link
-                  to={cta.to}
-                  className="mt-6 inline-flex justify-center rounded-md bg-[#10b981] px-4 py-2 text-black font-medium hover:bg-[#0ea371]"
-                >
-                  {cta.label}
-                </Link>
-              ) : (
-                <a
-                  href={cta.href!}
-                  target="_blank"
-                  rel="noreferrer noopener"
-                  className="mt-6 inline-flex justify-center rounded-md bg-white px-4 py-2 text-black font-medium hover:bg-white/90"
-                >
-                  {cta.label}
-                </a>
-              )}
+              <Link
+                to="/auth"
+                className={`mt-6 inline-flex justify-center rounded-md px-4 py-2 font-medium ${
+                  cta.highlight
+                    ? "bg-[#10b981] text-black hover:bg-[#0ea371]"
+                    : "bg-white text-black hover:bg-white/90"
+                }`}
+              >
+                {cta.label}
+              </Link>
             </div>
           );
         })}
       </section>
       <section className="max-w-3xl mx-auto px-6 pb-24 text-sm text-white/60 text-center">
-        Prices in GBP. Cancel any time from your Stripe billing portal — no lock-in, no per-seat charges.
+        Prices in GBP. Paid plans are billed via Stripe. Cancel or update payment any time from the billing portal in your dashboard.
       </section>
     </MarketingLayout>
   );

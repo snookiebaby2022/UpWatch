@@ -1,21 +1,35 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-const OWNER_EMAIL = "snookiebaby2022@gmail.com";
-const SETUP_TOKEN = process.env.SETUP_TOKEN ?? "upwatch-fix-2026";
-
+/**
+ * One-time admin bootstrap — disabled unless SETUP_TOKEN is set in Worker secrets.
+ * Never returns passwords in the response.
+ */
 export const Route = createFileRoute("/api/public/setup/bootstrap")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        const setupToken = process.env.SETUP_TOKEN?.trim();
+        if (!setupToken) {
+          return json({ error: "not found" }, 404);
+        }
+
         const token =
           request.headers.get("x-setup-token")
           ?? new URL(request.url).searchParams.get("token");
-        if (!token || token !== SETUP_TOKEN) {
+        if (!token || token !== setupToken) {
           return json({ error: "unauthorized" }, 401);
         }
 
+        const ownerEmail = process.env.SETUP_OWNER_EMAIL?.trim();
+        if (!ownerEmail) {
+          return json({ error: "SETUP_OWNER_EMAIL not configured" }, 503);
+        }
+
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-        const password = process.env.SETUP_PASSWORD ?? "UpWatch2026!Admin";
+        const password = process.env.SETUP_PASSWORD?.trim();
+        if (!password) {
+          return json({ error: "SETUP_PASSWORD not configured" }, 503);
+        }
 
         let userId: string | null = null;
         let created = false;
@@ -26,7 +40,7 @@ export const Route = createFileRoute("/api/public/setup/bootstrap")({
         }
 
         const existing = existingUsers.users.find(
-          (u) => u.email?.toLowerCase() === OWNER_EMAIL.toLowerCase(),
+          (u) => u.email?.toLowerCase() === ownerEmail.toLowerCase(),
         );
 
         if (existing) {
@@ -40,7 +54,7 @@ export const Route = createFileRoute("/api/public/setup/bootstrap")({
           }
         } else {
           const { data: createdUser, error: createErr } = await supabaseAdmin.auth.admin.createUser({
-            email: OWNER_EMAIL,
+            email: ownerEmail,
             password,
             email_confirm: true,
             user_metadata: { display_name: "Admin" },
@@ -73,7 +87,7 @@ export const Route = createFileRoute("/api/public/setup/bootstrap")({
         );
         if (roleErr) {
           return json({
-            error: "admin role insert failed — run supabase/fix-admin-now.sql in Supabase SQL editor first",
+            error: "admin role insert failed",
             detail: roleErr.message,
           }, 500);
         }
@@ -81,10 +95,9 @@ export const Route = createFileRoute("/api/public/setup/bootstrap")({
         return json({
           ok: true,
           created,
-          email: OWNER_EMAIL,
-          password,
+          email: ownerEmail,
           userId,
-          message: "Sign in at /auth with this email and password, then open /admin",
+          message: "Admin ready — sign in at /auth, then open /admin",
         });
       },
     },

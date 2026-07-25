@@ -30,11 +30,15 @@ import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
 import { Route as CompareBetterstackRouteImport } from './routes/compare.betterstack'
 import { Route as CompareUptimeKumaRouteImport } from './routes/compare.uptime-kuma'
 import { Route as CompareUptimerobotRouteImport } from './routes/compare.uptimerobot'
+import { Route as ApiAccountDeleteRouteImport } from './routes/api/account/delete'
 import { Route as ApiAdminHealthChecksRouteImport } from './routes/api/admin/health-checks'
 import { Route as ApiAdminTicketsRouteImport } from './routes/api/admin/tickets'
+import { Route as ApiStripeCheckoutRouteImport } from './routes/api/stripe/checkout'
+import { Route as ApiStripePortalRouteImport } from './routes/api/stripe/portal'
 import { Route as ApiPublicGoogleSessionRouteImport } from './routes/api/public/google/session'
 import { Route as ApiPublicHooksKumaHeartbeatRouteImport } from './routes/api/public/hooks/kuma-heartbeat'
 import { Route as ApiPublicHooksRunMonitorsRouteImport } from './routes/api/public/hooks/run-monitors'
+import { Route as ApiPublicHooksStripeWebhookRouteImport } from './routes/api/public/hooks/stripe-webhook'
 import { Route as ApiPublicSetupBootstrapRouteImport } from './routes/api/public/setup/bootstrap'
 import { Route as ApiPublicSetupHealthRouteImport } from './routes/api/public/setup/health'
 
@@ -142,6 +146,11 @@ const CompareUptimerobotRoute = CompareUptimerobotRouteImport.update({
   path: '/compare/uptimerobot',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAccountDeleteRoute = ApiAccountDeleteRouteImport.update({
+  id: '/api/account/delete',
+  path: '/api/account/delete',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAdminHealthChecksRoute = ApiAdminHealthChecksRouteImport.update({
   id: '/api/admin/health-checks',
   path: '/api/admin/health-checks',
@@ -150,6 +159,16 @@ const ApiAdminHealthChecksRoute = ApiAdminHealthChecksRouteImport.update({
 const ApiAdminTicketsRoute = ApiAdminTicketsRouteImport.update({
   id: '/api/admin/tickets',
   path: '/api/admin/tickets',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiStripeCheckoutRoute = ApiStripeCheckoutRouteImport.update({
+  id: '/api/stripe/checkout',
+  path: '/api/stripe/checkout',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiStripePortalRoute = ApiStripePortalRouteImport.update({
+  id: '/api/stripe/portal',
+  path: '/api/stripe/portal',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicGoogleSessionRoute = ApiPublicGoogleSessionRouteImport.update({
@@ -167,6 +186,12 @@ const ApiPublicHooksRunMonitorsRoute =
   ApiPublicHooksRunMonitorsRouteImport.update({
     id: '/api/public/hooks/run-monitors',
     path: '/api/public/hooks/run-monitors',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksStripeWebhookRoute =
+  ApiPublicHooksStripeWebhookRouteImport.update({
+    id: '/api/public/hooks/stripe-webhook',
+    path: '/api/public/hooks/stripe-webhook',
     getParentRoute: () => rootRouteImport,
   } as any)
 const ApiPublicSetupBootstrapRoute = ApiPublicSetupBootstrapRouteImport.update({
@@ -201,11 +226,15 @@ export interface FileRoutesByFullPath {
   '/compare/uptime-kuma': typeof CompareUptimeKumaRoute
   '/compare/uptimerobot': typeof CompareUptimerobotRoute
   '/blog/': typeof BlogIndexRoute
+  '/api/account/delete': typeof ApiAccountDeleteRoute
   '/api/admin/health-checks': typeof ApiAdminHealthChecksRoute
   '/api/admin/tickets': typeof ApiAdminTicketsRoute
+  '/api/stripe/checkout': typeof ApiStripeCheckoutRoute
+  '/api/stripe/portal': typeof ApiStripePortalRoute
   '/api/public/google/session': typeof ApiPublicGoogleSessionRoute
   '/api/public/hooks/kuma-heartbeat': typeof ApiPublicHooksKumaHeartbeatRoute
   '/api/public/hooks/run-monitors': typeof ApiPublicHooksRunMonitorsRoute
+  '/api/public/hooks/stripe-webhook': typeof ApiPublicHooksStripeWebhookRoute
   '/api/public/setup/bootstrap': typeof ApiPublicSetupBootstrapRoute
   '/api/public/setup/health': typeof ApiPublicSetupHealthRoute
 }
@@ -229,11 +258,15 @@ export interface FileRoutesByTo {
   '/compare/uptime-kuma': typeof CompareUptimeKumaRoute
   '/compare/uptimerobot': typeof CompareUptimerobotRoute
   '/blog': typeof BlogIndexRoute
+  '/api/account/delete': typeof ApiAccountDeleteRoute
   '/api/admin/health-checks': typeof ApiAdminHealthChecksRoute
   '/api/admin/tickets': typeof ApiAdminTicketsRoute
+  '/api/stripe/checkout': typeof ApiStripeCheckoutRoute
+  '/api/stripe/portal': typeof ApiStripePortalRoute
   '/api/public/google/session': typeof ApiPublicGoogleSessionRoute
   '/api/public/hooks/kuma-heartbeat': typeof ApiPublicHooksKumaHeartbeatRoute
   '/api/public/hooks/run-monitors': typeof ApiPublicHooksRunMonitorsRoute
+  '/api/public/hooks/stripe-webhook': typeof ApiPublicHooksStripeWebhookRoute
   '/api/public/setup/bootstrap': typeof ApiPublicSetupBootstrapRoute
   '/api/public/setup/health': typeof ApiPublicSetupHealthRoute
 }
@@ -260,11 +293,15 @@ export interface FileRoutesById {
   '/compare/uptime-kuma': typeof CompareUptimeKumaRoute
   '/compare/uptimerobot': typeof CompareUptimerobotRoute
   '/blog/': typeof BlogIndexRoute
+  '/api/account/delete': typeof ApiAccountDeleteRoute
   '/api/admin/health-checks': typeof ApiAdminHealthChecksRoute
   '/api/admin/tickets': typeof ApiAdminTicketsRoute
+  '/api/stripe/checkout': typeof ApiStripeCheckoutRoute
+  '/api/stripe/portal': typeof ApiStripePortalRoute
   '/api/public/google/session': typeof ApiPublicGoogleSessionRoute
   '/api/public/hooks/kuma-heartbeat': typeof ApiPublicHooksKumaHeartbeatRoute
   '/api/public/hooks/run-monitors': typeof ApiPublicHooksRunMonitorsRoute
+  '/api/public/hooks/stripe-webhook': typeof ApiPublicHooksStripeWebhookRoute
   '/api/public/setup/bootstrap': typeof ApiPublicSetupBootstrapRoute
   '/api/public/setup/health': typeof ApiPublicSetupHealthRoute
 }
@@ -291,11 +328,15 @@ export interface FileRouteTypes {
     | '/compare/uptime-kuma'
     | '/compare/uptimerobot'
     | '/blog/'
+    | '/api/account/delete'
     | '/api/admin/health-checks'
     | '/api/admin/tickets'
+    | '/api/stripe/checkout'
+    | '/api/stripe/portal'
     | '/api/public/google/session'
     | '/api/public/hooks/kuma-heartbeat'
     | '/api/public/hooks/run-monitors'
+    | '/api/public/hooks/stripe-webhook'
     | '/api/public/setup/bootstrap'
     | '/api/public/setup/health'
   fileRoutesByTo: FileRoutesByTo
@@ -319,11 +360,15 @@ export interface FileRouteTypes {
     | '/compare/uptime-kuma'
     | '/compare/uptimerobot'
     | '/blog'
+    | '/api/account/delete'
     | '/api/admin/health-checks'
     | '/api/admin/tickets'
+    | '/api/stripe/checkout'
+    | '/api/stripe/portal'
     | '/api/public/google/session'
     | '/api/public/hooks/kuma-heartbeat'
     | '/api/public/hooks/run-monitors'
+    | '/api/public/hooks/stripe-webhook'
     | '/api/public/setup/bootstrap'
     | '/api/public/setup/health'
   id:
@@ -349,11 +394,15 @@ export interface FileRouteTypes {
     | '/compare/uptime-kuma'
     | '/compare/uptimerobot'
     | '/blog/'
+    | '/api/account/delete'
     | '/api/admin/health-checks'
     | '/api/admin/tickets'
+    | '/api/stripe/checkout'
+    | '/api/stripe/portal'
     | '/api/public/google/session'
     | '/api/public/hooks/kuma-heartbeat'
     | '/api/public/hooks/run-monitors'
+    | '/api/public/hooks/stripe-webhook'
     | '/api/public/setup/bootstrap'
     | '/api/public/setup/health'
   fileRoutesById: FileRoutesById
@@ -375,11 +424,15 @@ export interface RootRouteChildren {
   CompareBetterstackRoute: typeof CompareBetterstackRoute
   CompareUptimeKumaRoute: typeof CompareUptimeKumaRoute
   CompareUptimerobotRoute: typeof CompareUptimerobotRoute
+  ApiAccountDeleteRoute: typeof ApiAccountDeleteRoute
   ApiAdminHealthChecksRoute: typeof ApiAdminHealthChecksRoute
   ApiAdminTicketsRoute: typeof ApiAdminTicketsRoute
+  ApiStripeCheckoutRoute: typeof ApiStripeCheckoutRoute
+  ApiStripePortalRoute: typeof ApiStripePortalRoute
   ApiPublicGoogleSessionRoute: typeof ApiPublicGoogleSessionRoute
   ApiPublicHooksKumaHeartbeatRoute: typeof ApiPublicHooksKumaHeartbeatRoute
   ApiPublicHooksRunMonitorsRoute: typeof ApiPublicHooksRunMonitorsRoute
+  ApiPublicHooksStripeWebhookRoute: typeof ApiPublicHooksStripeWebhookRoute
   ApiPublicSetupBootstrapRoute: typeof ApiPublicSetupBootstrapRoute
   ApiPublicSetupHealthRoute: typeof ApiPublicSetupHealthRoute
 }
@@ -533,6 +586,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CompareUptimerobotRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/account/delete': {
+      id: '/api/account/delete'
+      path: '/api/account/delete'
+      fullPath: '/api/account/delete'
+      preLoaderRoute: typeof ApiAccountDeleteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/admin/health-checks': {
       id: '/api/admin/health-checks'
       path: '/api/admin/health-checks'
@@ -545,6 +605,20 @@ declare module '@tanstack/react-router' {
       path: '/api/admin/tickets'
       fullPath: '/api/admin/tickets'
       preLoaderRoute: typeof ApiAdminTicketsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/stripe/checkout': {
+      id: '/api/stripe/checkout'
+      path: '/api/stripe/checkout'
+      fullPath: '/api/stripe/checkout'
+      preLoaderRoute: typeof ApiStripeCheckoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/stripe/portal': {
+      id: '/api/stripe/portal'
+      path: '/api/stripe/portal'
+      fullPath: '/api/stripe/portal'
+      preLoaderRoute: typeof ApiStripePortalRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/google/session': {
@@ -566,6 +640,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/hooks/run-monitors'
       fullPath: '/api/public/hooks/run-monitors'
       preLoaderRoute: typeof ApiPublicHooksRunMonitorsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/stripe-webhook': {
+      id: '/api/public/hooks/stripe-webhook'
+      path: '/api/public/hooks/stripe-webhook'
+      fullPath: '/api/public/hooks/stripe-webhook'
+      preLoaderRoute: typeof ApiPublicHooksStripeWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/setup/bootstrap': {
@@ -629,11 +710,15 @@ const rootRouteChildren: RootRouteChildren = {
   CompareBetterstackRoute: CompareBetterstackRoute,
   CompareUptimeKumaRoute: CompareUptimeKumaRoute,
   CompareUptimerobotRoute: CompareUptimerobotRoute,
+  ApiAccountDeleteRoute: ApiAccountDeleteRoute,
   ApiAdminHealthChecksRoute: ApiAdminHealthChecksRoute,
   ApiAdminTicketsRoute: ApiAdminTicketsRoute,
+  ApiStripeCheckoutRoute: ApiStripeCheckoutRoute,
+  ApiStripePortalRoute: ApiStripePortalRoute,
   ApiPublicGoogleSessionRoute: ApiPublicGoogleSessionRoute,
   ApiPublicHooksKumaHeartbeatRoute: ApiPublicHooksKumaHeartbeatRoute,
   ApiPublicHooksRunMonitorsRoute: ApiPublicHooksRunMonitorsRoute,
+  ApiPublicHooksStripeWebhookRoute: ApiPublicHooksStripeWebhookRoute,
   ApiPublicSetupBootstrapRoute: ApiPublicSetupBootstrapRoute,
   ApiPublicSetupHealthRoute: ApiPublicSetupHealthRoute,
 }

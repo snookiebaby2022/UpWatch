@@ -30,7 +30,7 @@ export const PLAN_PRICE: Record<Plan, string> = {
 export const PLAN_FEATURES: Record<Plan, readonly string[]> = {
   starter: ["5 monitors", "15-minute check intervals", "Email alerts"],
   pro: ["50 monitors", "5-minute check intervals", "Slack & Discord integrations"],
-  business: ["Unlimited monitors", "1-minute check intervals", "Multi-region checking"],
+  business: ["Unlimited monitors", "1-minute check intervals", "Triple-probe consensus", "Telegram & custom webhooks"],
 };
 
 /** Notification channel types allowed per plan. */

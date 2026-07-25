@@ -4,7 +4,7 @@ import { ComparePage } from "@/components/ComparePage";
 
 const TITLE = "UpWatch vs UptimeRobot — a friendly comparison";
 const DESC =
-  "How UpWatch stacks up against UptimeRobot on check interval, multi-region monitoring, alerting channels and pricing.";
+  "How UpWatch stacks up against UptimeRobot on check interval, triple-probe checks, alerting channels and pricing.";
 
 export const Route = createFileRoute("/compare/uptimerobot")({
   head: () => ({
@@ -28,7 +28,7 @@ export const Route = createFileRoute("/compare/uptimerobot")({
       rows={[
         ["Free plan check interval", "5 minutes", "15 minutes"],
         ["Business check interval", "60 seconds", "60 seconds"],
-        ["Multi-region consensus", "1 minute", "Yes (2-of-3)"],
+        ["Triple-probe consensus (Business)", "Yes (2-of-3)", "No"],
         ["Telegram alerts", "Add-on", "Built-in"],
         ["Public status pages", "Yes", "Yes"],
         ["Starting price", "£0", "£0"],

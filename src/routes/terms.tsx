@@ -37,7 +37,7 @@ function Terms() {
         <div className="space-y-6 text-zinc-400 leading-relaxed">
           <h2 className="text-xl font-semibold text-white">1. Service</h2>
           <p>
-            UpWatch provides HTTP, TCP, ping, DNS and keyword uptime monitoring. We use commercially
+            UpWatch provides HTTP/HTTPS uptime monitoring with email and webhook alerts. We use commercially
             reasonable efforts to keep the service available but do not guarantee uninterrupted access.
           </p>
           <h2 className="text-xl font-semibold text-white">2. Acceptable use</h2>

@@ -28,7 +28,7 @@ export const Route = createFileRoute("/compare/betterstack")({
       rows={[
         ["Uptime-only pricing", "£0 – £30/mo", "Bundled with logs"],
         ["Business check interval", "60 seconds", "30 seconds"],
-        ["Multi-region consensus", "Yes (2-of-3)", "Yes"],
+        ["Triple-probe consensus (Business)", "Yes (2-of-3 parallel)", "Yes"],
         ["Telegram alerts", "Built-in", "Add-on"],
         ["Public status pages", "One-click", "Yes"],
         ["Ideal for", "Sites, APIs, side projects", "Larger ops teams"],
