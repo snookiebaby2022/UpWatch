@@ -45,6 +45,13 @@ jobs:
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
           BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
 
+      - name: Validate Supabase keys before deploy
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node infra/verify-auth-secrets.mjs
+
       - name: Patch Kuma cron + set Cloudflare worker name
         run: |
           node infra/patch-kuma-cron.mjs
@@ -76,9 +83,11 @@ jobs:
           sync_secret() {
             local name="$1"
             local val="$2"
-            if [ -n "$val" ]; then
-              printf '%s' "$val" | npx wrangler secret put "$name" --config .output/server/wrangler.json
+            if [ -z "$val" ]; then
+              echo "::error::Missing GitHub secret: $name (auth will break without it)"
+              exit 1
             fi
+            printf '%s' "$val" | npx wrangler secret put "$name" --config .output/server/wrangler.json
           }
           sync_secret SUPABASE_URL "$SUPABASE_URL"
           sync_secret SUPABASE_PUBLISHABLE_KEY "$SUPABASE_PUBLISHABLE_KEY"
@@ -89,3 +98,13 @@ jobs:
           sync_secret KUMA_BASE_URL "https://status.upwatch.online"
           sync_secret KUMA_STATUS_PAGE_SLUG "upwatch"
           sync_secret KUMA_PUSH_URL "https://status.upwatch.online/api/push/5pyQgQR1m8"
+
+      - name: Verify Supabase auth keys
+        if: success()
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          node infra/verify-auth-secrets.mjs --url https://upwatch.online
+          curl -sf "https://upwatch.online/api/public/setup/health" | node -e "const d=JSON.parse(require('fs').readFileSync(0,'utf8')); if(!d.ok) { console.error(d); process.exit(1); } console.log('Worker auth health OK');"

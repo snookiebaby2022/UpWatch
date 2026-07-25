@@ -23,9 +23,36 @@ function Test-Endpoint {
 
 Write-Host "`n=== UpWatch API / integration checks ===`n" -ForegroundColor Cyan
 
+# Load publishable key from .env for run-monitors probe
+$publishableKey = $env:SUPABASE_PUBLISHABLE_KEY
+if (-not $publishableKey) {
+    $envFile = Join-Path (Split-Path $PSScriptRoot -Parent) ".env"
+    if (Test-Path $envFile) {
+        Get-Content $envFile | ForEach-Object {
+            if ($_ -match '^\s*SUPABASE_PUBLISHABLE_KEY\s*=\s*"?([^"#]+)"?\s*') {
+                $publishableKey = $Matches[1].Trim()
+            }
+        }
+    }
+}
+
 Test-Endpoint -Name "Kuma push API" -Url 'https://status.upwatch.online/api/push/5pyQgQR1m8?status=up&msg=OK&ping=' -Expect '"ok":true'
 Test-Endpoint -Name "Kuma status page API" -Url "https://status.upwatch.online/api/status-page/upwatch" -Expect "publicGroupList"
 Test-Endpoint -Name "UpWatch /status" -Url "https://upwatch.online/status" -Expect "UpWatch"
+
+try {
+    $auth = Invoke-RestMethod -Uri "https://upwatch.online/api/public/setup/health" -TimeoutSec 15
+    if ($auth.ok) {
+        Write-Host "  OK:   Auth health (Supabase keys on Worker)" -ForegroundColor Green
+    } else {
+        Write-Host "  FAIL: Auth health — $($auth.error)" -ForegroundColor Red
+        $fail++
+    }
+} catch {
+    Write-Host "  FAIL: Auth health — $($_.Exception.Message)" -ForegroundColor Red
+    Write-Host "         Run: node infra/sync-supabase-keys.mjs" -ForegroundColor Yellow
+    $fail++
+}
 
 try {
     $admin = Invoke-WebRequest -Uri "https://upwatch.online/admin" -UseBasicParsing -TimeoutSec 15
@@ -44,13 +71,17 @@ try {
 }
 
 try {
-    $headers = @{ "Content-Type" = "application/json"; "apikey" = "sb_publishable_DN7TI6X612A8S8FwSLw2qA_PEQTMHHW" }
-    $r = Invoke-RestMethod -Uri "https://upwatch.online/api/public/hooks/run-monitors" -Method POST -Headers $headers -Body "{}" -TimeoutSec 30
-    if ($r.ok) {
-        Write-Host "  OK:   run-monitors cron hook - checked $($r.checked) monitors" -ForegroundColor Green
+    if (-not $publishableKey) {
+        Write-Host "  WARN: run-monitors - no SUPABASE_PUBLISHABLE_KEY in .env, skipping" -ForegroundColor Yellow
     } else {
-        Write-Host "  FAIL: run-monitors - unexpected response" -ForegroundColor Red
-        $fail++
+        $headers = @{ "Content-Type" = "application/json"; "apikey" = $publishableKey }
+        $r = Invoke-RestMethod -Uri "https://upwatch.online/api/public/hooks/run-monitors" -Method POST -Headers $headers -Body "{}" -TimeoutSec 30
+        if ($r.ok) {
+            Write-Host "  OK:   run-monitors cron hook - checked $($r.checked) monitors" -ForegroundColor Green
+        } else {
+            Write-Host "  FAIL: run-monitors - unexpected response" -ForegroundColor Red
+            $fail++
+        }
     }
 } catch {
     $msg = $_.Exception.Message

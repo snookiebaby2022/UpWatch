@@ -36,6 +36,7 @@ import { Route as ApiPublicGoogleSessionRouteImport } from './routes/api/public/
 import { Route as ApiPublicHooksKumaHeartbeatRouteImport } from './routes/api/public/hooks/kuma-heartbeat'
 import { Route as ApiPublicHooksRunMonitorsRouteImport } from './routes/api/public/hooks/run-monitors'
 import { Route as ApiPublicSetupBootstrapRouteImport } from './routes/api/public/setup/bootstrap'
+import { Route as ApiPublicSetupHealthRouteImport } from './routes/api/public/setup/health'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -173,6 +174,11 @@ const ApiPublicSetupBootstrapRoute = ApiPublicSetupBootstrapRouteImport.update({
   path: '/api/public/setup/bootstrap',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicSetupHealthRoute = ApiPublicSetupHealthRouteImport.update({
+  id: '/api/public/setup/health',
+  path: '/api/public/setup/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -201,6 +207,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/kuma-heartbeat': typeof ApiPublicHooksKumaHeartbeatRoute
   '/api/public/hooks/run-monitors': typeof ApiPublicHooksRunMonitorsRoute
   '/api/public/setup/bootstrap': typeof ApiPublicSetupBootstrapRoute
+  '/api/public/setup/health': typeof ApiPublicSetupHealthRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -228,6 +235,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/kuma-heartbeat': typeof ApiPublicHooksKumaHeartbeatRoute
   '/api/public/hooks/run-monitors': typeof ApiPublicHooksRunMonitorsRoute
   '/api/public/setup/bootstrap': typeof ApiPublicSetupBootstrapRoute
+  '/api/public/setup/health': typeof ApiPublicSetupHealthRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -258,6 +266,7 @@ export interface FileRoutesById {
   '/api/public/hooks/kuma-heartbeat': typeof ApiPublicHooksKumaHeartbeatRoute
   '/api/public/hooks/run-monitors': typeof ApiPublicHooksRunMonitorsRoute
   '/api/public/setup/bootstrap': typeof ApiPublicSetupBootstrapRoute
+  '/api/public/setup/health': typeof ApiPublicSetupHealthRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -288,6 +297,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/kuma-heartbeat'
     | '/api/public/hooks/run-monitors'
     | '/api/public/setup/bootstrap'
+    | '/api/public/setup/health'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -315,6 +325,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/kuma-heartbeat'
     | '/api/public/hooks/run-monitors'
     | '/api/public/setup/bootstrap'
+    | '/api/public/setup/health'
   id:
     | '__root__'
     | '/'
@@ -344,6 +355,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/kuma-heartbeat'
     | '/api/public/hooks/run-monitors'
     | '/api/public/setup/bootstrap'
+    | '/api/public/setup/health'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -369,6 +381,7 @@ export interface RootRouteChildren {
   ApiPublicHooksKumaHeartbeatRoute: typeof ApiPublicHooksKumaHeartbeatRoute
   ApiPublicHooksRunMonitorsRoute: typeof ApiPublicHooksRunMonitorsRoute
   ApiPublicSetupBootstrapRoute: typeof ApiPublicSetupBootstrapRoute
+  ApiPublicSetupHealthRoute: typeof ApiPublicSetupHealthRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -562,6 +575,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicSetupBootstrapRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/setup/health': {
+      id: '/api/public/setup/health'
+      path: '/api/public/setup/health'
+      fullPath: '/api/public/setup/health'
+      preLoaderRoute: typeof ApiPublicSetupHealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -615,6 +635,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksKumaHeartbeatRoute: ApiPublicHooksKumaHeartbeatRoute,
   ApiPublicHooksRunMonitorsRoute: ApiPublicHooksRunMonitorsRoute,
   ApiPublicSetupBootstrapRoute: ApiPublicSetupBootstrapRoute,
+  ApiPublicSetupHealthRoute: ApiPublicSetupHealthRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
