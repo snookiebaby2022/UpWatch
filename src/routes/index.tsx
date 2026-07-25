@@ -3,7 +3,7 @@ import { useQuery, queryOptions } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { getPublicStatus } from "@/lib/status.functions";
-import { STATUS_PAGE_URL, SITE_URL, OG_IMAGE } from "@/lib/site";
+import { KUMA_PUBLIC_URL, SITE_URL, OG_IMAGE } from "@/lib/site";
 import { PLAN_FEATURES, PLAN_LABEL, PLAN_ORDER, PLAN_PRICE } from "@/lib/plans";
 import { StatusMonitorList } from "@/components/StatusMonitorList";
 import { supabase } from "@/integrations/supabase/client";
@@ -259,12 +259,14 @@ function LiveDemo() {
                 : "Fetching live status…"}
           </h3>
           <div className="flex flex-col items-end gap-1">
-            <Link
-              to="/status"
+            <a
+              href={KUMA_PUBLIC_URL}
+              target="_blank"
+              rel="noopener noreferrer"
               className="text-xs font-mono text-zinc-500 uppercase tracking-widest hover:text-brand transition-colors"
             >
-              Live status → {STATUS_PAGE_URL.replace("https://", "")}
-            </Link>
+              Live demo → {KUMA_PUBLIC_URL.replace("https://", "")}
+            </a>
           </div>
         </div>
         <StatusMonitorList monitors={monitors} loading={isLoading} failed={!!failed} compact />

@@ -128,14 +128,24 @@ async function fetchUpwatchStatus(userId?: string): Promise<PublicStatus> {
   };
 }
 
-/** Public monitors from UpWatch (optionally scoped to one user when signed in). */
+/** Public monitors: Kuma demo widgets when anonymous, UpWatch DB when signed in. */
 export const getPublicStatus = createServerFn({ method: "GET" })
   .validator((data: { userId?: string } | undefined) => data ?? {})
   .handler(async ({ data }): Promise<PublicStatus> => {
-    return fetchUpwatchStatus(data.userId);
+    if (data.userId) {
+      return fetchUpwatchStatus(data.userId);
+    }
+
+    const { fetchKumaPublicStatus } = await import("@/lib/kuma-status.server");
+    const kuma = await fetchKumaPublicStatus();
+    if (kuma.ok && kuma.monitors.length > 0) {
+      return kuma;
+    }
+
+    return fetchUpwatchStatus();
   });
 
-// Back-compat aliases
+// Back-compat alias — homepage demo reads the Kuma status page when configured.
 export const getKumaStatus = getPublicStatus;
 export type KumaMonitor = StatusMonitor;
 export type KumaStatus = PublicStatus;

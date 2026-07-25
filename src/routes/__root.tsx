@@ -1,3 +1,5 @@
+/// <reference types="vite/client" />
+import appCss from "../styles.css?url";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   Outlet,

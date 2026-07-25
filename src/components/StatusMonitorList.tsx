@@ -26,7 +26,7 @@ export function StatusMonitorList({
   if (monitors.length === 0) {
     return (
       <div className="text-sm text-zinc-500 py-8 text-center font-mono border border-dashed border-brand-border rounded-xl">
-        No public monitors yet. Add monitors from your dashboard and mark them public.
+        No demo monitors yet. Add HTTP monitors in Uptime Kuma and assign them to the &quot;upwatch&quot; status page.
       </div>
     );
   }

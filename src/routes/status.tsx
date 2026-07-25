@@ -66,7 +66,7 @@ function StatusPage() {
           <p className="text-zinc-400 max-w-2xl">
             {signedIn
               ? "Your public monitors on UpWatch."
-              : "Public monitors shared by UpWatch users."}
+              : "Live demo monitors from our Uptime Kuma status page."}
           </p>
         </header>
 
