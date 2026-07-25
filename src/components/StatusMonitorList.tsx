@@ -1,14 +1,4 @@
-import { Link } from "@tanstack/react-router";
-import type { PublicStatus, StatusMonitor } from "@/lib/status.functions";
-import { KUMA_PUBLIC_URL, STATUS_PAGE_URL } from "@/lib/site";
-
-export function StatusSourceBadge({ source }: { source: PublicStatus["source"] }) {
-  return (
-    <span className="text-[10px] uppercase tracking-widest font-mono text-zinc-500">
-      {source === "kuma" ? "Uptime Kuma" : "UpWatch monitors"}
-    </span>
-  );
-}
+import type { StatusMonitor } from "@/lib/status.functions";
 
 export function StatusMonitorList({
   monitors,
@@ -126,28 +116,6 @@ function HeartbeatBar({ beats, tall }: { beats: StatusMonitor["heartbeats"]; tal
   );
 }
 
-export function StatusPageLinks({
-  source,
-  kumaPublicUrl,
-}: {
-  source: PublicStatus["source"];
-  kumaPublicUrl: string | null;
-}) {
-  const external = kumaPublicUrl || KUMA_PUBLIC_URL || null;
-  return (
-    <div className="flex flex-wrap items-center gap-3 text-xs font-mono uppercase tracking-widest text-zinc-500">
-      <Link to="/status" className="hover:text-brand transition-colors">
-        {STATUS_PAGE_URL.replace("https://", "")}
-      </Link>
-      {source === "kuma" && external && (
-        <a href={external} target="_blank" rel="noopener noreferrer" className="hover:text-brand transition-colors">
-          Kuma status page →
-        </a>
-      )}
-    </div>
-  );
-}
-
 export function OverallStatusBanner({
   monitors,
   incident,
@@ -195,3 +163,4 @@ export function OverallStatusBanner({
     </div>
   );
 }
+

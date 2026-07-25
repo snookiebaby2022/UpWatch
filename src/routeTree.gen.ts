@@ -30,6 +30,9 @@ import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
 import { Route as CompareBetterstackRouteImport } from './routes/compare.betterstack'
 import { Route as CompareUptimeKumaRouteImport } from './routes/compare.uptime-kuma'
 import { Route as CompareUptimerobotRouteImport } from './routes/compare.uptimerobot'
+import { Route as ApiAdminHealthChecksRouteImport } from './routes/api/admin/health-checks'
+import { Route as ApiAdminTicketsRouteImport } from './routes/api/admin/tickets'
+import { Route as ApiPublicGoogleSessionRouteImport } from './routes/api/public/google/session'
 import { Route as ApiPublicHooksRunMonitorsRouteImport } from './routes/api/public/hooks/run-monitors'
 import { Route as ApiPublicSetupBootstrapRouteImport } from './routes/api/public/setup/bootstrap'
 
@@ -137,6 +140,21 @@ const CompareUptimerobotRoute = CompareUptimerobotRouteImport.update({
   path: '/compare/uptimerobot',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAdminHealthChecksRoute = ApiAdminHealthChecksRouteImport.update({
+  id: '/api/admin/health-checks',
+  path: '/api/admin/health-checks',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAdminTicketsRoute = ApiAdminTicketsRouteImport.update({
+  id: '/api/admin/tickets',
+  path: '/api/admin/tickets',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicGoogleSessionRoute = ApiPublicGoogleSessionRouteImport.update({
+  id: '/api/public/google/session',
+  path: '/api/public/google/session',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicHooksRunMonitorsRoute =
   ApiPublicHooksRunMonitorsRouteImport.update({
     id: '/api/public/hooks/run-monitors',
@@ -170,6 +188,9 @@ export interface FileRoutesByFullPath {
   '/compare/uptime-kuma': typeof CompareUptimeKumaRoute
   '/compare/uptimerobot': typeof CompareUptimerobotRoute
   '/blog/': typeof BlogIndexRoute
+  '/api/admin/health-checks': typeof ApiAdminHealthChecksRoute
+  '/api/admin/tickets': typeof ApiAdminTicketsRoute
+  '/api/public/google/session': typeof ApiPublicGoogleSessionRoute
   '/api/public/hooks/run-monitors': typeof ApiPublicHooksRunMonitorsRoute
   '/api/public/setup/bootstrap': typeof ApiPublicSetupBootstrapRoute
 }
@@ -193,6 +214,9 @@ export interface FileRoutesByTo {
   '/compare/uptime-kuma': typeof CompareUptimeKumaRoute
   '/compare/uptimerobot': typeof CompareUptimerobotRoute
   '/blog': typeof BlogIndexRoute
+  '/api/admin/health-checks': typeof ApiAdminHealthChecksRoute
+  '/api/admin/tickets': typeof ApiAdminTicketsRoute
+  '/api/public/google/session': typeof ApiPublicGoogleSessionRoute
   '/api/public/hooks/run-monitors': typeof ApiPublicHooksRunMonitorsRoute
   '/api/public/setup/bootstrap': typeof ApiPublicSetupBootstrapRoute
 }
@@ -219,6 +243,9 @@ export interface FileRoutesById {
   '/compare/uptime-kuma': typeof CompareUptimeKumaRoute
   '/compare/uptimerobot': typeof CompareUptimerobotRoute
   '/blog/': typeof BlogIndexRoute
+  '/api/admin/health-checks': typeof ApiAdminHealthChecksRoute
+  '/api/admin/tickets': typeof ApiAdminTicketsRoute
+  '/api/public/google/session': typeof ApiPublicGoogleSessionRoute
   '/api/public/hooks/run-monitors': typeof ApiPublicHooksRunMonitorsRoute
   '/api/public/setup/bootstrap': typeof ApiPublicSetupBootstrapRoute
 }
@@ -245,6 +272,9 @@ export interface FileRouteTypes {
     | '/compare/uptime-kuma'
     | '/compare/uptimerobot'
     | '/blog/'
+    | '/api/admin/health-checks'
+    | '/api/admin/tickets'
+    | '/api/public/google/session'
     | '/api/public/hooks/run-monitors'
     | '/api/public/setup/bootstrap'
   fileRoutesByTo: FileRoutesByTo
@@ -268,6 +298,9 @@ export interface FileRouteTypes {
     | '/compare/uptime-kuma'
     | '/compare/uptimerobot'
     | '/blog'
+    | '/api/admin/health-checks'
+    | '/api/admin/tickets'
+    | '/api/public/google/session'
     | '/api/public/hooks/run-monitors'
     | '/api/public/setup/bootstrap'
   id:
@@ -293,6 +326,9 @@ export interface FileRouteTypes {
     | '/compare/uptime-kuma'
     | '/compare/uptimerobot'
     | '/blog/'
+    | '/api/admin/health-checks'
+    | '/api/admin/tickets'
+    | '/api/public/google/session'
     | '/api/public/hooks/run-monitors'
     | '/api/public/setup/bootstrap'
   fileRoutesById: FileRoutesById
@@ -314,6 +350,9 @@ export interface RootRouteChildren {
   CompareBetterstackRoute: typeof CompareBetterstackRoute
   CompareUptimeKumaRoute: typeof CompareUptimeKumaRoute
   CompareUptimerobotRoute: typeof CompareUptimerobotRoute
+  ApiAdminHealthChecksRoute: typeof ApiAdminHealthChecksRoute
+  ApiAdminTicketsRoute: typeof ApiAdminTicketsRoute
+  ApiPublicGoogleSessionRoute: typeof ApiPublicGoogleSessionRoute
   ApiPublicHooksRunMonitorsRoute: typeof ApiPublicHooksRunMonitorsRoute
   ApiPublicSetupBootstrapRoute: typeof ApiPublicSetupBootstrapRoute
 }
@@ -467,6 +506,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CompareUptimerobotRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/admin/health-checks': {
+      id: '/api/admin/health-checks'
+      path: '/api/admin/health-checks'
+      fullPath: '/api/admin/health-checks'
+      preLoaderRoute: typeof ApiAdminHealthChecksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/admin/tickets': {
+      id: '/api/admin/tickets'
+      path: '/api/admin/tickets'
+      fullPath: '/api/admin/tickets'
+      preLoaderRoute: typeof ApiAdminTicketsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/google/session': {
+      id: '/api/public/google/session'
+      path: '/api/public/google/session'
+      fullPath: '/api/public/google/session'
+      preLoaderRoute: typeof ApiPublicGoogleSessionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/run-monitors': {
       id: '/api/public/hooks/run-monitors'
       path: '/api/public/hooks/run-monitors'
@@ -528,6 +588,9 @@ const rootRouteChildren: RootRouteChildren = {
   CompareBetterstackRoute: CompareBetterstackRoute,
   CompareUptimeKumaRoute: CompareUptimeKumaRoute,
   CompareUptimerobotRoute: CompareUptimerobotRoute,
+  ApiAdminHealthChecksRoute: ApiAdminHealthChecksRoute,
+  ApiAdminTicketsRoute: ApiAdminTicketsRoute,
+  ApiPublicGoogleSessionRoute: ApiPublicGoogleSessionRoute,
   ApiPublicHooksRunMonitorsRoute: ApiPublicHooksRunMonitorsRoute,
   ApiPublicSetupBootstrapRoute: ApiPublicSetupBootstrapRoute,
 }

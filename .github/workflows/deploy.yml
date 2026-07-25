@@ -21,6 +21,7 @@ jobs:
       KUMA_BASE_URL: https://status.upwatch.online
       KUMA_STATUS_PAGE_SLUG: upwatch
       VITE_KUMA_PUBLIC_URL: https://status.upwatch.online/status/upwatch
+      VITE_KUMA_PUSH_URL: https://status.upwatch.online/api/push/5pyQgQR1m8
     steps:
       - uses: actions/checkout@v4
 
@@ -85,3 +86,4 @@ jobs:
           sync_secret TELEGRAM_BOT_TOKEN "$TELEGRAM_BOT_TOKEN"
           sync_secret KUMA_BASE_URL "https://status.upwatch.online"
           sync_secret KUMA_STATUS_PAGE_SLUG "upwatch"
+          sync_secret KUMA_PUSH_URL "https://status.upwatch.online/api/push/5pyQgQR1m8"

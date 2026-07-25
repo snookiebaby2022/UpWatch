@@ -8,6 +8,7 @@ import { ChannelsPanel } from "@/components/ChannelsPanel";
 import type { Plan } from "@/lib/plans";
 import { resolveAdminAccess } from "@/lib/admin-access";
 import { PLAN_FEATURES, PLAN_INTERVAL_SECONDS, PLAN_LABEL, PLAN_LIMITS } from "@/lib/plans";
+import { normalizeMonitorStatus } from "@/lib/monitor-status";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
@@ -233,6 +234,15 @@ function MonitorsPanel({
       setName("");
       setUrl("");
       onChange();
+      // First check immediately so new monitors don't sit on "pending"
+      void fetch("/api/public/hooks/run-monitors", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        },
+        body: "{}",
+      }).then(() => onChange());
     } catch (err) {
       setMsg(err instanceof Error ? err.message : "Failed to add monitor.");
     } finally {
@@ -325,7 +335,7 @@ function MonitorsPanel({
       ) : (
         <ul className="divide-y divide-brand-border/50 border border-brand-border rounded-xl overflow-hidden">
           {monitors.map((m) => {
-            const status = m.last_status ?? "pending";
+            const status = normalizeMonitorStatus(m.last_status);
             return (
               <li key={m.id} className="flex items-center justify-between px-5 py-4 bg-bg/40">
                 <div className="min-w-0">
@@ -365,13 +375,14 @@ function MonitorsPanel({
 }
 
 function StatusBadge({ status }: { status: string }) {
+  const normalized = normalizeMonitorStatus(status);
   const cls =
-    status === "up"
+    normalized === "up"
       ? "text-brand"
-      : status === "down"
+      : normalized === "down"
         ? "text-red-400"
         : "text-zinc-500";
-  const label = status === "up" ? "● up" : status === "down" ? "● down" : "○ pending";
+  const label = normalized === "up" ? "● up" : normalized === "down" ? "● down" : "○ pending";
   return <span className={`text-xs font-mono ${cls}`}>{label}</span>;
 }
 

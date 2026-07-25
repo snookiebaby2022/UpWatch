@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { MarketingLayout } from "@/components/MarketingLayout";
-import { useSession } from "@/hooks/use-session";
+import { useAuthNav } from "@/hooks/use-auth-nav";
 import { PLAN_LABEL } from "@/lib/plans";
 import { PLAN_TICKET_PRIORITY } from "@/lib/tickets";
 
@@ -18,7 +18,7 @@ export const Route = createFileRoute("/support")({
 });
 
 function PublicSupportPage() {
-  const signedIn = useSession();
+  const { signedIn, homeTo } = useAuthNav();
 
   return (
     <MarketingLayout>
@@ -91,8 +91,8 @@ function PublicSupportPage() {
               </Link>
             </>
           )}
-          <Link to="/" className="rounded-md border border-white/20 px-5 py-2.5 text-white/80 hover:text-white">
-            Back home
+          <Link to={homeTo} className="rounded-md border border-white/20 px-5 py-2.5 text-white/80 hover:text-white">
+            {signedIn ? "Back to dashboard" : "Back home"}
           </Link>
         </div>
       </div>

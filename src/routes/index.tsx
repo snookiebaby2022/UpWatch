@@ -5,7 +5,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { getPublicStatus } from "@/lib/status.functions";
 import { STATUS_PAGE_URL, SITE_URL, OG_IMAGE } from "@/lib/site";
 import { PLAN_FEATURES, PLAN_LABEL, PLAN_ORDER, PLAN_PRICE } from "@/lib/plans";
-import { StatusMonitorList, StatusSourceBadge } from "@/components/StatusMonitorList";
+import { StatusMonitorList } from "@/components/StatusMonitorList";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/hooks/use-session";
 
@@ -262,7 +262,6 @@ function LiveDemo() {
                 : "Fetching live status…"}
           </h3>
           <div className="flex flex-col items-end gap-1">
-            {data && <StatusSourceBadge source={data.source} />}
             <Link
               to="/status"
               className="text-xs font-mono text-zinc-500 uppercase tracking-widest hover:text-brand transition-colors"

@@ -75,29 +75,26 @@ function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <header className="border-b border-border/60">
+    <div className="dark min-h-screen bg-bg text-zinc-200 font-sans">
+      <header className="border-b border-brand-border/60">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Link to="/" className="font-semibold tracking-tight">
+            <Link to="/dashboard" className="font-semibold tracking-tight text-white">
               UpWatch
             </Link>
-            <span className="text-xs uppercase tracking-widest text-muted-foreground">
+            <span className="text-xs uppercase tracking-widest text-zinc-500">
               Admin Console v2
             </span>
-            <span className="text-xs font-mono text-muted-foreground/80">build {BUILD_LABEL}</span>
+            <span className="text-xs font-mono text-zinc-600">build {BUILD_LABEL}</span>
           </div>
           <div className="flex items-center gap-3 text-sm">
-            <Link to="/" className="text-muted-foreground hover:text-foreground">
-              Home
-            </Link>
-            <Link to="/dashboard" className="text-muted-foreground hover:text-foreground">
+            <Link to="/dashboard" className="text-zinc-400 hover:text-white transition-colors">
               Dashboard
             </Link>
             <button
               type="button"
               onClick={() => setTab("support")}
-              className={`text-muted-foreground hover:text-foreground ${
+              className={`text-zinc-400 hover:text-white transition-colors ${
                 tab === "support" ? "text-brand font-semibold" : ""
               }`}
             >
@@ -111,12 +108,12 @@ function AdminPage() {
             <button
               onClick={() => admin.load()}
               disabled={admin.loading}
-              className="text-muted-foreground hover:text-foreground disabled:opacity-40"
+              className="text-zinc-400 hover:text-white transition-colors disabled:opacity-40"
             >
               {admin.loading ? "Refreshing…" : "Refresh"}
             </button>
             <NotificationBell />
-            <button onClick={handleSignOut} className="text-muted-foreground hover:text-foreground">
+            <button onClick={handleSignOut} className="text-zinc-400 hover:text-white transition-colors">
               Sign out
             </button>
           </div>
@@ -125,7 +122,7 @@ function AdminPage() {
 
       <main className="max-w-7xl mx-auto px-6 py-8 space-y-6">
         {admin.msg && (
-          <div className="text-sm border border-border/60 bg-card/40 rounded-md px-3 py-2">
+          <div className="text-sm border border-brand-border bg-surface/60 rounded-md px-3 py-2 text-zinc-300">
             {admin.msg}
           </div>
         )}
@@ -137,7 +134,7 @@ function AdminPage() {
             <p className="text-xs text-amber-200/80">
               SQL file: <code className="font-mono">supabase/fix-tickets-now.sql</code> — paste in{" "}
               <a
-                href="https://supabase.com/dashboard/project/vepgivwmulpdacsfucmn/sql/new"
+                href="https://supabase.com/dashboard/project/zjijihumvmijnijpkwpz/sql/new"
                 className="underline"
                 target="_blank"
                 rel="noreferrer"
@@ -149,7 +146,7 @@ function AdminPage() {
           </div>
         )}
 
-        <div className="flex gap-2 border-b border-border/60 flex-wrap">
+        <div className="flex gap-2 border-b border-brand-border/60 flex-wrap">
           {TABS.map(({ id, label }) => (
             <button
               key={id}
@@ -159,8 +156,8 @@ function AdminPage() {
               }}
               className={`px-4 py-2 text-sm border-b-2 -mb-px ${
                 tab === id
-                  ? "border-brand text-foreground"
-                  : "border-transparent text-muted-foreground hover:text-foreground"
+                  ? "border-brand text-white"
+                  : "border-transparent text-zinc-500 hover:text-white"
               }`}
             >
               {label}
@@ -179,7 +176,7 @@ function AdminPage() {
         </div>
 
         {admin.loading ? (
-          <div className="text-sm text-muted-foreground">Loading…</div>
+          <div className="text-sm text-zinc-500">Loading…</div>
         ) : admin.loadError ? (
           <div className="border border-red-900/50 bg-red-950/30 rounded-md p-4 text-sm text-red-300">
             <div className="font-semibold text-red-200 mb-1">Couldn't load admin data</div>

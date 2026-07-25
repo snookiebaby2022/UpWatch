@@ -1,17 +1,20 @@
 import { Link } from "@tanstack/react-router";
 import { type ReactNode } from "react";
 import { BUILD_LABEL } from "@/lib/build";
+import { useAuthNav } from "@/hooks/use-auth-nav";
 
 /**
  * Minimal marketing shell used by SEO content routes (features, pricing,
  * compare, blog). Reuses the site's dark palette established in `index.tsx`.
  */
 export function MarketingLayout({ children }: { children: ReactNode }) {
+  const { homeTo, signedIn, loading } = useAuthNav();
+
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white">
       <header className="border-b border-white/10">
         <nav className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-          <Link to="/" className="font-semibold text-white">
+          <Link to={homeTo} className="font-semibold text-white">
             UpWatch
           </Link>
           <div className="flex items-center gap-6 text-sm text-white/70">
@@ -20,12 +23,21 @@ export function MarketingLayout({ children }: { children: ReactNode }) {
             <Link to="/compare/uptimerobot" className="hover:text-white">Compare</Link>
             <Link to="/support" className="hover:text-white">Support</Link>
             <Link to="/status" className="hover:text-white">Status</Link>
-            <Link
-              to="/auth"
-              className="rounded-md bg-[#10b981] px-3 py-1.5 text-black font-medium hover:bg-[#0ea371]"
-            >
-              Sign in
-            </Link>
+            {!loading && signedIn ? (
+              <Link
+                to="/dashboard"
+                className="rounded-md bg-[#10b981] px-3 py-1.5 text-black font-medium hover:bg-[#0ea371]"
+              >
+                Dashboard
+              </Link>
+            ) : (
+              <Link
+                to="/auth"
+                className="rounded-md bg-[#10b981] px-3 py-1.5 text-black font-medium hover:bg-[#0ea371]"
+              >
+                Sign in
+              </Link>
+            )}
           </div>
         </nav>
       </header>

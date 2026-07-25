@@ -1,4 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
+import {
+  legacyIntsForPendingMatch,
+  monitorStatusToDb,
+  monitorStatusToLegacyInt,
+  normalizeMonitorStatus,
+  type MonitorStatus,
+} from "@/lib/monitor-status";
 
 async function sendAlert(opts: {
   monitor: { id: string; url: string; user_id: string; name?: string };
@@ -264,10 +271,7 @@ export const Route = createFileRoute("/api/public/hooks/run-monitors")({
                   status_code: null,
                   error_message: errorMessage,
                 });
-                await supabaseAdmin
-                  .from("monitors")
-                  .update({ last_status: "down", last_checked_at: nowIso })
-                  .eq("id", m.id);
+                await persistMonitorStatus(supabaseAdmin, m.id, normalizeMonitorStatus(m.last_status), "down", nowIso);
                 return { id: m.id, status: "down", previous: m.last_status };
               }
 
@@ -318,20 +322,11 @@ export const Route = createFileRoute("/api/public/hooks/run-monitors")({
                 });
               }
 
-              // TOCTOU-safe transition: only apply state change if last_status
-              // still matches what we observed. A concurrent runner will lose
-              // the race and skip the alert / incident write.
-              const prev = m.last_status;
-              const { data: updatedRows } = await supabaseAdmin
-                .from("monitors")
-                .update({ last_status: status, last_checked_at: nowIso })
-                .eq("id", m.id)
-                .eq("last_status", prev ?? "pending")
-                .select("id");
+              // TOCTOU-safe transition for alerts; persist check outcome (text or legacy int column).
+              const prev = normalizeMonitorStatus(m.last_status);
+              let weApplied = await persistMonitorStatus(supabaseAdmin, m.id, prev, status, nowIso);
 
-              const weApplied = (updatedRows?.length ?? 0) > 0;
-
-              if (weApplied && prev && prev !== "pending" && prev !== status) {
+              if (weApplied && prev !== "pending" && prev !== status) {
                 if (status === "down") {
                   // Partial unique index (incidents_one_open_per_monitor) makes
                   // duplicate open incidents impossible; ignore the conflict.
@@ -368,10 +363,22 @@ export const Route = createFileRoute("/api/public/hooks/run-monitors")({
           if (failed > 0) {
             console.warn(`[run-monitors] ${failed}/${results.length} checks rejected`);
           }
+
+          const { pingKumaPush } = await import("@/lib/kuma-push");
+          const kumaPush = await pingKumaPush({
+            status: "up",
+            msg: `checked ${results.length}`,
+            ping: Math.max(1, Math.round(Date.now() % 100_000)),
+          });
+          if (!kumaPush.ok) {
+            console.warn("[run-monitors] kuma push heartbeat failed:", kumaPush.detail);
+          }
+
           return Response.json({
             ok: true,
             checked: results.length,
             failed,
+            kumaPush: kumaPush.ok,
             at: nowIso,
           });
         } catch (err) {
@@ -385,3 +392,47 @@ export const Route = createFileRoute("/api/public/hooks/run-monitors")({
     },
   },
 });
+
+async function persistMonitorStatus(
+  supabaseAdmin: Awaited<ReturnType<typeof import("@/integrations/supabase/client.server")>>["supabaseAdmin"],
+  monitorId: string,
+  prev: MonitorStatus,
+  status: MonitorStatus,
+  nowIso: string,
+): Promise<boolean> {
+  const payload = { last_status: monitorStatusToDb(status), last_checked_at: nowIso };
+  const pendingMatch = legacyIntsForPendingMatch();
+  const prevFilter = prev === "pending" ? pendingMatch : [monitorStatusToDb(prev), monitorStatusToLegacyInt(prev)];
+
+  let { data: updatedRows, error } = await supabaseAdmin
+    .from("monitors")
+    .update(payload)
+    .eq("id", monitorId)
+    .in("last_status", prevFilter as string[])
+    .select("id");
+
+  if (error?.code === "22P02") {
+    ({ data: updatedRows, error } = await supabaseAdmin
+      .from("monitors")
+      .update({ last_status: monitorStatusToLegacyInt(status), last_checked_at: nowIso })
+      .eq("id", monitorId)
+      .in("last_status", prev === "pending" ? [0] : [monitorStatusToLegacyInt(prev)])
+      .select("id"));
+  }
+
+  if ((updatedRows?.length ?? 0) > 0) return true;
+
+  let forced = await supabaseAdmin
+    .from("monitors")
+    .update(payload)
+    .eq("id", monitorId)
+    .select("id");
+  if (forced.error?.code === "22P02") {
+    forced = await supabaseAdmin
+      .from("monitors")
+      .update({ last_status: monitorStatusToLegacyInt(status), last_checked_at: nowIso })
+      .eq("id", monitorId)
+      .select("id");
+  }
+  return (forced.data?.length ?? 0) > 0;
+}

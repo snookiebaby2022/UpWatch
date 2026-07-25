@@ -83,8 +83,9 @@ export function useAdminData() {
       if (ticketsRes.error) {
         console.error("support_tickets load failed", ticketsRes.error);
         setTicketsError(
-          ticketsRes.error.message.includes("support_tickets")
-            ? "Support ticket tables are missing. Run supabase/fix-tickets-now.sql in the Supabase SQL Editor, then Refresh."
+          ticketsRes.error.message.includes("support_tickets") ||
+            ticketsRes.error.message.includes("support_ticket_messages")
+            ? "Support ticket tables need updating. Run supabase/fix-tickets-now.sql in the Supabase SQL Editor, then Refresh."
             : ticketsRes.error.message,
         );
       }
@@ -97,7 +98,10 @@ export function useAdminData() {
       const wait = waitRes.data ?? [];
       const inc = incRes.data ?? [];
       const chans = chanRes.data ?? [];
-      const tix = ticketsRes.data ?? [];
+      const tix = (ticketsRes.data ?? []).map((t) => ({
+        ...(t as TicketRow),
+        priority: ((t as TicketRow).priority ?? "normal") as TicketRow["priority"],
+      }));
 
       type SubRow = { user_id: string; plan: Plan; status: Status };
       type RoleRow = { user_id: string; role: string };
@@ -133,7 +137,7 @@ export function useAdminData() {
       setWaitlist(wait as WaitlistRow[]);
       setIncidents(inc as IncidentRow[]);
       setChannels(chans as ChannelRow[]);
-      setTickets(sortTicketsByPriority(tix as TicketRow[]));
+      setTickets(sortTicketsByPriority(tix));
     } catch (err) {
       console.error("admin load failed", err);
       setLoadError(err instanceof Error ? err.message : "Failed to load admin data.");
@@ -248,6 +252,21 @@ export function useAdminData() {
   }
 
   async function loadTicketMessages(ticketId: string) {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const token = sessionData.session?.access_token;
+    if (token) {
+      const res = await fetch(`/api/admin/tickets?ticketId=${encodeURIComponent(ticketId)}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const body = (await res.json()) as { messages?: TicketMessageRow[]; error?: string };
+      if (res.ok && body.messages) return body.messages;
+      if (body.error?.includes("Could not find the table")) {
+        throw new Error(
+          "support_ticket_messages table missing — run supabase/fix-tickets-now.sql in Supabase SQL Editor.",
+        );
+      }
+    }
+
     const { data, error } = await supabase
       .from("support_ticket_messages")
       .select("*")
@@ -258,6 +277,29 @@ export function useAdminData() {
   }
 
   async function sendAdminReply(ticket: TicketRow, body: string, authorId: string) {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const token = sessionData.session?.access_token;
+
+    if (token) {
+      const res = await fetch("/api/admin/tickets", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ ticketId: ticket.id, message: body }),
+      });
+      const payload = (await res.json()) as { ok?: boolean; error?: string };
+      if (res.ok && payload.ok) {
+        if (ticket.status === "open") {
+          await supabase.from("support_tickets").update({ status: "pending" }).eq("id", ticket.id);
+        }
+        load();
+        return;
+      }
+      if (payload.error) throw new Error(payload.error);
+    }
+
     const { error } = await supabase.from("support_ticket_messages").insert({
       ticket_id: ticket.id,
       author_id: authorId,

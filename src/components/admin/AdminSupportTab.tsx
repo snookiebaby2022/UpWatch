@@ -20,11 +20,11 @@ function TicketBubble({
       <div
         className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm whitespace-pre-wrap ${
           mine
-            ? "bg-brand/10 border border-brand/40 text-foreground"
-            : "bg-card/60 border border-border/60 text-foreground"
+            ? "bg-brand/10 border border-brand/40 text-white"
+            : "bg-surface/80 border border-brand-border/60 text-zinc-200"
         }`}
       >
-        <div className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1">
+        <div className="text-[10px] uppercase tracking-widest text-zinc-400 mb-1">
           {label} · {new Date(at).toLocaleString()}
         </div>
         {body}
@@ -139,14 +139,14 @@ export function AdminSupportTab({
   if (openTicket) {
     const owner = userById.get(openTicket.user_id);
     return (
-      <div className="border border-border/60 rounded-lg p-6 space-y-5 bg-card/20">
+      <div className="border border-brand-border/60 rounded-lg p-6 space-y-5 bg-surface/40">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <div className="text-xs uppercase tracking-widest text-muted-foreground mb-1">
+            <div className="text-xs uppercase tracking-widest text-zinc-400 mb-1">
               {new Date(openTicket.created_at).toLocaleString()} · {openTicket.priority} priority ·
               from {owner?.email ?? owner?.display_name ?? openTicket.user_id.slice(0, 8)}
             </div>
-            <h2 className="text-xl font-semibold">{openTicket.subject}</h2>
+            <h2 className="text-xl font-semibold text-white">{openTicket.subject}</h2>
           </div>
           <div className="flex items-center gap-2">
             <select
@@ -156,7 +156,7 @@ export function AdminSupportTab({
                 await onUpdateStatus(openTicket.id, status);
                 setOpenTicket({ ...openTicket, status });
               }}
-              className="bg-background border border-border/60 rounded px-2 py-1 text-sm"
+              className="bg-surface border border-brand-border/60 rounded px-2 py-1 text-sm text-white"
             >
               <option value="open">open</option>
               <option value="pending">pending</option>
@@ -165,7 +165,7 @@ export function AdminSupportTab({
             </select>
             <button
               onClick={() => setOpenTicket(null)}
-              className="text-sm text-muted-foreground hover:text-foreground"
+              className="text-sm text-zinc-400 hover:text-white"
             >
               ← Back
             </button>
@@ -197,7 +197,7 @@ export function AdminSupportTab({
             rows={4}
             maxLength={5000}
             placeholder="Reply as admin…"
-            className="w-full bg-background border border-border/60 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-brand"
+            className="w-full bg-surface border border-brand-border/60 rounded-lg px-4 py-3 text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:border-brand"
           />
           <button
             onClick={sendAdminReply}
@@ -218,12 +218,12 @@ export function AdminSupportTab({
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
           placeholder="Search tickets by subject, user…"
-          className="max-w-md bg-background"
+          className="max-w-md bg-surface border-brand-border/60 text-white placeholder:text-zinc-500"
         />
         <select
           value={statusFilter}
           onChange={(e) => onStatusFilterChange(e.target.value as TicketStatus | "all")}
-          className="bg-background border border-border/60 rounded px-3 py-2 text-sm"
+          className="bg-surface border border-brand-border/60 rounded px-3 py-2 text-sm text-white"
         >
           <option value="all">All statuses</option>
           <option value="open">Open</option>
@@ -234,7 +234,7 @@ export function AdminSupportTab({
         <select
           value={priorityFilter}
           onChange={(e) => onPriorityFilterChange(e.target.value as TicketPriority | "all")}
-          className="bg-background border border-border/60 rounded px-3 py-2 text-sm"
+          className="bg-surface border border-brand-border/60 rounded px-3 py-2 text-sm text-white"
         >
           <option value="all">All priorities</option>
           <option value="high">High first</option>
@@ -242,9 +242,9 @@ export function AdminSupportTab({
           <option value="low">Low</option>
         </select>
       </div>
-      <div className="overflow-x-auto border border-border/60 rounded-lg">
-        <table className="w-full text-sm">
-          <thead className="bg-card/40 text-xs uppercase tracking-widest text-muted-foreground">
+      <div className="overflow-x-auto border border-brand-border/60 rounded-lg">
+        <table className="w-full text-sm text-zinc-200">
+          <thead className="bg-surface/80 text-xs uppercase tracking-widest text-zinc-400">
             <tr>
               <th className="text-left px-4 py-3">Subject</th>
               <th className="text-left px-4 py-3">User</th>
@@ -258,11 +258,11 @@ export function AdminSupportTab({
             {filtered.map((t) => {
               const owner = userById.get(t.user_id);
               return (
-                <tr key={t.id} className="border-t border-border/60">
+                <tr key={t.id} className="border-t border-brand-border/60">
                   <td className="px-4 py-3 max-w-sm truncate">{t.subject}</td>
                   <td className="px-4 py-3">
                     <div>{owner?.email ?? owner?.display_name ?? "—"}</div>
-                    <div className="text-xs font-mono text-muted-foreground">{t.user_id.slice(0, 8)}…</div>
+                    <div className="text-xs font-mono text-zinc-500">{t.user_id.slice(0, 8)}…</div>
                   </td>
                   <td className="px-4 py-3">
                     <span
@@ -283,13 +283,13 @@ export function AdminSupportTab({
                       <option value="closed">closed</option>
                     </select>
                   </td>
-                  <td className="px-4 py-3 text-muted-foreground text-xs">
+                  <td className="px-4 py-3 text-zinc-400 text-xs">
                     {new Date(t.created_at).toLocaleString()}
                   </td>
                   <td className="px-4 py-3 text-right">
                     <button
                       onClick={() => openTicketThread(t)}
-                      className="text-xs px-3 py-1.5 border border-border/60 rounded hover:border-brand"
+                      className="text-xs px-3 py-1.5 border border-brand-border/60 rounded hover:border-brand text-white"
                     >
                       Open
                     </button>
@@ -299,7 +299,7 @@ export function AdminSupportTab({
             })}
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-4 py-6 text-center text-muted-foreground">
+                <td colSpan={6} className="px-4 py-6 text-center text-zinc-500">
                   No tickets match your filters
                 </td>
               </tr>

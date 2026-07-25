@@ -1,0 +1,2 @@
+-- Fix ambiguous has_role overload — use fix-production-schema.sql instead (full fix).
+-- This file kept for reference; run: supabase/fix-production-schema.sql

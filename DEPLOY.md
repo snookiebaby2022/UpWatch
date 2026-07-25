@@ -29,49 +29,43 @@ Repo → Settings → Secrets and variables → Actions → New repository secre
 
 Then: Actions → **Deploy production** → Run workflow.
 
-## 3. Google OAuth (optional)
+## 3. Google OAuth
 
-The dashboard toggle alone is **not enough** — Supabase must store both **Client ID** and **Client Secret**.
+UpWatch uses **Google Identity Services** + `signInWithIdToken` (no Supabase OAuth redirect, so **Client Secret is optional** on hosted Supabase).
 
 ### Google Cloud Console
 
 1. [Credentials](https://console.cloud.google.com/apis/credentials) → OAuth 2.0 Client ID → **Web application**
-2. **Authorized redirect URI** (exact, no wildcards):
-
-   `https://vepgivwmulpdacsfucmn.supabase.co/auth/v1/callback`
-
-3. Copy **Client ID** and **Client Secret** (create a new secret if the old one was lost)
+2. **Authorized JavaScript origins** (required):
+   - `https://upwatch.online`
+   - `https://www.upwatch.online`
+   - `http://localhost:5173` (local dev only)
+3. Copy the **Client ID** → set `VITE_GOOGLE_CLIENT_ID` in `.env` and rebuild
 
 ### Supabase Dashboard
 
-1. [Google provider](https://supabase.com/dashboard/project/vepgivwmulpdacsfucmn/auth/providers?provider=Google)
-2. Enable Google, paste **Client ID** and **Client Secret** (not just “Authorized Client IDs”), **Save**
-3. [URL Configuration](https://supabase.com/dashboard/project/vepgivwmulpdacsfucmn/auth/url-configuration):
-   - **Site URL:** `https://upwatch.online`
-   - **Redirect URLs** (add every line):
-     - `https://upwatch.online/**`
-     - `https://www.upwatch.online/**`
-     - `https://upwatch.online/auth`
-     - `https://uptime-buddy-hq.lovable.app/**` (keep if you still use Lovable preview)
+1. [Google provider](https://supabase.com/dashboard/project/vepgivwmulpdacsfucmn/auth/providers?provider=Google) → Enable Google
+2. In **Client IDs** (aka Authorized Client IDs), paste your Web Client ID:
+   `670259483154-67e6dgusfovkfi2000smjkksrf5n15pt.apps.googleusercontent.com`
+   (If other IDs exist, comma-separate — Web ID first.)
+3. Enable **Skip nonce check** (required for the Google button flow)
+4. [URL Configuration](https://supabase.com/dashboard/project/vepgivwmulpdacsfucmn/auth/url-configuration): Site URL `https://upwatch.online`, redirect `https://upwatch.online/**`
 
-4. **Google Cloud Console** → OAuth client → **Authorized JavaScript origins**:
-   - `https://upwatch.online`
-   - `https://www.upwatch.online`
-   - `https://uptime-buddy-hq.lovable.app` (optional, for Lovable preview)
+If you see **Unacceptable audience in id_token**, step 2 was not saved — Supabase does not recognize your Google Client ID yet.
 
-### If dashboard Save still fails (`missing OAuth secret`)
+**Server fallback (no Supabase Google config needed):** add `SUPABASE_SERVICE_ROLE_KEY` to the Cloudflare Worker, then run `.\infra\enable-google-signin.ps1` (paste `sb_secret_...` from Supabase → Settings → API Keys).
 
-Use the Management API script (bypasses a broken dashboard save):
+Or run (needs [Supabase PAT](https://supabase.com/dashboard/account/tokens) with Owner role):
 
 ```powershell
-# Token: https://supabase.com/dashboard/account/tokens
 $env:SUPABASE_ACCESS_TOKEN = "sbp_..."
 $env:GOOGLE_CLIENT_ID = "....apps.googleusercontent.com"
-$env:GOOGLE_CLIENT_SECRET = "GOCSPX-..."
-.\infra\configure-google-oauth.ps1
+.\infra\configure-google-gis.ps1
 ```
 
-Success = script prints “authorize returns redirect 302”. Then test https://upwatch.online/auth .
+### Legacy OAuth redirect (optional)
+
+If you prefer `signInWithOAuth`, you must save **Client ID + Client Secret** in Supabase (Owner role). Use `infra/configure-google-oauth.ps1` or the dashboard.
 
 ## 4. Verify
 

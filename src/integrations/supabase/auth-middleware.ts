@@ -12,21 +12,39 @@ function isNewSupabaseApiKey(value: string): boolean {
 
 function createSupabaseFetch(supabaseKey: string): typeof fetch {
   return (input, init) => {
-    const headers = new Headers(
-      typeof Request !== 'undefined' && input instanceof Request ? input.headers : undefined,
-    );
+    const headers = new Headers();
+
+    if (typeof Request !== 'undefined' && input instanceof Request) {
+      input.headers.forEach((value, key) => headers.set(key, value));
+    }
 
     if (init?.headers) {
       new Headers(init.headers).forEach((value, key) => headers.set(key, value));
     }
 
-    // New Supabase API keys are opaque strings, not bearer JWTs.
     if (isNewSupabaseApiKey(supabaseKey) && headers.get('Authorization') === `Bearer ${supabaseKey}`) {
       headers.delete('Authorization');
     }
 
     headers.set('apikey', supabaseKey);
-    return fetch(input, { ...init, headers });
+
+    const url =
+      typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+
+    const nextInit: RequestInit = { ...(init ?? {}), headers };
+
+    if (typeof Request !== 'undefined' && input instanceof Request) {
+      nextInit.method ??= input.method;
+      nextInit.body ??= input.body;
+      nextInit.redirect ??= input.redirect;
+      nextInit.credentials ??= input.credentials;
+      nextInit.cache ??= input.cache;
+      nextInit.mode ??= input.mode;
+      nextInit.referrer ??= input.referrer;
+      nextInit.integrity ??= input.integrity;
+    }
+
+    return fetch(url, nextInit);
   };
 }
 

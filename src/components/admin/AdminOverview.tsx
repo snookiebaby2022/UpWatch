@@ -11,9 +11,9 @@ export function Stat({
   accent?: string;
 }) {
   return (
-    <div className="border border-border/60 rounded-lg px-4 py-3 bg-card/40">
-      <div className="text-xs uppercase tracking-widest text-muted-foreground">{label}</div>
-      <div className={`text-2xl font-semibold mt-1 ${accent ?? ""}`}>{value}</div>
+    <div className="border border-brand-border/60 rounded-lg px-4 py-3 bg-surface/60">
+      <div className="text-xs uppercase tracking-widest text-zinc-400">{label}</div>
+      <div className={`text-2xl font-semibold mt-1 text-white ${accent ?? ""}`}>{value}</div>
     </div>
   );
 }
@@ -78,8 +78,8 @@ export function AdminOverview({
       </section>
 
       <div className="grid md:grid-cols-3 gap-6">
-        <div className="border border-border/60 rounded-lg p-5 bg-card/20 space-y-3">
-          <h3 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">
+        <div className="border border-brand-border/60 rounded-lg p-5 bg-surface/40 space-y-3">
+          <h3 className="text-sm font-semibold uppercase tracking-widest text-zinc-400">
             Plan distribution
           </h3>
           {(["starter", "pro", "business"] as const).map((plan) => (
@@ -90,17 +90,17 @@ export function AdminOverview({
           ))}
         </div>
 
-        <div className="border border-border/60 rounded-lg p-5 bg-card/20 space-y-3">
-          <h3 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">
+        <div className="border border-brand-border/60 rounded-lg p-5 bg-surface/40 space-y-3">
+          <h3 className="text-sm font-semibold uppercase tracking-widest text-zinc-400">
             Recent signups
           </h3>
           {recentUsers.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No users yet</p>
+            <p className="text-sm text-zinc-400">No users yet</p>
           ) : (
             recentUsers.map((u) => (
               <div key={u.id} className="text-sm flex justify-between gap-2">
                 <span className="truncate">{u.email ?? u.display_name ?? u.id.slice(0, 8)}</span>
-                <span className="text-muted-foreground shrink-0">
+                <span className="text-zinc-400 shrink-0">
                   {new Date(u.created_at).toLocaleDateString()}
                 </span>
               </div>
@@ -108,8 +108,8 @@ export function AdminOverview({
           )}
         </div>
 
-        <div className="border border-border/60 rounded-lg p-5 bg-card/20 space-y-3">
-          <h3 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">
+        <div className="border border-brand-border/60 rounded-lg p-5 bg-surface/40 space-y-3">
+          <h3 className="text-sm font-semibold uppercase tracking-widest text-zinc-400">
             Open incidents
           </h3>
           {openIncidents.length === 0 ? (
@@ -120,7 +120,7 @@ export function AdminOverview({
               return (
                 <div key={i.id} className="text-sm">
                   <div className="font-medium truncate">{mon?.name ?? i.monitor_id.slice(0, 8)}</div>
-                  <div className="text-xs text-muted-foreground">
+                  <div className="text-xs text-zinc-400">
                     since {new Date(i.started_at).toLocaleString()}
                   </div>
                 </div>
@@ -130,16 +130,16 @@ export function AdminOverview({
         </div>
       </div>
 
-      <div className="border border-border/60 rounded-lg p-5 bg-card/20 space-y-3">
+      <div className="border border-brand-border/60 rounded-lg p-5 bg-surface/40 space-y-3">
         <div className="flex items-center justify-between gap-3">
-          <h3 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">
+          <h3 className="text-sm font-semibold uppercase tracking-widest text-zinc-400">
             Recent support tickets
           </h3>
           {onOpenSupport && (
             <button
               type="button"
               onClick={onOpenSupport}
-              className="text-xs px-3 py-1.5 border border-border/60 rounded hover:border-brand"
+              className="text-xs px-3 py-1.5 border border-brand-border/60 rounded hover:border-brand text-white"
             >
               Open Support tab →
             </button>
@@ -148,11 +148,11 @@ export function AdminOverview({
         {ticketsError ? (
           <p className="text-sm text-amber-300">{ticketsError}</p>
         ) : recentTickets.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No tickets yet — users open them from /tickets</p>
+          <p className="text-sm text-zinc-400">No tickets yet — users open them from /tickets</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="text-xs uppercase tracking-widest text-muted-foreground">
+              <thead className="text-xs uppercase tracking-widest text-zinc-400">
                 <tr>
                   <th className="text-left py-2">Subject</th>
                   <th className="text-left py-2">Priority</th>
@@ -164,7 +164,7 @@ export function AdminOverview({
                 {recentTickets.map((t) => (
                   <tr
                     key={t.id}
-                    className="border-t border-border/60 cursor-pointer hover:bg-card/30"
+                    className="border-t border-brand-border/60 cursor-pointer hover:bg-surface/60"
                     onClick={onOpenSupport}
                   >
                     <td className="py-2 max-w-xs truncate">{t.subject}</td>
@@ -176,7 +176,7 @@ export function AdminOverview({
                       </span>
                     </td>
                     <td className="py-2 capitalize">{t.status}</td>
-                    <td className="py-2 text-muted-foreground">
+                    <td className="py-2 text-zinc-400">
                       {new Date(t.created_at).toLocaleString()}
                     </td>
                   </tr>
