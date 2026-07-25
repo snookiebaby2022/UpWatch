@@ -142,6 +142,40 @@
   --sidebar-ring: oklch(0.551 0.027 264.364);
 }
 
+.admin-console {
+  --background: #171717;
+  --foreground: #fafafa;
+  --card: #262626;
+  --card-foreground: #fafafa;
+  --muted: #262626;
+  --muted-foreground: #d4d4d8;
+  --border: #404040;
+  --input: #404040;
+  --popover: #171717;
+  --popover-foreground: #fafafa;
+  color: #e4e4e7;
+}
+
+.admin-console .text-muted-foreground {
+  color: #d4d4d8;
+}
+
+.admin-console input,
+.admin-console select,
+.admin-console textarea {
+  background-color: #171717;
+  color: #fafafa;
+  border-color: #404040;
+}
+
+.admin-console table {
+  color: #e4e4e7;
+}
+
+.admin-console thead {
+  color: #a1a1aa;
+}
+
 @layer base {
   * {
     border-color: var(--color-border);

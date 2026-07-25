@@ -34,8 +34,9 @@ start_container() {
 
 stop_container
 
-SQL="UPDATE monitor SET url='${PUSH_URL}' WHERE type='push' OR push_token IS NOT NULL OR url LIKE '%/api/push/%';"
-SQL="${SQL} SELECT id, name, type, url, push_token FROM monitor WHERE type='push' OR push_token IS NOT NULL;"
+SQL="UPDATE monitor SET url='${PUSH_URL}', maxretries=0 WHERE type='push' OR push_token IS NOT NULL OR url LIKE '%/api/push/%';"
+SQL="${SQL} INSERT OR REPLACE INTO setting (key, value) VALUES ('primaryBaseURL', 'https://status.upwatch.online');"
+SQL="${SQL} SELECT id, name, type, url, maxretries FROM monitor WHERE type='push' OR push_token IS NOT NULL;"
 
 if command -v sqlite3 >/dev/null 2>&1; then
   sqlite3 "$DB" "$SQL"

@@ -11,9 +11,9 @@ export function Stat({
   accent?: string;
 }) {
   return (
-    <div className="border border-brand-border/60 rounded-lg px-4 py-3 bg-surface/60">
-      <div className="text-xs uppercase tracking-widest text-zinc-400">{label}</div>
-      <div className={`text-2xl font-semibold mt-1 text-white ${accent ?? ""}`}>{value}</div>
+    <div className="border border-brand-border rounded-lg px-4 py-3 bg-surface">
+      <div className="text-xs uppercase tracking-widest text-zinc-300 font-medium">{label}</div>
+      <div className={`text-2xl font-bold mt-1 text-white ${accent ?? ""}`}>{value}</div>
     </div>
   );
 }
@@ -79,7 +79,7 @@ export function AdminOverview({
 
       <div className="grid md:grid-cols-3 gap-6">
         <div className="border border-brand-border/60 rounded-lg p-5 bg-surface/40 space-y-3">
-          <h3 className="text-sm font-semibold uppercase tracking-widest text-zinc-400">
+          <h3 className="text-sm font-semibold uppercase tracking-widest text-zinc-300">
             Plan distribution
           </h3>
           {(["starter", "pro", "business"] as const).map((plan) => (
@@ -91,7 +91,7 @@ export function AdminOverview({
         </div>
 
         <div className="border border-brand-border/60 rounded-lg p-5 bg-surface/40 space-y-3">
-          <h3 className="text-sm font-semibold uppercase tracking-widest text-zinc-400">
+          <h3 className="text-sm font-semibold uppercase tracking-widest text-zinc-300">
             Recent signups
           </h3>
           {recentUsers.length === 0 ? (
@@ -109,7 +109,7 @@ export function AdminOverview({
         </div>
 
         <div className="border border-brand-border/60 rounded-lg p-5 bg-surface/40 space-y-3">
-          <h3 className="text-sm font-semibold uppercase tracking-widest text-zinc-400">
+          <h3 className="text-sm font-semibold uppercase tracking-widest text-zinc-300">
             Open incidents
           </h3>
           {openIncidents.length === 0 ? (
@@ -132,7 +132,7 @@ export function AdminOverview({
 
       <div className="border border-brand-border/60 rounded-lg p-5 bg-surface/40 space-y-3">
         <div className="flex items-center justify-between gap-3">
-          <h3 className="text-sm font-semibold uppercase tracking-widest text-zinc-400">
+          <h3 className="text-sm font-semibold uppercase tracking-widest text-zinc-300">
             Recent support tickets
           </h3>
           {onOpenSupport && (

@@ -23,8 +23,9 @@ docker stop upwatch-uptime-kuma 2>$null
 docker stop uptime-kuma 2>$null
 
 $sql = @"
-UPDATE monitor SET url='$PushUrl' WHERE type='push' OR push_token IS NOT NULL OR url LIKE '%/api/push/%';
-SELECT id, name, type, url, push_token FROM monitor WHERE type='push' OR push_token IS NOT NULL;
+UPDATE monitor SET url='$PushUrl', maxretries=0 WHERE type='push' OR push_token IS NOT NULL OR url LIKE '%/api/push/%';
+INSERT OR REPLACE INTO setting (key, value) VALUES ('primaryBaseURL', 'https://status.upwatch.online');
+SELECT id, name, type, url, maxretries FROM monitor WHERE type='push' OR push_token IS NOT NULL;
 "@
 
 if (Get-Command sqlite3 -ErrorAction SilentlyContinue) {

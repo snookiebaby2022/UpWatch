@@ -75,7 +75,7 @@ function AdminPage() {
   }
 
   return (
-    <div className="dark min-h-screen bg-bg text-zinc-200 font-sans">
+    <div className="admin-console min-h-screen bg-bg text-zinc-100 font-sans">
       <header className="border-b border-brand-border/60">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">

@@ -33,6 +33,7 @@ import { Route as CompareUptimerobotRouteImport } from './routes/compare.uptimer
 import { Route as ApiAdminHealthChecksRouteImport } from './routes/api/admin/health-checks'
 import { Route as ApiAdminTicketsRouteImport } from './routes/api/admin/tickets'
 import { Route as ApiPublicGoogleSessionRouteImport } from './routes/api/public/google/session'
+import { Route as ApiPublicHooksKumaHeartbeatRouteImport } from './routes/api/public/hooks/kuma-heartbeat'
 import { Route as ApiPublicHooksRunMonitorsRouteImport } from './routes/api/public/hooks/run-monitors'
 import { Route as ApiPublicSetupBootstrapRouteImport } from './routes/api/public/setup/bootstrap'
 
@@ -155,6 +156,12 @@ const ApiPublicGoogleSessionRoute = ApiPublicGoogleSessionRouteImport.update({
   path: '/api/public/google/session',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicHooksKumaHeartbeatRoute =
+  ApiPublicHooksKumaHeartbeatRouteImport.update({
+    id: '/api/public/hooks/kuma-heartbeat',
+    path: '/api/public/hooks/kuma-heartbeat',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksRunMonitorsRoute =
   ApiPublicHooksRunMonitorsRouteImport.update({
     id: '/api/public/hooks/run-monitors',
@@ -191,6 +198,7 @@ export interface FileRoutesByFullPath {
   '/api/admin/health-checks': typeof ApiAdminHealthChecksRoute
   '/api/admin/tickets': typeof ApiAdminTicketsRoute
   '/api/public/google/session': typeof ApiPublicGoogleSessionRoute
+  '/api/public/hooks/kuma-heartbeat': typeof ApiPublicHooksKumaHeartbeatRoute
   '/api/public/hooks/run-monitors': typeof ApiPublicHooksRunMonitorsRoute
   '/api/public/setup/bootstrap': typeof ApiPublicSetupBootstrapRoute
 }
@@ -217,6 +225,7 @@ export interface FileRoutesByTo {
   '/api/admin/health-checks': typeof ApiAdminHealthChecksRoute
   '/api/admin/tickets': typeof ApiAdminTicketsRoute
   '/api/public/google/session': typeof ApiPublicGoogleSessionRoute
+  '/api/public/hooks/kuma-heartbeat': typeof ApiPublicHooksKumaHeartbeatRoute
   '/api/public/hooks/run-monitors': typeof ApiPublicHooksRunMonitorsRoute
   '/api/public/setup/bootstrap': typeof ApiPublicSetupBootstrapRoute
 }
@@ -246,6 +255,7 @@ export interface FileRoutesById {
   '/api/admin/health-checks': typeof ApiAdminHealthChecksRoute
   '/api/admin/tickets': typeof ApiAdminTicketsRoute
   '/api/public/google/session': typeof ApiPublicGoogleSessionRoute
+  '/api/public/hooks/kuma-heartbeat': typeof ApiPublicHooksKumaHeartbeatRoute
   '/api/public/hooks/run-monitors': typeof ApiPublicHooksRunMonitorsRoute
   '/api/public/setup/bootstrap': typeof ApiPublicSetupBootstrapRoute
 }
@@ -275,6 +285,7 @@ export interface FileRouteTypes {
     | '/api/admin/health-checks'
     | '/api/admin/tickets'
     | '/api/public/google/session'
+    | '/api/public/hooks/kuma-heartbeat'
     | '/api/public/hooks/run-monitors'
     | '/api/public/setup/bootstrap'
   fileRoutesByTo: FileRoutesByTo
@@ -301,6 +312,7 @@ export interface FileRouteTypes {
     | '/api/admin/health-checks'
     | '/api/admin/tickets'
     | '/api/public/google/session'
+    | '/api/public/hooks/kuma-heartbeat'
     | '/api/public/hooks/run-monitors'
     | '/api/public/setup/bootstrap'
   id:
@@ -329,6 +341,7 @@ export interface FileRouteTypes {
     | '/api/admin/health-checks'
     | '/api/admin/tickets'
     | '/api/public/google/session'
+    | '/api/public/hooks/kuma-heartbeat'
     | '/api/public/hooks/run-monitors'
     | '/api/public/setup/bootstrap'
   fileRoutesById: FileRoutesById
@@ -353,6 +366,7 @@ export interface RootRouteChildren {
   ApiAdminHealthChecksRoute: typeof ApiAdminHealthChecksRoute
   ApiAdminTicketsRoute: typeof ApiAdminTicketsRoute
   ApiPublicGoogleSessionRoute: typeof ApiPublicGoogleSessionRoute
+  ApiPublicHooksKumaHeartbeatRoute: typeof ApiPublicHooksKumaHeartbeatRoute
   ApiPublicHooksRunMonitorsRoute: typeof ApiPublicHooksRunMonitorsRoute
   ApiPublicSetupBootstrapRoute: typeof ApiPublicSetupBootstrapRoute
 }
@@ -527,6 +541,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicGoogleSessionRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/kuma-heartbeat': {
+      id: '/api/public/hooks/kuma-heartbeat'
+      path: '/api/public/hooks/kuma-heartbeat'
+      fullPath: '/api/public/hooks/kuma-heartbeat'
+      preLoaderRoute: typeof ApiPublicHooksKumaHeartbeatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/run-monitors': {
       id: '/api/public/hooks/run-monitors'
       path: '/api/public/hooks/run-monitors'
@@ -591,6 +612,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAdminHealthChecksRoute: ApiAdminHealthChecksRoute,
   ApiAdminTicketsRoute: ApiAdminTicketsRoute,
   ApiPublicGoogleSessionRoute: ApiPublicGoogleSessionRoute,
+  ApiPublicHooksKumaHeartbeatRoute: ApiPublicHooksKumaHeartbeatRoute,
   ApiPublicHooksRunMonitorsRoute: ApiPublicHooksRunMonitorsRoute,
   ApiPublicSetupBootstrapRoute: ApiPublicSetupBootstrapRoute,
 }

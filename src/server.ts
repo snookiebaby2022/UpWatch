@@ -58,4 +58,23 @@ export default {
       });
     }
   },
+
+  /** Cloudflare cron — keep Uptime Kuma push monitor green (every 2 min). */
+  async scheduled(_event: unknown, _env: unknown, ctx: { waitUntil: (p: Promise<unknown>) => void }) {
+    ctx.waitUntil(
+      (async () => {
+        try {
+          const { pingKumaPush } = await import("./lib/kuma-push");
+          const result = await pingKumaPush({
+            status: "up",
+            msg: "UpWatch cron",
+            ping: Math.max(1, Date.now() % 100_000),
+          });
+          if (!result.ok) console.warn("[kuma-cron] push failed:", result.detail);
+        } catch (err) {
+          console.error("[kuma-cron] error", err);
+        }
+      })(),
+    );
+  },
 };
