@@ -96,18 +96,36 @@ export const Route = createFileRoute("/api/admin/tickets")({
 
         // Notify ticket owner (in-app bell + realtime toast)
         const preview = message.length > 200 ? `${message.slice(0, 197)}…` : message;
-        const { error: notifyErr } = await supabaseAdmin.from("notifications").insert({
+        let notified = false;
+        const baseNotify = {
           user_id: ticket.user_id,
-          type: "ticket_reply",
           title: `Support replied: ${ticket.subject}`,
-          body: preview,
-          link: "/tickets",
-        });
-        if (notifyErr) {
-          console.error("ticket reply notification failed:", notifyErr.message);
+          message: preview,
+        };
+        const { error: notifyErr } = await supabaseAdmin.from("notifications").insert(baseNotify);
+        if (!notifyErr) {
+          notified = true;
+        } else {
+          const { notificationInsertPayload } = await import("@/lib/notifications");
+          const { error: fullErr } = await supabaseAdmin
+            .from("notifications")
+            .insert(
+              notificationInsertPayload({
+                user_id: ticket.user_id,
+                type: "ticket_reply",
+                title: `Support replied: ${ticket.subject}`,
+                body: preview,
+                link: "/tickets",
+              }),
+            );
+          if (fullErr) {
+            console.error("ticket reply notification failed:", notifyErr.message, fullErr.message);
+          } else {
+            notified = true;
+          }
         }
 
-        return json({ ok: true, message: inserted });
+        return json({ ok: true, message: inserted, notified });
       },
     },
   },

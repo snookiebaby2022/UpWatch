@@ -5,17 +5,13 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { useSession } from "@/hooks/use-session";
+import {
+  notificationLink,
+  notificationText,
+  type NotificationRow,
+} from "@/lib/notifications";
 
-
-type Notification = {
-  id: string;
-  type: string;
-  title: string;
-  body: string | null;
-  link: string | null;
-  read: boolean;
-  created_at: string;
-};
+type Notification = NotificationRow;
 
 function timeAgo(iso: string) {
   const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
@@ -86,13 +82,13 @@ export function NotificationBell() {
 
           // Toast pop-up
           toast(n.title, {
-            description: n.body ?? undefined,
-            action: n.link
+            description: notificationText(n) ?? undefined,
+            action: notificationLink(n)
               ? {
                   label: "Open",
                   // SPA navigation — a full reload would drop the auth session,
                   // realtime subscriptions, and any in-flight state.
-                  onClick: () => router.navigate({ to: n.link! }),
+                  onClick: () => router.navigate({ to: notificationLink(n)! }),
                 }
               : undefined,
           });
@@ -106,14 +102,15 @@ export function NotificationBell() {
           ) {
             try {
               const notif = new Notification(n.title, {
-                body: n.body ?? undefined,
+                body: notificationText(n) ?? undefined,
                 icon: "/favicon.png",
                 tag: n.id,
               });
-              if (n.link) {
+              const link = notificationLink(n);
+              if (link) {
                 notif.onclick = () => {
                   window.focus();
-                  window.location.href = n.link!;
+                  window.location.href = link;
                 };
               }
             } catch (e) {
@@ -210,6 +207,8 @@ export function NotificationBell() {
             </div>
           ) : (
             items.map((n) => {
+              const text = notificationText(n);
+              const link = notificationLink(n);
               const body = (
                 <div
                   className={`px-4 py-3 border-b border-brand-border/50 hover:bg-black/30 transition-colors ${
@@ -221,9 +220,9 @@ export function NotificationBell() {
                       <div className="text-sm font-medium text-white truncate">
                         {n.title}
                       </div>
-                      {n.body && (
+                      {text && (
                         <div className="text-xs text-zinc-400 mt-0.5 line-clamp-2">
-                          {n.body}
+                          {text}
                         </div>
                       )}
                       <div className="text-[10px] text-zinc-500 mt-1">
@@ -246,10 +245,10 @@ export function NotificationBell() {
                   </div>
                 </div>
               );
-              return n.link ? (
+              return link ? (
                 <Link
                   key={n.id}
-                  to={n.link}
+                  to={link}
                   onClick={() => {
                     markOne(n.id);
                     setOpen(false);
