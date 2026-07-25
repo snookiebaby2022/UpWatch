@@ -88,6 +88,18 @@ export async function createPortalSession(customerId: string) {
   });
 }
 
+export async function cancelSubscription(subscriptionId: string) {
+  const secret = stripeSecretKey();
+  if (!secret) throw new Error("STRIPE_SECRET_KEY not configured");
+  const res = await fetch(`https://api.stripe.com/v1/subscriptions/${subscriptionId}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${secret}` },
+  });
+  const data = (await res.json()) as { error?: { message?: string } };
+  if (!res.ok) throw new Error(data.error?.message ?? `Stripe DELETE subscription ${res.status}`);
+  return data;
+}
+
 /** Verify Stripe webhook signature (v1) using Web Crypto — works on Cloudflare Workers. */
 export async function verifyStripeSignature(
   payload: string,

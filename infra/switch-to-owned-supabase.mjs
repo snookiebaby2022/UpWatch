@@ -5,9 +5,11 @@ import { fileURLToPath } from "node:url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const projectRef = "zjijihumvmijnijpkwpz";
-const legacyServiceRole =
-  process.argv[2] ||
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpqaWppaHVtdm1pam5panBrd3B6Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NDY1NDE1MCwiZXhwIjoyMTAwMjMwMTUwfQ.YaWgPcC-ahKetQymQHNYOFBcWy1OL_Ktlwp4jO7Q2FQ";
+const legacyServiceRole = process.argv[2] || process.env.SUPABASE_SERVICE_ROLE_KEY;
+if (!legacyServiceRole) {
+  console.error("Pass legacy service role as argv or set SUPABASE_SERVICE_ROLE_KEY");
+  process.exit(1);
+}
 
 const tmp = join(root, ".tmp-zji-keys.json");
 const keysJson = execSync(

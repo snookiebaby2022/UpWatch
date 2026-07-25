@@ -23,6 +23,7 @@ dist-ssr
 .wrangler/
 .dev.vars
 infra/uptime-kuma/.env
+supabase/.temp/
 
 # Editor directories and files
 .vscode/*

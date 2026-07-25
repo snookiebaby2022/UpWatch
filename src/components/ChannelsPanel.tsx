@@ -32,6 +32,11 @@ const CHANNEL_META: Record<string, { label: string; placeholder: string; hint: s
     placeholder: "123456789 (your chat ID)",
     hint: "Message @UpWatchAlertsBot then run /start — it replies with your chat ID.",
   },
+  webhook: {
+    label: "Custom webhook",
+    placeholder: "https://your-server.com/alerts",
+    hint: "We POST JSON on down/up events. HTTPS required.",
+  },
 };
 
 export function ChannelsPanel({ userId, plan }: { userId: string; plan: Plan }) {

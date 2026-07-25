@@ -80,35 +80,40 @@ jobs:
           BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
         run: |
-          sync_secret() {
+          sync_required() {
             local name="$1"
             local val="$2"
             if [ -z "$val" ]; then
-              echo "::error::Missing GitHub secret: $name (auth will break without it)"
+              echo "::error::Missing GitHub secret: $name"
               exit 1
             fi
             printf '%s' "$val" | npx wrangler secret put "$name" --config .output/server/wrangler.json
           }
-          sync_secret SUPABASE_URL "$SUPABASE_URL"
-          sync_secret SUPABASE_PUBLISHABLE_KEY "$SUPABASE_PUBLISHABLE_KEY"
-          sync_secret SUPABASE_SERVICE_ROLE_KEY "$SUPABASE_SERVICE_ROLE_KEY"
-          sync_secret CRON_SECRET "$CRON_SECRET"
-          sync_secret BREVO_API_KEY "$BREVO_API_KEY"
-          sync_secret TELEGRAM_BOT_TOKEN "$TELEGRAM_BOT_TOKEN"
-          sync_secret KUMA_BASE_URL "https://status.upwatch.online"
-          sync_secret KUMA_STATUS_PAGE_SLUG "upwatch"
-          sync_secret KUMA_PUSH_URL "https://status.upwatch.online/api/push/5pyQgQR1m8"
-          if [ -n "${{ secrets.STRIPE_SECRET_KEY }}" ]; then
-            sync_secret STRIPE_SECRET_KEY "${{ secrets.STRIPE_SECRET_KEY }}"
-          fi
-          if [ -n "${{ secrets.STRIPE_WEBHOOK_SECRET }}" ]; then
-            sync_secret STRIPE_WEBHOOK_SECRET "${{ secrets.STRIPE_WEBHOOK_SECRET }}"
-          fi
-          if [ -n "${{ secrets.STRIPE_PRICE_PRO }}" ]; then
-            sync_secret STRIPE_PRICE_PRO "${{ secrets.STRIPE_PRICE_PRO }}"
-          fi
-          if [ -n "${{ secrets.STRIPE_PRICE_BUSINESS }}" ]; then
-            sync_secret STRIPE_PRICE_BUSINESS "${{ secrets.STRIPE_PRICE_BUSINESS }}"
+          sync_optional() {
+            local name="$1"
+            local val="$2"
+            if [ -z "$val" ]; then
+              echo "Skipping optional secret: $name"
+              return 0
+            fi
+            printf '%s' "$val" | npx wrangler secret put "$name" --config .output/server/wrangler.json
+          }
+          sync_required SUPABASE_URL "$SUPABASE_URL"
+          sync_required SUPABASE_PUBLISHABLE_KEY "$SUPABASE_PUBLISHABLE_KEY"
+          sync_required SUPABASE_SERVICE_ROLE_KEY "$SUPABASE_SERVICE_ROLE_KEY"
+          sync_optional CRON_SECRET "$CRON_SECRET"
+          sync_optional BREVO_API_KEY "$BREVO_API_KEY"
+          sync_optional TELEGRAM_BOT_TOKEN "$TELEGRAM_BOT_TOKEN"
+          sync_optional KUMA_BASE_URL "https://status.upwatch.online"
+          sync_optional KUMA_STATUS_PAGE_SLUG "upwatch"
+          sync_optional KUMA_PUSH_URL "https://status.upwatch.online/api/push/5pyQgQR1m8"
+          if [ -z "${{ secrets.STRIPE_SECRET_KEY }}" ] || [ -z "${{ secrets.STRIPE_PRICE_PRO }}" ] || [ -z "${{ secrets.STRIPE_PRICE_BUSINESS }}" ]; then
+            echo "::warning::Stripe secrets missing — billing checkout will not work until STRIPE_* are set"
+          else
+            sync_required STRIPE_SECRET_KEY "${{ secrets.STRIPE_SECRET_KEY }}"
+            sync_required STRIPE_PRICE_PRO "${{ secrets.STRIPE_PRICE_PRO }}"
+            sync_required STRIPE_PRICE_BUSINESS "${{ secrets.STRIPE_PRICE_BUSINESS }}"
+            sync_optional STRIPE_WEBHOOK_SECRET "${{ secrets.STRIPE_WEBHOOK_SECRET }}"
           fi
 
       - name: Verify Supabase auth keys

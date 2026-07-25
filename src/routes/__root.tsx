@@ -11,9 +11,7 @@ import { useEffect, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { completeAuthFromUrl } from "@/lib/auth-oauth";
 import { CookieConsent } from "@/components/CookieConsent";
-
-
-import appCss from "../styles.css?url";
+import { Toaster } from "@/components/ui/sonner";
 import { BUILD_SHA } from "../lib/build";
 import { reportClientError } from "../lib/error-reporting";
 
