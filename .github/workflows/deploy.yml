@@ -107,6 +107,7 @@ jobs:
           sync_optional KUMA_BASE_URL "https://status.upwatch.online"
           sync_optional KUMA_STATUS_PAGE_SLUG "upwatch"
           sync_optional KUMA_PUSH_URL "https://status.upwatch.online/api/push/5pyQgQR1m8"
+          sync_optional KUMA_METRICS_API_KEY "${{ secrets.KUMA_METRICS_API_KEY }}"
           if [ -z "${{ secrets.STRIPE_SECRET_KEY }}" ] || [ -z "${{ secrets.STRIPE_PRICE_PRO }}" ] || [ -z "${{ secrets.STRIPE_PRICE_BUSINESS }}" ]; then
             echo "::warning::Stripe secrets missing — billing checkout will not work until STRIPE_* are set"
           else

@@ -29,6 +29,7 @@ function WelcomePage() {
 
   useEffect(() => {
     if (typeof window !== "undefined") {
+      localStorage.setItem("upwatch:welcomed", "1");
       sessionStorage.setItem("upwatch:welcomed", "1");
     }
     const timers = [
@@ -36,10 +37,18 @@ function WelcomePage() {
       setTimeout(() => setPhase(2), 1100),
       setTimeout(() => setPhase(3), 1900),
       setTimeout(() => setPhase(4), 2600),
-      setTimeout(() => navigate({ to: "/", replace: true }), 4200),
+      setTimeout(() => navigate({ to: "/", replace: true }), 3200),
     ];
     return () => timers.forEach(clearTimeout);
   }, [navigate]);
+
+  function skip() {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("upwatch:welcomed", "1");
+      sessionStorage.setItem("upwatch:welcomed", "1");
+    }
+    navigate({ to: "/", replace: true });
+  }
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-bg text-zinc-200 font-sans flex items-center justify-center px-6">
@@ -161,11 +170,22 @@ function WelcomePage() {
           </Link>
           <Link
             to="/auth"
+            search={{ mode: "signup" }}
             className="w-full sm:w-auto px-8 py-4 rounded-xl border border-brand-border bg-surface/50 backdrop-blur text-white font-semibold hover:border-brand transition-colors"
           >
             Create account
           </Link>
         </div>
+
+        <button
+          type="button"
+          onClick={skip}
+          className={`mt-8 text-sm text-zinc-500 hover:text-brand transition-colors ${
+            phase >= 2 ? "opacity-100" : "opacity-0"
+          }`}
+        >
+          Skip intro →
+        </button>
 
         {/* footer meta */}
         <div

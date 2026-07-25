@@ -5,8 +5,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { completeAuthFromUrl } from "@/lib/auth-oauth";
 import { GoogleSignInButton } from "@/components/GoogleSignInButton";
 
+const authSearchSchema = z.object({
+  mode: z.enum(["signin", "signup", "forgot"]).optional(),
+});
+
 export const Route = createFileRoute("/auth")({
   ssr: false,
+  validateSearch: authSearchSchema,
   head: () => ({
     meta: [
       { title: "Sign in — UpWatch" },
@@ -43,7 +48,8 @@ function authErrorMessage(err: unknown, mode: "signin" | "signup") {
 
 function AuthPage() {
   const navigate = useNavigate();
-  const [mode, setMode] = useState<"signin" | "signup" | "forgot">("signin");
+  const { mode: searchMode } = Route.useSearch();
+  const [mode, setMode] = useState<"signin" | "signup" | "forgot">(searchMode ?? "signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
@@ -51,6 +57,10 @@ function AuthPage() {
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
   const [lastSignupEmail, setLastSignupEmail] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (searchMode) setMode(searchMode);
+  }, [searchMode]);
 
   // Complete OAuth / magic-link callback, then bounce to dashboard if signed in.
   useEffect(() => {
@@ -62,7 +72,7 @@ function AuthPage() {
           return;
         }
         if (session) {
-          navigate({ to: "/dashboard", replace: true });
+          navigate({ to: "/dashboard", search: { welcome: true }, replace: true });
           return;
         }
         const { data } = await supabase.auth.getUser();
@@ -126,11 +136,11 @@ function AuthPage() {
         if (err) throw err;
         // If email confirmation is disabled, Supabase returns a session immediately — go straight in.
         if (data.session) {
-          navigate({ to: "/dashboard", replace: true });
+          navigate({ to: "/dashboard", search: { welcome: true }, replace: true });
           return;
         }
         setLastSignupEmail(parsed.data.email);
-        setInfo("Account created. Check your inbox to confirm your email.");
+        setInfo("Account created! Check your inbox to confirm, then you'll land on your dashboard.");
       } else {
         const { error: err } = await supabase.auth.signInWithPassword({
           email: parsed.data.email,
@@ -189,7 +199,7 @@ function AuthPage() {
       setError("Google sign-in did not create a session. Try email sign-in or refresh the page.");
       return;
     }
-    navigate({ to: "/dashboard", replace: true });
+    navigate({ to: "/dashboard", search: { welcome: true }, replace: true });
   }
 
   return (

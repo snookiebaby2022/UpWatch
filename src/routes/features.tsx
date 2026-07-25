@@ -125,7 +125,7 @@ function FeaturesPage() {
         <Link to="/pricing" className="inline-flex rounded-md border border-white/20 px-6 py-3 font-medium hover:bg-white/5">
           View pricing
         </Link>
-        <Link to="/auth" className="inline-flex rounded-md bg-[#10b981] px-6 py-3 text-black font-medium hover:bg-[#0ea371]">
+        <Link to="/auth" search={{ mode: "signup" }} className="inline-flex rounded-md bg-[#10b981] px-6 py-3 text-black font-medium hover:bg-[#0ea371]">
           Start monitoring — free
         </Link>
       </section>

@@ -33,4 +33,5 @@ jobs:
           ssh -o StrictHostKeyChecking=no "$SSH_USER@$SSH_HOST" "cd ~/upwatch-kuma && \
             if [ -n \"$TUNNEL_TOKEN\" ]; then echo CLOUDFLARE_TUNNEL_TOKEN=$TUNNEL_TOKEN >> .env; fi && \
             docker compose --profile cloudflare up -d || docker compose up -d && \
-            bash fix-http-monitors.sh"
+            bash fix-http-monitors.sh && \
+            bash create-upwatch-status-page.sh"

@@ -137,7 +137,7 @@ function Index() {
   // and re-render. Deferring to useEffect keeps SSR output stable.
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if (sessionStorage.getItem("upwatch:welcomed") !== "1") {
+    if (sessionStorage.getItem("upwatch:welcomed") !== "1" && localStorage.getItem("upwatch:welcomed") !== "1") {
       navigate({ to: "/welcome", replace: true });
     }
   }, [navigate]);
@@ -194,6 +194,7 @@ function Nav() {
             </Link>
             <Link
               to="/auth"
+              search={{ mode: "signup" }}
               className="bg-white text-black px-4 py-2 rounded-full text-sm font-semibold hover:bg-zinc-200 transition-colors"
             >
               Sign up
@@ -219,6 +220,7 @@ function Hero() {
       <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
         <Link
           to="/auth"
+          search={{ mode: "signup" }}
           className="w-full sm:w-auto bg-brand text-bg px-8 py-4 rounded-xl font-bold text-lg hover:scale-105 transition-transform"
         >
           Get Started — Free
@@ -333,6 +335,7 @@ function Pricing() {
               tier.href.startsWith("/") ? (
                 <Link
                   to={tier.href}
+                  search={{ mode: "signup" }}
                   className="w-full py-3 rounded-lg bg-brand text-bg text-center font-bold hover:opacity-90 transition-opacity"
                 >
                   {tier.cta}

@@ -25,6 +25,9 @@ async function authFetch(path: string, init?: RequestInit) {
 }
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    welcome: search.welcome === true || search.welcome === "true" || search.welcome === "1",
+  }),
   head: () => ({
     meta: [
       { title: "Dashboard — UpWatch" },
@@ -47,11 +50,18 @@ type Monitor = {
 
 function Dashboard() {
   const navigate = useNavigate();
+  const { welcome } = Route.useSearch();
   const queryClient = useQueryClient();
   const [email, setEmail] = useState<string>("");
   const [displayName, setDisplayName] = useState<string>("");
   const [userId, setUserId] = useState<string>("");
   const [isAdmin, setIsAdmin] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(welcome);
+
+  useEffect(() => {
+    if (!welcome) return;
+    navigate({ to: "/dashboard", search: {}, replace: true });
+  }, [welcome, navigate]);
 
   useEffect(() => {
     (async () => {
@@ -159,6 +169,24 @@ function Dashboard() {
       </nav>
 
       <main className="max-w-4xl mx-auto px-6 py-12 space-y-10">
+        {showWelcome && (
+          <div className="rounded-xl border border-brand/40 bg-brand/10 px-5 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div>
+              <p className="text-white font-semibold">You're in — add your first monitor below</p>
+              <p className="text-sm text-zinc-400 mt-1">
+                Paste any HTTPS URL. We'll email you when it goes down. Your free plan includes 5 monitors.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowWelcome(false)}
+              className="text-sm text-zinc-400 hover:text-white shrink-0"
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
+
         <div>
           <h1 className="text-4xl md:text-5xl font-extrabold text-white tracking-tight mb-3">
             Welcome{displayName ? `, ${displayName}` : ""}.
@@ -345,8 +373,10 @@ function MonitorsPanel({
           Failed to load monitors.
         </div>
       ) : monitors.length === 0 ? (
-        <div className="text-sm text-zinc-500 py-10 text-center font-mono border border-dashed border-brand-border rounded-xl">
-          No monitors yet — add one above to get started.
+        <div className="text-sm text-zinc-500 py-10 text-center font-mono border border-dashed border-brand-border rounded-xl space-y-2">
+          <p className="text-white font-sans font-medium">No monitors yet</p>
+          <p>Add your website or API URL above — checks start within a minute.</p>
+          <p className="text-zinc-600 text-xs">Example: https://yourdomain.com</p>
         </div>
       ) : (
         <ul className="divide-y divide-brand-border/50 border border-brand-border rounded-xl overflow-hidden">

@@ -1,0 +1,32 @@
+# Keep the Kuma "upwatch" status page in sync with all HTTP monitors on the Pi.
+# Homepage demo uses /metrics when KUMA_METRICS_API_KEY is set on the Worker;
+# this workflow keeps the public Kuma status page complete too.
+
+name: Sync Kuma status page
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Sync monitors on Kuma host
+        env:
+          SSH_HOST: ${{ secrets.KUMA_SSH_HOST }}
+          SSH_USER: ${{ secrets.KUMA_SSH_USER }}
+          SSH_KEY: ${{ secrets.KUMA_SSH_KEY }}
+        run: |
+          if [ -z "$SSH_HOST" ] || [ -z "$SSH_USER" ] || [ -z "$SSH_KEY" ]; then
+            echo "Skipping — set KUMA_SSH_HOST, KUMA_SSH_USER, KUMA_SSH_KEY to auto-sync demo monitors."
+            exit 0
+          fi
+          mkdir -p ~/.ssh
+          echo "$SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          scp -o StrictHostKeyChecking=no infra/uptime-kuma/create-upwatch-status-page.sh "$SSH_USER@$SSH_HOST:~/upwatch-kuma/"
+          ssh -o StrictHostKeyChecking=no "$SSH_USER@$SSH_HOST" "bash ~/upwatch-kuma/create-upwatch-status-page.sh"

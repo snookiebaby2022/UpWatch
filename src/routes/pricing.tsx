@@ -87,6 +87,7 @@ function PricingPage() {
               </ul>
               <Link
                 to="/auth"
+                search={{ mode: "signup" }}
                 className={`mt-6 inline-flex justify-center rounded-md px-4 py-2 font-medium ${
                   cta.highlight
                     ? "bg-[#10b981] text-black hover:bg-[#0ea371]"
