@@ -112,7 +112,11 @@ async function warm(env) {
     const target = new URL(path.trim(), url).toString();
     try {
       const res = await fetch(target, {
-        headers: { "user-agent": "nexlify-keep-warm/1.0", "cache-control": "no-cache" },
+        headers: {
+          "user-agent": "Mozilla/5.0 (compatible; nexlify-keep-warm/1.0)",
+          "accept": "text/html,application/xhtml+xml",
+          "cache-control": "no-cache",
+        },
         cf: { cacheTtl: 0 },
       });
       console.log("[warm]", target, res.status);
@@ -151,6 +155,26 @@ async function warm(env) {
   }
   console.log(`\nDeployed worker: ${workerName}`);
 
+  // Allow monitoring + keep-warm user agents through WAF (fixes intermittent 403 → false DOWN)
+  const uaNeedles = ["UpWatch-Monitor", "nexlify-keep-warm", "Uptime-Kuma"];
+  for (const ua of uaNeedles) {
+    try {
+      await cf("POST", `/zones/${zone.id}/firewall/access_rules/rules`, {
+        mode: "allow",
+        notes: `Allow ${ua} health checks`,
+        configuration: { target: "user_agent", value: ua },
+      });
+      console.log(`WAF allow rule: user-agent contains "${ua}"`);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (msg.includes("already exists") || msg.includes("81057")) {
+        console.log(`WAF allow rule already present: ${ua}`);
+      } else {
+        console.warn(`WAF rule skipped for ${ua}:`, msg);
+      }
+    }
+  }
+
   // Cron trigger every 5 minutes
   await cf("PUT", `/accounts/${ACCOUNT_ID}/workers/scripts/${workerName}/schedules`, [
     { cron: "*/5 * * * *" },
@@ -173,7 +197,10 @@ async function warm(env) {
     const t0 = Date.now();
     try {
       const res = await fetch(WARM_URL, {
-        headers: { "user-agent": "UpWatch-Nexlify-Probe/1.0" },
+        headers: {
+          "user-agent": "Mozilla/5.0 (compatible; UpWatch-Monitor/1.0; +https://upwatch.online)",
+          accept: "text/html,application/xhtml+xml",
+        },
         signal: AbortSignal.timeout(30_000),
       });
       console.log(`  attempt ${i}: HTTP ${res.status} in ${Date.now() - t0}ms`);
