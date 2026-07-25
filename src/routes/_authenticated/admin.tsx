@@ -17,6 +17,7 @@ import { useAdminData } from "@/components/admin/useAdminData";
 import { resolveAdminAccess } from "@/lib/admin-access";
 import { completeAuthFromUrl } from "@/lib/auth-oauth";
 import { BUILD_LABEL } from "@/lib/build";
+import { useUnreadNotificationCount } from "@/hooks/use-unread-notification-count";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({
@@ -61,6 +62,7 @@ function AdminPage() {
   const [ticketPriorityFilter, setTicketPriorityFilter] = useState<TicketPriority | "all">("all");
 
   const admin = useAdminData();
+  const unreadNotifications = useUnreadNotificationCount();
 
   async function handleSignOut() {
     try {
@@ -99,9 +101,9 @@ function AdminPage() {
               }`}
             >
               Support
-              {admin.totals.openTickets > 0 && (
+              {unreadNotifications > 0 && (
                 <span className="ml-1.5 text-xs bg-brand text-black rounded-full px-1.5 py-0.5 font-semibold">
-                  {admin.totals.openTickets}
+                  {unreadNotifications > 9 ? "9+" : unreadNotifications}
                 </span>
               )}
             </button>
@@ -161,9 +163,9 @@ function AdminPage() {
               }`}
             >
               {label}
-              {id === "support" && admin.totals.openTickets > 0 && (
+              {id === "support" && unreadNotifications > 0 && (
                 <span className="ml-2 text-xs bg-brand text-black rounded-full px-2 py-0.5 font-semibold">
-                  {admin.totals.openTickets}
+                  {unreadNotifications > 9 ? "9+" : unreadNotifications}
                 </span>
               )}
               {id === "incidents" && admin.totals.openIncidents > 0 && (

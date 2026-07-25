@@ -45,8 +45,10 @@ jobs:
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
           BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
 
-      - name: Set Cloudflare worker name
-        run: node -e "const fs=require('fs');const p='.output/server/wrangler.json';const j=JSON.parse(fs.readFileSync(p,'utf8'));j.name='upwatch';j.triggers={crons:['*/2 * * * *']};if(j.assets?.directory) j.assets.directory=j.assets.directory.replace(/\\\\/g,'/');fs.writeFileSync(p,JSON.stringify(j,null,2));"
+      - name: Patch Kuma cron + set Cloudflare worker name
+        run: |
+          node infra/patch-kuma-cron.mjs
+          node -e "const fs=require('fs');const p='.output/server/wrangler.json';const j=JSON.parse(fs.readFileSync(p,'utf8'));j.name='upwatch';j.triggers={crons:['*/2 * * * *']};if(j.assets?.directory) j.assets.directory=j.assets.directory.replace(/\\\\/g,'/');fs.writeFileSync(p,JSON.stringify(j,null,2));"
 
       - name: Deploy to Cloudflare Workers
         env:
